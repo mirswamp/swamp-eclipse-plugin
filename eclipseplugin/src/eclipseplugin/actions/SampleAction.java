@@ -7,6 +7,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 import eclipseplugin.dialogs.AuthenticationDialog;
+import eclipseplugin.dialogs.SelectionDialog;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 
@@ -40,7 +41,12 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 			// TODO Handle error
 		}
 		else {
-			
+			SelectionDialog s = new SelectionDialog(window.getShell());
+			s.create();
+			if (s.open() != Window.OK) {
+				// TODO Handle error
+			}
+			System.out.println("Made it to the promised land!");
 		
 		// Here's where the business logic goes
 		}

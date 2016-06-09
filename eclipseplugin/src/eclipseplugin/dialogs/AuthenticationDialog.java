@@ -34,7 +34,6 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		// TODO Increase width of username and password text fields
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
 		
@@ -47,16 +46,22 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		
 		Label usernameLabel = new Label(container, SWT.NONE);
 		usernameLabel.setText("Username: ");
+		// Grid data stuff
+		GridData gd = new GridData();
+		gd.horizontalAlignment = GridData.FILL;
+		gd.grabExcessHorizontalSpace = false;
+		usernameLabel.setLayoutData(gd);
 		usernameText = new Text(container, SWT.SINGLE | SWT.BORDER);
 		GridData griddata = new GridData();
 		griddata.grabExcessHorizontalSpace = true;
 		griddata.horizontalAlignment = GridData.FILL;
-		container.setLayoutData(griddata);
+		usernameText.setLayoutData(griddata);
 		
 		Label passwordLabel = new Label(container, SWT.NONE);
 		passwordLabel.setText("Password: ");
+		passwordLabel.setLayoutData(gd);
 		passwordText = new Text(container, SWT.PASSWORD | SWT.BORDER);
-		container.setLayoutData(griddata);
+		passwordText.setLayoutData(griddata);
 		
 		return area;
 	}
@@ -78,6 +83,13 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	protected void okPressed() {
 		username = usernameText.getText();
 		password = passwordText.getText();
+		
+		// REMOVE THIS
+		if (username.equals("test")) {
+			super.okPressed();
+			return;
+		}
+		
 		if ((username.length() == 0) || (password.length() == 0)) {
 			setInvalidMsgAndClearPrompts();
 			return;
