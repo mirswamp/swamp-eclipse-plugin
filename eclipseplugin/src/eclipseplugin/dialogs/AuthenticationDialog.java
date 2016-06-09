@@ -67,34 +67,46 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		createButton(parent, IDialogConstants.CANCEL_ID, "Cancel", false);
 	}
 	
+	void setInvalidMsgAndClearPrompts() {
+		// TODO: Add some formatting to the invalid message (e.g. bold)
+		this.setMessage(INVALID_MESSAGE + "\n" + AUTHENTICATION_PROMPT);
+		usernameText.setText("");
+		passwordText.setText("");
+	}
 	
 	@Override
 	protected void okPressed() {
 		username = usernameText.getText();
 		password = passwordText.getText();
 		if ((username.length() == 0) || (password.length() == 0)) {
-			this.setMessage(INVALID_MESSAGE + "\n" + AUTHENTICATION_PROMPT);
-			usernameText.setText("");
-			passwordText.setText("");
+			setInvalidMsgAndClearPrompts();
 			return;
 		}
 		System.out.println("Username: " + username + "\tPassword: " + password);
 		// do the validation with the API using the things in the text fields
-		//ArrayList<Session> sessions;
-		//sessions = ParseCommandLine.getCurrSessionInfo();
-		int val = ParseCommandLine.testAPI(3);
-		System.out.println(val);
-		//sessions = ParseCommandLine.getSessions(username, password);
-		//System.out.println("Is sessions null? " + sessions == null);
-		//System.out.println("Number of sessions: " + sessions.size());
-		//if (sessions.size() < 1) {
+		ArrayList<Session> sessions;
+		//int val = ParseCommandLine.testAPI(3);
+		//System.out.println(val);
+		try {
+		sessions = ParseCommandLine.getSessions(username, password);
+		}
+		catch (HTTPException h) {
+			System.err.println("Error: " + h.getMessage());
+			sessions = null;
+		}
+		finally {
 			
-			super.okPressed();
-		//}
-		//else {
-			// add error message here
-			//this.setMessage(INVALID_MESSAGE + "\n" + AUTHENTICATION_PROMPT);
-		//}
+		}
+		System.out.println("Is sessions null? " + sessions == null);
+		if (sessions == null) {
+			System.out.println("Sessions is null");
+			setInvalidMsgAndClearPrompts();
+			return;
+		}
+		else {
+			System.out.println("Number of sessions: " + sessions.size());
+		}
+		super.okPressed();
 	}
 	
 }
