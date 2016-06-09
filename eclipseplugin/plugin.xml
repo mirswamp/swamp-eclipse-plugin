@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+
+   <extension
+         point="org.eclipse.ui.actionSets">
+      <actionSet
+            label="Display Plugin"
+            visible="true"
+            id="eclipseplugin.actionSet">
+         <menu
+               label="SWAMP Menu"
+               id="SWAMPMenu">
+            <separator
+                  name="sampleGroup">
+            </separator>
+         </menu>
+         <action
+               label="Launch SWAMP"
+               icon="icons/sample.gif"
+               class="eclipseplugin.actions.SampleAction"
+               tooltip="Say Hello to the SWAMP"
+               menubarPath="SWAMPMenu/sampleGroup"
+               toolbarPath="sampleGroup"
+               id="eclipseplugin.actions.SampleAction">
+         </action>
+      </actionSet>
+   </extension>
+
+</plugin>     
