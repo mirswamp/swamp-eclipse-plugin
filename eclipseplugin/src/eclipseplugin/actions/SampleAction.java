@@ -1,3 +1,10 @@
+/* Malcolm Reid Jr.
+ * 06/07/2016
+ * UW SWAMP
+ * SampleAction.java
+ * Plug-in code to launch primary dialogs when activated
+ */
+
 package eclipseplugin.actions;
 
 import org.eclipse.jface.action.IAction;

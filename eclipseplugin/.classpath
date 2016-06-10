@@ -4,7 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="lib/swampsecurity.jar"/>
-	<classpathentry kind="lib" path="lib/swampapi.jar"/>
 	<classpathentry kind="lib" path="lib/commons-cli-1.3.1.jar"/>
 	<classpathentry kind="lib" path="lib/commons-codec-1.9.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging-1.2.jar"/>
@@ -22,5 +21,6 @@
 	<classpathentry kind="lib" path="lib/ncsa-security-java7-3.2.1.jar"/>
 	<classpathentry kind="lib" path="lib/ncsa-security-servlet-3.2.1.jar"/>
 	<classpathentry kind="lib" path="lib/ncsa-security-storage-3.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/swampapi.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

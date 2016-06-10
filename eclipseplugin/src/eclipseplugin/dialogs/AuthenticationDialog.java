@@ -97,8 +97,6 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		System.out.println("Username: " + username + "\tPassword: " + password);
 		// do the validation with the API using the things in the text fields
 		ArrayList<Session> sessions;
-		//int val = ParseCommandLine.testAPI(3);
-		//System.out.println(val);
 		try {
 		sessions = ParseCommandLine.getSessions(username, password);
 		}
