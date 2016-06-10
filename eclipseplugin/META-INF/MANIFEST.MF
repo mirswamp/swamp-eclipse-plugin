@@ -28,4 +28,8 @@ Bundle-ClassPath: .,
  lib/ncsa-security-java7-3.2.1.jar,
  lib/ncsa-security-servlet-3.2.1.jar,
  lib/ncsa-security-storage-3.2.1.jar,
- lib/swampapi.jar
+ lib/swamp-api-client-1.0-SNAPSHOT.jar,
+ lib/commons-lang-2.6.jar,
+ lib/ezmorph-1.0.6.jar,
+ lib/commons-collections-3.2.2.jar,
+ lib/commons-beanutils-1.9.2.jar

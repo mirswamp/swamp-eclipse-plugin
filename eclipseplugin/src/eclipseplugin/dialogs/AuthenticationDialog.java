@@ -16,8 +16,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
-import edu.wisc.cs.swamp.ParseCommandLine;
+//import src.main.java.edu.wisc.cs.swamp.ParseCommandLine;
+//import src.main.java.edu.wisc.cs.swamp.*;
 import edu.wisc.cs.swamp.*;
+import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
 import edu.uiuc.ncsa.swamp.session.*;
 
 public class AuthenticationDialog extends TitleAreaDialog {
@@ -25,6 +27,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	private Text passwordText;
 	private String username;
 	private String password;
+	private ArrayList<Session> sessions;
 	private static final String AUTHENTICATION_PROMPT = "Please enter your authentication information for the SWAMP.";
 	private static final String INVALID_MESSAGE = "Invalid username or password.";
 	
@@ -79,6 +82,10 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		passwordText.setText("");
 	}
 	
+	public HandlerFactory getHandlerFactory() {
+		return new HandlerFactory(sessions.get(0), sessions.get(1));
+	}
+	
 	@Override
 	protected void okPressed() {
 		username = usernameText.getText();
@@ -96,7 +103,6 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		}
 		System.out.println("Username: " + username + "\tPassword: " + password);
 		// do the validation with the API using the things in the text fields
-		ArrayList<Session> sessions;
 		try {
 		sessions = ParseCommandLine.getSessions(username, password);
 		}

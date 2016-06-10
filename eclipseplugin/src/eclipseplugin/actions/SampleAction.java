@@ -17,6 +17,7 @@ import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.SelectionDialog;
 
 import org.eclipse.jface.dialogs.MessageDialog;
+import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -48,7 +49,9 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 			// TODO Handle error
 		}
 		else {
+			HandlerFactory h = d.getHandlerFactory();
 			SelectionDialog s = new SelectionDialog(window.getShell());
+			s.setHandlerFactory(h);
 			s.create();
 			if (s.open() != Window.OK) {
 				// TODO Handle error

@@ -19,12 +19,15 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import java.util.ArrayList;
+import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
+import edu.wisc.cs.swamp.ParseCommandLine;
 
 public class SelectionDialog extends TitleAreaDialog {
 	
 	private ArrayList<String> projectList;
 	private ArrayList<String> platformList;
 	private ArrayList<String> toolList;
+	private HandlerFactory handler;
 
 	private enum Type {
 		PROJECT, PLATFORM, TOOL
@@ -45,21 +48,30 @@ public class SelectionDialog extends TitleAreaDialog {
 		}
 	}
 	
+	public void setHandlerFactory(HandlerFactory h) {
+		handler = h;
+	}
+	
 	private void setComboElements(Combo c, Type t) {
+		ArrayList<String> list;
 		if (t == Type.PROJECT) {
-			// get list of projects as string array
-			// do c.setItems(array)
+			list = ParseCommandLine.getProjectList(handler);
 		}
 		else if (t == Type.PLATFORM) {
-			// get list of platforms as string array
-			// do c.setItems(array)			
+			list = ParseCommandLine.getPlatformList(handler);
 		}
 		else {
-			// get list of tools as string array
-			// do c.setItems(array)			
+			list = ParseCommandLine.getToolList(handler);
 		}
-		String[] array = {"String 0", "String 1", "String 2", "String 3", "String 4", "String 5", "String 6"};
-		c.setItems(array);
+		setComboList(c, list);
+	}
+	
+	private void setComboList(Combo c, ArrayList<String> list) {
+		if (list != null) {
+			String[] ary = new String[list.size()];
+			list.toArray(ary);
+			c.setItems(ary);
+		}
 	}
 	
 	@Override
