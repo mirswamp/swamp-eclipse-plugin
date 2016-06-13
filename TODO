@@ -1,5 +1,7 @@
 TODO:
--Fix up the UI of the selection dialog
 -Properly populate tools combo box once project is selected
-
--The fun part...
+-Make third dialog for further project configuration
+-Export JAR file programmatically
+-Export Ant build file programmatically
+-Ship all to SWAMP
+-Maintain persistent connection
