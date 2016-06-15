@@ -24,12 +24,15 @@ import edu.wisc.cs.swamp.ParseCommandLine;
 
 public class SelectionDialog extends TitleAreaDialog {
 	
-	private ArrayList<String> projectList;
-	private ArrayList<String> platformList;
-	private ArrayList<String> toolList;
+	//private ArrayList<String> projectList;
+	//private ArrayList<String> platformList;
+	//private ArrayList<String> toolList;
 	private Combo projCombo;
 	private Combo platCombo;
 	private Combo toolCombo;
+	private int prjIndex;
+	private int pltIndex;
+	private int toolIndex;
 	private HandlerFactory handler;
 
 	private enum Type {
@@ -38,17 +41,9 @@ public class SelectionDialog extends TitleAreaDialog {
 	
 	public SelectionDialog(Shell parentShell) {
 		super(parentShell);
-		projectList = new ArrayList<String>();
-		platformList = new ArrayList<String>();
-		toolList = new ArrayList<String>();
-		// initialize the 3 lists here
-		// dummy initializing
-		for (int i = 0; i < 10; i++) {
-			String tmp = "Choice " + i;
-			projectList.add(tmp);
-			platformList.add(tmp);
-			toolList.add(tmp);
-		}
+		//projectList = new ArrayList<String>();
+		//platformList = new ArrayList<String>();
+		//toolList = new ArrayList<String>();
 	}
 	
 	public void setHandlerFactory(HandlerFactory h) {
@@ -76,6 +71,18 @@ public class SelectionDialog extends TitleAreaDialog {
 			list.toArray(ary);
 			c.setItems(ary);
 		}
+	}
+	
+	public int getProjectIndex() {
+		return prjIndex;
+	}
+	
+	public int getPlatformIndex() {
+		return pltIndex;
+	}
+	
+	public int getToolIndex() {
+		return toolIndex;
 	}
 	
 	@Override
@@ -122,10 +129,12 @@ public class SelectionDialog extends TitleAreaDialog {
 			type = t;
 		}
 		
+		@Override
 		public void widgetSelected(SelectionEvent e) {
 			int selection = combo.getSelectionIndex();
 			System.out.println("Index " + selection + " selected");
 			if (type == Type.PROJECT) {
+				prjIndex = selection;
 				if (selection == 0) {
 					System.out.println("Create a project selected");
 					platCombo.removeAll();
@@ -139,6 +148,7 @@ public class SelectionDialog extends TitleAreaDialog {
 			}
 		}
 		
+		@Override
 		public void widgetDefaultSelected(SelectionEvent e) {
 			int selection = combo.getSelectionIndex();
 			System.out.println("Index " + selection + " selected");

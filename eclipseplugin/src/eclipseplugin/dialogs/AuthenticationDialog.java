@@ -40,7 +40,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
 		
-		this.setTitle("Swamp Authentication");
+		this.setTitle("SWAMP Authentication");
 		this.setMessage(AUTHENTICATION_PROMPT);
 		
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));

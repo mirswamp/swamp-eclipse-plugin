@@ -7,17 +7,32 @@
 
 package eclipseplugin.actions;
 
+
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
+import eclipseplugin.PackageInfo;
 import eclipseplugin.dialogs.AuthenticationDialog;
+import eclipseplugin.dialogs.ConfigDialog;
 import eclipseplugin.dialogs.SelectionDialog;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
+import java.util.Date;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -42,6 +57,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
+		PackageInfo pkg;
 		// Add authentication dialog here
 		AuthenticationDialog d = new AuthenticationDialog(window.getShell());
 		d.create();
@@ -56,15 +72,71 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 			if (s.open() != Window.OK) {
 				// TODO Handle error
 			}
-			System.out.println("Made it to the promised land!");
-		
+			else {
+				// TODO Get the project or create a new project here
+				//Project project = ParseCommandLine.getProjectFromIndex(s.getProjectIndex());
+				ConfigDialog c = new ConfigDialog(window.getShell());
+				c.setHandlerFactory(h);
+				c.create();
+				System.out.println("Made it to config dialog");
+				if (c.open() != Window.OK) {
+					// TODO Handle error
+				}
+				else {
+					Date date = new Date();
+					String timestamp = date.toString();
+					String pkgName = c.getPkgName();
+					String path = c.getPkgPath();
+					// output name should be some combination of pkg name, version, timestamp, extension (.zip)
+					pkg = new PackageInfo(path,timestamp + "-" + pkgName + ".zip"); // pass in path and output zip file name
+					pkg.setPkgShortName(pkgName);
+					pkg.setVersion(c.getPkgVersion());
+					pkg.setBuildSys(c.getBuildSys());
+					pkg.setBuildTarget(c.getBuildTarget());
+					// short name comes from config dialog
+					// version comes from config dialog
+					// archive stuff comes from pkg info
+					// package-dir should be extracted from path
+					// package build sys comes from config dialog
+					// package build target comes from config dialog
+					/* writer.println("package-short-name=");
+					writer.println("package-version=");
+					writer.println("package-archive=");
+					writer.println("package-archive-md5=");
+					writer.println("package-archive-sha512=");
+					writer.println("package-dir=");
+					writer.println("package-language=Java");
+					writer.println("build-sys=");
+					writer.println("build-target=");
+					*/
+					//pkg.writePkgConfFile();
+				}
+			}
+			// This will likely end up in its own class
+			IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		// Here's where the business logic goes
 		}
+		
+		// Trying to do automated menu selection
+		Menu menu = window.getShell().getMenu();
+		if (menu == null) {
+			System.out.println("Empty menu");
+		}
+		else {
+			MenuItem[] menuItems = menu.getItems();
+			for (MenuItem m : menuItems) {
+				System.out.println(m);
+			}
+		}
+		
+		
 		/*MessageDialog.openInformation(
 			window.getShell(),
 			"Success",
 			"Here's the information about your submission");*/
 	}
+	
+
 
 	/**
 	 * Selection in the workbench has been changed. We 
