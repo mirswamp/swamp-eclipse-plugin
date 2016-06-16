@@ -2,6 +2,7 @@ package eclipseplugin.dialogs;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
@@ -62,12 +63,19 @@ public class ConfigDialog extends TitleAreaDialog {
 	
 	private void setProjectCombo(Combo c) {
 		IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		System.out.println("Workspace: " + ResourcesPlugin.getWorkspace());
+		System.out.println("Root: " + ResourcesPlugin.getWorkspace().getRoot());
 		ArrayList<String> list = new ArrayList<String>();
 		for (IProject prj : projects) {
 			System.out.println(prj.getName());
 			list.add(prj.getName());
-			IPath path = prj.getWorkingLocation(prj.getName());
-			System.out.println(path);
+			try {
+				prj.open(null);
+			} catch (CoreException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			System.out.println("Project path2: " + prj.getLocation());
 		}
 		if (list != null) {
 			String[] ary = new String[list.size()];
@@ -148,6 +156,19 @@ public class ConfigDialog extends TitleAreaDialog {
 		handler = h;
 	}
 	
+	private boolean isValid() {
+		// TODO add actual checks here for the text and combo fields
+		return true;
+	}
+	
+	@Override
+	protected void okPressed() {
+		// Here we do some checks to make sure that everything has actually been populated
+		if (isValid()) {
+			super.okPressed();
+		}
+	}
+	
 	private class ComboSelectionListener implements SelectionListener {
 		Combo combo;
 		Type type;
@@ -173,8 +194,12 @@ public class ConfigDialog extends TitleAreaDialog {
 				// populate filepath text
 				IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 				project = projects[selection];
-				pkgPath = project.getWorkingLocation(project.getName()).toString();
-				prjFilePathText.setText(pkgPath.toString());
+				pkgName = project.getName();
+				IPath p = project.getLocation();
+				if (p == null)
+					return;
+				pkgPath = p.toString();//project.getWorkingLocation(pkgName).toString();
+				prjFilePathText.setText(pkgPath);
 				prjFilePathText.setEnabled(false);
 			}
 		}
@@ -185,5 +210,4 @@ public class ConfigDialog extends TitleAreaDialog {
 			System.out.println("Index " + selection + " selected");
 		}
 	}
-	
 }

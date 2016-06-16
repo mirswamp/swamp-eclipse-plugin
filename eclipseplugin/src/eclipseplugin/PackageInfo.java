@@ -17,13 +17,14 @@ import java.security.NoSuchAlgorithmException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.eclipse.core.runtime.IPath;
+
 public class PackageInfo {
 
 	private String shortName;
 	private String version;
 	// Zip File
 	private String zipPath;
-	private String pkgPath;
 	private String md5hash;
 	private String sha512hash;
 	private String pkgDir;
@@ -32,7 +33,8 @@ public class PackageInfo {
 	
 	public PackageInfo(String dirPath, String outputName) {
 		
-		zipPackage(dirPath, outputName);
+		pkgDir = dirPath;
+		zipPath = zipPackage(dirPath, outputName);
 		
 		MessageDigest md5 = null;
 		MessageDigest sha512 = null;
@@ -43,7 +45,8 @@ public class PackageInfo {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		Path path = Paths.get(outputName);
+		System.out.println("Path to get: " + zipPath);
+		Path path = Paths.get(zipPath);
 		byte[] zipBytes;
 		try {
 			zipBytes = Files.readAllBytes(path);
@@ -78,28 +81,43 @@ public class PackageInfo {
 	}
 	
 	/* Adapted from example code provided at http://www.oracle.com/technetwork/articles/java/compress-1565076.html */
-	private void zipPackage(String dirPath, String outputName) {
+	private String zipPackage(String dirPath, String outputName) {
+		String finalPath = "";
+		System.out.println("Writing a zip file of " + dirPath + " to file " + outputName);
 		// this needs to zip the directory specified by Path dir and return the path to the zipped file
 		try {
-			FileOutputStream fileOS = new FileOutputStream(outputName);
+			IPath path = new org.eclipse.core.runtime.Path(dirPath);
+			IPath parentPath = path.removeLastSegments(1);
+			//System.out.println("String dirPath: " + dirPath);
+			//System.out.println("Parent path: " + parentPath);
+			//System.out.println("Child path: " + path);
+			finalPath = parentPath.toString() + "/" + outputName;
+			FileOutputStream fileOS = new FileOutputStream(finalPath);
 			ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(fileOS));
 			addEntries(dirPath, out);
+			out.close();
 		}
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+		return finalPath;
 	}
 	
 	private void addEntries(String pathname, ZipOutputStream out) {
 		File file = new File(pathname);
+		String filename;
 		String files[] = file.list();
+		//System.out.println("List of files in " + pathname);
 		for (int i = 0; i < files.length; i++) {
-			File f = new File(files[i]);
+			filename = pathname + "/" + files[i];
+			System.out.println("Filename: " + filename);
+			File f = new File(pathname + "/" + files[i]);
+			System.out.println(f);
 			if (f.isDirectory()) {
-				addEntries(files[i], out);
+				addEntries(filename, out);
 			}
 			else {
-				addFileToZip(files[i], out);
+				addFileToZip(filename, out);
 			}
 		}
 	}
@@ -108,12 +126,14 @@ public class PackageInfo {
 		int BUF_SIZE = 2048;
 		byte data[] = new byte[BUF_SIZE];
 		try {
+			System.out.println("Reading input from: " + pathname);
 			FileInputStream fi = new FileInputStream(pathname);
 			BufferedInputStream in = new BufferedInputStream(fi, 2048);
 			ZipEntry entry = new ZipEntry(pathname);
 			out.putNextEntry(entry);
 			int cnt;
 			while ((cnt = in.read(data, 0, BUF_SIZE)) != -1) {
+				System.out.println(cnt + " bytes read");
 				out.write(data, 0, cnt);
 			}
 			in.close();
@@ -141,7 +161,7 @@ public class PackageInfo {
 		writer.println("package-archive=" + zipPath);
 		writer.println("package-archive-md5=" + md5hash);
 		writer.println("package-archive-sha512=" + sha512hash);
-		writer.println("package-dir=" + pkgPath);
+		writer.println("package-dir=" + pkgDir);
 		writer.println("package-language=" + "Java");
 		writer.println("build-sys=" + buildSys);
 		writer.println("build-target=" + buildTarget);

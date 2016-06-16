@@ -25,14 +25,8 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
 import java.util.Date;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IPath;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -87,12 +81,19 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					String timestamp = date.toString();
 					String pkgName = c.getPkgName();
 					String path = c.getPkgPath();
+					String filename = timestamp + "-" + pkgName + ".zip";
+					String filenameNoSpaces = filename.replace(" ", "-");
+					System.out.println("Package Name: " + pkgName);
+					System.out.println("Path: " + path);
+					System.out.println("Filename: " + filenameNoSpaces);
 					// output name should be some combination of pkg name, version, timestamp, extension (.zip)
-					pkg = new PackageInfo(path,timestamp + "-" + pkgName + ".zip"); // pass in path and output zip file name
+					
+					pkg = new PackageInfo(path, filenameNoSpaces); // pass in path and output zip file name
 					pkg.setPkgShortName(pkgName);
 					pkg.setVersion(c.getPkgVersion());
 					pkg.setBuildSys(c.getBuildSys());
 					pkg.setBuildTarget(c.getBuildTarget());
+					
 					// short name comes from config dialog
 					// version comes from config dialog
 					// archive stuff comes from pkg info

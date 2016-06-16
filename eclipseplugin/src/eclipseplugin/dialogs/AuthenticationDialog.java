@@ -91,12 +91,6 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		username = usernameText.getText();
 		password = passwordText.getText();
 		
-		// REMOVE THIS
-		if (username.equals("test")) {
-			super.okPressed();
-			return;
-		}
-		
 		if ((username.length() == 0) || (password.length() == 0)) {
 			setInvalidMsgAndClearPrompts();
 			return;
