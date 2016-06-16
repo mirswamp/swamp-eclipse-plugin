@@ -90,25 +90,8 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					// TODO Handle error
 				}
 				else {
-					Date date = new Date();
-					String timestamp = date.toString();
-					String pkgName = c.getPkgName();
-					String path = c.getPkgPath();
-					String filename = timestamp + "-" + pkgName + ".zip";
-					String filenameNoSpaces = filename.replace(" ", "-");
-					System.out.println("Package Name: " + pkgName);
-					System.out.println("Path: " + path);
-					System.out.println("Filename: " + filenameNoSpaces);
-					// output name should be some combination of pkg name, version, timestamp, extension (.zip)
 					
-					PackageInfo pkg = new PackageInfo(path, filenameNoSpaces); // pass in path and output zip file name
-					pkg.setPkgShortName(pkgName);
-					pkg.setVersion(c.getPkgVersion());
-					pkg.setBuildSys(c.getBuildSys());
-					pkg.setBuildTarget(c.getBuildTarget());
-					
-					pkg.writePkgConfFile();
-					
+					// Generating Buildfile
 					IProject proj = c.getProject();
 					BuildFileCreator.setOptions("build.xml", "jUnit", true, true);
 					IJavaProject project = JavaCore.create(proj);
@@ -138,6 +121,26 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+					
+					// Zipping and generating package.conf
+					Date date = new Date();
+					String timestamp = date.toString();
+					String pkgName = c.getPkgName();
+					String path = c.getPkgPath();
+					String filename = timestamp + "-" + pkgName + ".zip";
+					String filenameNoSpaces = filename.replace(" ", "-");
+					System.out.println("Package Name: " + pkgName);
+					System.out.println("Path: " + path);
+					System.out.println("Filename: " + filenameNoSpaces);
+					// output name should be some combination of pkg name, version, timestamp, extension (.zip)
+					
+					PackageInfo pkg = new PackageInfo(path, filenameNoSpaces); // pass in path and output zip file name
+					pkg.setPkgShortName(pkgName);
+					pkg.setVersion(c.getPkgVersion());
+					pkg.setBuildSys(c.getBuildSys());
+					pkg.setBuildTarget(c.getBuildTarget());
+					
+					pkg.writePkgConfFile();
 				}
 			}
 			
