@@ -88,13 +88,15 @@ public class PackageInfo {
 		try {
 			IPath path = new org.eclipse.core.runtime.Path(dirPath);
 			IPath parentPath = path.removeLastSegments(1);
+			String lastSegment = path.lastSegment();
+			System.out.println("Last segment: " + lastSegment);
 			//System.out.println("String dirPath: " + dirPath);
 			//System.out.println("Parent path: " + parentPath);
 			//System.out.println("Child path: " + path);
 			finalPath = parentPath.toString() + "/" + outputName;
 			FileOutputStream fileOS = new FileOutputStream(finalPath);
 			ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(fileOS));
-			addEntries(dirPath, out);
+			addEntries(dirPath, lastSegment, out);
 			out.close();
 		}
 		catch (Exception e) {
@@ -103,33 +105,35 @@ public class PackageInfo {
 		return finalPath;
 	}
 	
-	private void addEntries(String pathname, ZipOutputStream out) {
+	private void addEntries(String pathname, String basePath, ZipOutputStream out) {
 		File file = new File(pathname);
 		String filename;
 		String files[] = file.list();
-		//System.out.println("List of files in " + pathname);
+		System.out.println("Adding entries from: " + basePath);
 		for (int i = 0; i < files.length; i++) {
 			filename = pathname + "/" + files[i];
 			System.out.println("Filename: " + filename);
 			File f = new File(pathname + "/" + files[i]);
 			System.out.println(f);
 			if (f.isDirectory()) {
-				addEntries(filename, out);
+				addEntries(filename, basePath + "/" + files[i],out);
+				//addEntries(filename, out);
 			}
 			else {
-				addFileToZip(filename, out);
+				addFileToZip(filename, basePath + "/" + files[i],out);
+				//addFileToZip(filename, out);
 			}
 		}
 	}
 	
-	private void addFileToZip(String pathname, ZipOutputStream out) {
+	private void addFileToZip(String pathname, String relPath, ZipOutputStream out) {
 		int BUF_SIZE = 2048;
 		byte data[] = new byte[BUF_SIZE];
 		try {
 			System.out.println("Reading input from: " + pathname);
 			FileInputStream fi = new FileInputStream(pathname);
 			BufferedInputStream in = new BufferedInputStream(fi, 2048);
-			ZipEntry entry = new ZipEntry(pathname);
+			ZipEntry entry = new ZipEntry(relPath);
 			out.putNextEntry(entry);
 			int cnt;
 			while ((cnt = in.read(data, 0, BUF_SIZE)) != -1) {
