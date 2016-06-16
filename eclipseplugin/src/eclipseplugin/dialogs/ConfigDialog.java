@@ -17,12 +17,10 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
 import java.util.List;
 import java.util.ArrayList;
 public class ConfigDialog extends TitleAreaDialog {
 
-	private HandlerFactory handler;
 	private Text buildText;
 	private Text prjFilePathText;
 	private Text prjVersionText;
@@ -152,10 +150,6 @@ public class ConfigDialog extends TitleAreaDialog {
 		buildText.setLayoutData(elementGridData);
 		
 		return area;
-	}
-	
-	public void setHandlerFactory(HandlerFactory h) {
-		handler = h;
 	}
 	
 	private boolean isValid() {

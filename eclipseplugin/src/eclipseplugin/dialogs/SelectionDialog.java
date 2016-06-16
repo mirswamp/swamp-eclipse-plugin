@@ -19,8 +19,13 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import java.util.ArrayList;
-import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
-import edu.wisc.cs.swamp.ParseCommandLine;
+import java.util.List;
+
+import edu.uiuc.ncsa.swamp.api.Project;
+import edu.uiuc.ncsa.swamp.api.Tool;
+//import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
+import edu.wisc.cs.swamp.SwampApiWrapper;
+import edu.uiuc.ncsa.swamp.api.Platform;
 
 public class SelectionDialog extends TitleAreaDialog {
 	
@@ -33,7 +38,7 @@ public class SelectionDialog extends TitleAreaDialog {
 	private int prjIndex;
 	private int pltIndex;
 	private int toolIndex;
-	private HandlerFactory handler;
+	private SwampApiWrapper api;
 
 	private enum Type {
 		PROJECT, PLATFORM, TOOL
@@ -46,23 +51,37 @@ public class SelectionDialog extends TitleAreaDialog {
 		//toolList = new ArrayList<String>();
 	}
 	
-	public void setHandlerFactory(HandlerFactory h) {
-		handler = h;
+	public void setSwampApiWrapper(SwampApiWrapper w) {
+		api = w;
 	}
-	
-	private void setComboElements(Combo c, Type t) {
-		ArrayList<String> list;
-		if (t == Type.PROJECT) {
-			list = ParseCommandLine.getProjectList(handler);
-			list.add(0,"Create new project");
+	private void setComboElements(Combo c, Type type) {
+		ArrayList<String> stringList = new ArrayList<String>();
+		if (type == Type.PROJECT) {
+			List<? extends Project> projects;
+			//list = ParseCommandLine.getProjectList(handler);
+			projects = api.getAllProjects();
+			for (Project p : projects) {
+				stringList.add(p.getFullName());
+			}
+			stringList.add(0,"Create new project");
 		}
-		else if (t == Type.PLATFORM) {
-			list = ParseCommandLine.getPlatformList(handler);
+		else if (type == Type.PLATFORM) {
+			List<? extends Platform> platforms;
+			//list = ParseCommandLine.getPlatformList(handler);
+			platforms = api.getAllPlatforms();
+			for (Platform p : platforms) {
+				stringList.add(p.getName());
+			}
 		}
 		else {
-			list = ParseCommandLine.getToolList(handler);
+			List<? extends Tool> tools;
+			//list = ParseCommandLine.getToolList(handler);
+			tools = api.getAllTools();
+			for (Tool t : tools) {
+				stringList.add(t.getName());
+			}
 		}
-		setComboList(c, list);
+		setComboList(c, stringList);
 	}
 	
 	private void setComboList(Combo c, ArrayList<String> list) {

@@ -19,22 +19,25 @@ import org.eclipse.swt.widgets.*;
 //import src.main.java.edu.wisc.cs.swamp.ParseCommandLine;
 //import src.main.java.edu.wisc.cs.swamp.*;
 import edu.wisc.cs.swamp.*;
-import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
+//import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
 import edu.uiuc.ncsa.swamp.session.*;
+
 
 public class AuthenticationDialog extends TitleAreaDialog {
 	private Text usernameText;
 	private Text passwordText;
-	private String username;
-	private String password;
-	private ArrayList<Session> sessions;
 	private static final String AUTHENTICATION_PROMPT = "Please enter your authentication information for the SWAMP.";
 	private static final String INVALID_MESSAGE = "Invalid username or password.";
+	private SwampApiWrapper api;
+	private String id;
 	
 	public AuthenticationDialog(Shell parentShell) {
 		super(parentShell);
 	}
-		
+	
+	public void setSwampApiWrapper(SwampApiWrapper w) {
+		api = w;
+	}
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
@@ -82,14 +85,10 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		passwordText.setText("");
 	}
 	
-	public HandlerFactory getHandlerFactory() {
-		return new HandlerFactory(sessions.get(0), sessions.get(1));
-	}
-	
 	@Override
 	protected void okPressed() {
-		username = usernameText.getText();
-		password = passwordText.getText();
+		String username = usernameText.getText();
+		String password = passwordText.getText();
 		
 		if ((username.length() == 0) || (password.length() == 0)) {
 			setInvalidMsgAndClearPrompts();
@@ -97,24 +96,11 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		}
 		System.out.println("Username: " + username + "\tPassword: " + password);
 		// do the validation with the API using the things in the text fields
-		try {
-		sessions = ParseCommandLine.getSessions(username, password);
-		}
-		catch (HTTPException h) {
-			System.err.println("Error: " + h.getMessage());
-			sessions = null;
-		}
-		finally {
-			
-		}
-		System.out.println("Is sessions null? " + sessions == null);
-		if (sessions == null) {
-			System.out.println("Sessions is null");
+		
+		id = api.login(username, password);
+		if (id == null) {
 			setInvalidMsgAndClearPrompts();
 			return;
-		}
-		else {
-			System.out.println("Number of sessions: " + sessions.size());
 		}
 		super.okPressed();
 	}

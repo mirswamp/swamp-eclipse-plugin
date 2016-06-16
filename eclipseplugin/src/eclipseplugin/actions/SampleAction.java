@@ -23,6 +23,8 @@ import eclipseplugin.dialogs.SelectionDialog;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
+import edu.wisc.cs.swamp.SwampApiWrapper;
+
 import java.util.Date;
 
 import org.eclipse.core.resources.IProject;
@@ -52,16 +54,26 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 	 */
 	public void run(IAction action) {
 		PackageInfo pkg;
+		SwampApiWrapper api;
+		try {
+			api = new SwampApiWrapper(SwampApiWrapper.HostType.DEVELOPMENT);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return;
+		}
 		// Add authentication dialog here
 		AuthenticationDialog d = new AuthenticationDialog(window.getShell());
 		d.create();
+		d.setSwampApiWrapper(api);
 		if (d.open() != Window.OK) {
 			// TODO Handle error
 		}
 		else {
-			HandlerFactory h = d.getHandlerFactory();
+			//HandlerFactory h = d.getHandlerFactory();
 			SelectionDialog s = new SelectionDialog(window.getShell());
-			s.setHandlerFactory(h);
+			//s.setHandlerFactory(h);
+			s.setSwampApiWrapper(api);
 			s.create();
 			if (s.open() != Window.OK) {
 				// TODO Handle error
@@ -70,7 +82,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				// TODO Get the project or create a new project here
 				//Project project = ParseCommandLine.getProjectFromIndex(s.getProjectIndex());
 				ConfigDialog c = new ConfigDialog(window.getShell());
-				c.setHandlerFactory(h);
+				//c.setHandlerFactory(h);
 				c.create();
 				System.out.println("Made it to config dialog");
 				if (c.open() != Window.OK) {
