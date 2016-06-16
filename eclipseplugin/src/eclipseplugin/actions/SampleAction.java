@@ -110,7 +110,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					writer.println("build-sys=");
 					writer.println("build-target=");
 					*/
-					//pkg.writePkgConfFile();
+					pkg.writePkgConfFile();
 				}
 			}
 			// This will likely end up in its own class

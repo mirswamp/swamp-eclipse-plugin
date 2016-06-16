@@ -25,6 +25,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	private HandlerFactory handler;
 	private Text buildText;
 	private Text prjFilePathText;
+	private Text prjVersionText;
 	private IProject project;
 	
 	private String pkgVersion;
@@ -32,6 +33,8 @@ public class ConfigDialog extends TitleAreaDialog {
 	private String buildSys;
 	private String buildTarget;
 	private String pkgPath;
+	private String buildOptions[] = { "Auto-generate build file", "ant", "ant+ivy", "Maven", "No build" };
+
 	
 	public String getPkgPath() {
 		return pkgPath;
@@ -120,7 +123,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		
 		Label prjVersion = new Label(container, SWT.NONE);
 		prjVersion.setText("Project Version: ");
-		Text prjVersionText = new Text(container, SWT.SINGLE | SWT.BORDER);
+		prjVersionText = new Text(container, SWT.SINGLE | SWT.BORDER);
 		prjVersionText.setLayoutData(elementGridData);
 		
 		Label prjFilepath = new Label(container, SWT.NONE);
@@ -139,7 +142,6 @@ public class ConfigDialog extends TitleAreaDialog {
 		Combo buildSysCombo = new Combo(container, SWT.DROP_DOWN);
 		// set its elements
 		buildSysCombo.setLayoutData(elementGridData);
-		String buildOptions[] = { "Auto-generate build file", "ant", "ant+ivy", "Maven", "No build" };
 		buildSysCombo.setItems(buildOptions);
 		buildSysCombo.addSelectionListener(new ComboSelectionListener(buildSysCombo, Type.BUILD));
 		
@@ -165,6 +167,9 @@ public class ConfigDialog extends TitleAreaDialog {
 	protected void okPressed() {
 		// Here we do some checks to make sure that everything has actually been populated
 		if (isValid()) {
+			pkgVersion = prjVersionText.getText();
+			buildTarget = buildText.getText();
+			
 			super.okPressed();
 		}
 	}
@@ -188,6 +193,12 @@ public class ConfigDialog extends TitleAreaDialog {
 				}
 				else {
 					buildText.setEnabled(true);
+				}
+				if (selection > -1) {
+					buildSys = buildOptions[selection];
+				}
+				else {
+					buildSys = null;
 				}
 			}
 			else if (type == Type.PROJECT) {

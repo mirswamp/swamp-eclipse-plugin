@@ -16,6 +16,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.apache.commons.codec.binary.Hex;
 
 import org.eclipse.core.runtime.IPath;
 
@@ -30,6 +31,7 @@ public class PackageInfo {
 	private String pkgDir;
 	private String buildSys;
 	private String buildTarget;
+	private String parentDir;
 	
 	public PackageInfo(String dirPath, String outputName) {
 		
@@ -61,7 +63,7 @@ public class PackageInfo {
 	
 	private String getDigest(byte[] bytes, MessageDigest m) {
 		byte[] retArray = m.digest(bytes);
-		return retArray.toString();
+		return Hex.encodeHexString(retArray);
 	}
 	
 	public void setPkgShortName(String name) {
@@ -88,12 +90,13 @@ public class PackageInfo {
 		try {
 			IPath path = new org.eclipse.core.runtime.Path(dirPath);
 			IPath parentPath = path.removeLastSegments(1);
+			parentDir = parentPath.toString();
 			String lastSegment = path.lastSegment();
 			System.out.println("Last segment: " + lastSegment);
 			//System.out.println("String dirPath: " + dirPath);
 			//System.out.println("Parent path: " + parentPath);
 			//System.out.println("Child path: " + path);
-			finalPath = parentPath.toString() + "/" + outputName;
+			finalPath = parentDir + "/" + outputName;
 			FileOutputStream fileOS = new FileOutputStream(finalPath);
 			ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(fileOS));
 			addEntries(dirPath, lastSegment, out);
@@ -117,11 +120,9 @@ public class PackageInfo {
 			System.out.println(f);
 			if (f.isDirectory()) {
 				addEntries(filename, basePath + "/" + files[i],out);
-				//addEntries(filename, out);
 			}
 			else {
 				addFileToZip(filename, basePath + "/" + files[i],out);
-				//addFileToZip(filename, out);
 			}
 		}
 	}
@@ -148,8 +149,8 @@ public class PackageInfo {
 	}
 	
 	public void writePkgConfFile() {
-		File pkgConf = new File("package.conf");
-		System.out.println(pkgConf.getAbsolutePath());
+		File pkgConf = new File(parentDir + "/package.conf");
+		//System.out.println(pkgConf.getAbsolutePath());
 		PrintWriter writer = null;
 		try {
 			writer = new PrintWriter(pkgConf.getAbsolutePath(), "UTF-8");

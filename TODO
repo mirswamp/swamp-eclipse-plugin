@@ -1,7 +1,6 @@
 TODO:
--Properly populate tools combo box once project is selected
--Test zipping files and get it working properly
--Write pkg-conf properly
+-Improve dialogs
+    -Properly populate tools combo box once project is selected
 -Export Ant build file programmatically
 -Ship all to SWAMP
 -Maintain persistent connection
