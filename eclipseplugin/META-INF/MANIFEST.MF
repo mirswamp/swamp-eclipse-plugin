@@ -33,4 +33,7 @@ Bundle-ClassPath: .,
  lib/commons-lang-2.6.jar,
  lib/ezmorph-1.0.6.jar,
  lib/commons-collections-3.2.2.jar,
- lib/commons-beanutils-1.9.2.jar
+ lib/commons-beanutils-1.9.2.jar,
+ lib/eclipse2ant_1.3.5.jar
+Import-Package: org.eclipse.ant.internal.ui.datatransfer,
+ org.eclipse.jdt.core

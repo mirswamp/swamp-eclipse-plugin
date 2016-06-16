@@ -23,10 +23,23 @@ import eclipseplugin.dialogs.SelectionDialog;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
-import java.util.Date;
 
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.TransformerConfigurationException;
+import javax.xml.transform.TransformerException;
+
+import org.eclipse.ant.internal.ui.datatransfer.BuildFileCreator;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -51,7 +64,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		PackageInfo pkg;
+		
 		// Add authentication dialog here
 		AuthenticationDialog d = new AuthenticationDialog(window.getShell());
 		d.create();
@@ -88,33 +101,46 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					System.out.println("Filename: " + filenameNoSpaces);
 					// output name should be some combination of pkg name, version, timestamp, extension (.zip)
 					
-					pkg = new PackageInfo(path, filenameNoSpaces); // pass in path and output zip file name
+					PackageInfo pkg = new PackageInfo(path, filenameNoSpaces); // pass in path and output zip file name
 					pkg.setPkgShortName(pkgName);
 					pkg.setVersion(c.getPkgVersion());
 					pkg.setBuildSys(c.getBuildSys());
 					pkg.setBuildTarget(c.getBuildTarget());
 					
-					// short name comes from config dialog
-					// version comes from config dialog
-					// archive stuff comes from pkg info
-					// package-dir should be extracted from path
-					// package build sys comes from config dialog
-					// package build target comes from config dialog
-					/* writer.println("package-short-name=");
-					writer.println("package-version=");
-					writer.println("package-archive=");
-					writer.println("package-archive-md5=");
-					writer.println("package-archive-sha512=");
-					writer.println("package-dir=");
-					writer.println("package-language=Java");
-					writer.println("build-sys=");
-					writer.println("build-target=");
-					*/
 					pkg.writePkgConfFile();
+					
+					IProject proj = c.getProject();
+					BuildFileCreator.setOptions("build.xml", "jUnit", true, true);
+					IJavaProject project = JavaCore.create(proj);
+					Set<IJavaProject> projects = new HashSet<IJavaProject>();
+					projects.add(project);
+					try {
+						BuildFileCreator.createBuildFiles(projects, window.getShell(), null);
+					} catch (JavaModelException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (TransformerConfigurationException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ParserConfigurationException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (TransformerException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (CoreException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 			}
-			// This will likely end up in its own class
-			IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+			
 		// Here's where the business logic goes
 		}
 		
