@@ -25,6 +25,8 @@ import eclipseplugin.dialogs.SelectionDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
 import edu.wisc.cs.swamp.SwampApiWrapper;
+
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -64,7 +66,6 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		PackageInfo pkg;
 		SwampApiWrapper api;
 		try {
 			api = new SwampApiWrapper(SwampApiWrapper.HostType.DEVELOPMENT);
