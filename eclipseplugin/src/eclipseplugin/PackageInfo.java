@@ -82,6 +82,10 @@ public class PackageInfo {
 		buildTarget = target;
 	}
 	
+	public String getParentPath() {
+		return parentDir;
+	}
+	
 	/* Adapted from example code provided at http://www.oracle.com/technetwork/articles/java/compress-1565076.html */
 	private String zipPackage(String dirPath, String outputName) {
 		String finalPath = "";

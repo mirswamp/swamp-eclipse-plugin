@@ -7,8 +7,6 @@
 
 package eclipseplugin.dialogs;
 
-import java.util.ArrayList;
-
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.widgets.Shell;
@@ -16,12 +14,9 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
-//import src.main.java.edu.wisc.cs.swamp.ParseCommandLine;
-//import src.main.java.edu.wisc.cs.swamp.*;
-import edu.wisc.cs.swamp.*;
-//import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
-import edu.uiuc.ncsa.swamp.session.*;
 
+import edu.uiuc.ncsa.swamp.session.HTTPException;
+import edu.wisc.cs.swamp.*;
 
 public class AuthenticationDialog extends TitleAreaDialog {
 	private Text usernameText;
@@ -91,8 +86,14 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		}
 		System.out.println("Username: " + username + "\tPassword: " + password);
 		// do the validation with the API using the things in the text fields
-		
-		id = api.login(username, password);
+	
+		try {
+			id = api.login(username, password);
+		}
+		catch (HTTPException h) {
+			setInvalidMsgAndClearPrompts();
+			return;
+		}
 		if (id == null) {
 			setInvalidMsgAndClearPrompts();
 			return;

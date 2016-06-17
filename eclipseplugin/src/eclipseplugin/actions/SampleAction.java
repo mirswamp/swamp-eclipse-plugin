@@ -113,36 +113,37 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					// TODO Handle error
 				}
 				else {
-					
-					// Generating Buildfile
-					IProject proj = c.getProject();
-					BuildFileCreator.setOptions("build.xml", "jUnit", true, true);
-					IJavaProject project = JavaCore.create(proj);
-					Set<IJavaProject> projects = new HashSet<IJavaProject>();
-					projects.add(project);
-					try {
-						BuildFileCreator.createBuildFiles(projects, window.getShell(), null);
-					} catch (JavaModelException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (TransformerConfigurationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (ParserConfigurationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (TransformerException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (CoreException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					if (c.needsGeneratedBuildFile()) {
+						// Generating Buildfile
+						IProject proj = c.getProject();
+						BuildFileCreator.setOptions("build.xml", "jUnit", true, true);
+						IJavaProject project = JavaCore.create(proj);
+						Set<IJavaProject> projects = new HashSet<IJavaProject>();
+						projects.add(project);
+						try {
+							BuildFileCreator.createBuildFiles(projects, window.getShell(), null);
+						} catch (JavaModelException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (TransformerConfigurationException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (ParserConfigurationException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (TransformerException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (CoreException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 					}
 					
 					// Zipping and generating package.conf
@@ -164,6 +165,20 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					pkg.setBuildTarget(c.getBuildTarget());
 					
 					pkg.writePkgConfFile();
+
+					String parentDir = pkg.getParentPath();
+					// Upload package
+					System.out.println("Uploading package");
+					System.out.println("Package-conf directory: " + parentDir + "/package.conf");
+					System.out.println("Archive directory: " + parentDir + "/" + filenameNoSpaces);
+					String pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filenameNoSpaces, prjUUID); 
+					
+					// Submit assessment
+					System.out.println("Package UUID: " + pkgUUID);
+					System.out.println("Tool UUID: " + toolUUID);
+					System.out.println("Project UUID: " + prjUUID);
+					System.out.println("Platform UUID: " + pltUUID);
+					api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
 				}
 			}
 

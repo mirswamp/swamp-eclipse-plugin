@@ -13,12 +13,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-
-import java.util.List;
 import java.util.ArrayList;
+
 public class ConfigDialog extends TitleAreaDialog {
 
 	private Text buildText;
@@ -26,6 +24,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	private Text prjVersionText;
 	private IProject project;
 	
+	private boolean needsBuildFile;
 	private String pkgVersion;
 	private String pkgName;
 	private String buildSys;
@@ -129,6 +128,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		return area;
 	}
 	
+	public boolean needsGeneratedBuildFile() {
+		return needsBuildFile;
+	}
+	
 	private boolean isValid() {
 		// TODO add actual checks here for the text and combo fields
 		return true;
@@ -166,7 +169,13 @@ public class ConfigDialog extends TitleAreaDialog {
 					buildText.setEnabled(true);
 				}
 				if (selection > -1) {
-					buildSys = buildOptions[selection];
+					if (selection == 0) {
+						needsBuildFile = true;
+						buildSys = "Ant";
+					}
+					else {
+						buildSys = buildOptions[selection];
+					}
 				}
 				else {
 					buildSys = null;
