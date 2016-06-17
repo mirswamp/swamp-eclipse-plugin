@@ -1,6 +1,8 @@
 TODO:
--Improve dialogs
-    -Properly populate tools combo box once project is selected
--Export Ant build file programmatically
--Ship all to SWAMP
+-Properly ship package to SWAMP
+    -Right now package is always empty
+-Better configure automatic export
+-Test automatic export
+-Test assessment submission in general
 -Maintain persistent connection
+-Add handling for when assessment results come in (?)

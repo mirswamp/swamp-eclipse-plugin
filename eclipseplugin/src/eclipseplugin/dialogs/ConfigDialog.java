@@ -30,8 +30,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	private String buildSys;
 	private String buildTarget;
 	private String pkgPath;
-	private String buildOptions[] = { "Auto-generate build file", "ant", "ant+ivy", "Maven", "No build" };
-
+	private String buildOptions[] = { "Auto-generate build file", "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", "no-build", "other" };
 	
 	public String getPkgPath() {
 		return pkgPath;

@@ -164,17 +164,13 @@ public class SelectionDialog extends TitleAreaDialog {
 				prjIndex = selection;
 				if (selection == 0) {
 					System.out.println("Create a project selected");
-					platCombo.removeAll();
-					toolCombo.removeAll();
 				}
-				else {
-					String[] comboOptions;
-					comboOptions = getComboElements(Type.PLATFORM);
-					platCombo.setItems(comboOptions);
-					comboOptions = getComboElements(Type.TOOL);
-					toolCombo.setItems(comboOptions);
-				}
-				// logic for creating a project
+			}
+			else if (type == Type.PLATFORM) {
+				pltIndex = selection;
+			}
+			else {
+				toolIndex = selection;
 			}
 		}
 		
