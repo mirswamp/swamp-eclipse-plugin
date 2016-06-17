@@ -35,6 +35,9 @@ public class SelectionDialog extends TitleAreaDialog {
 	private Combo projCombo;
 	private Combo platCombo;
 	private Combo toolCombo;
+	private List<? extends Project> projects;
+	private List<? extends Tool> tools;
+	private List<? extends Platform> platforms;
 	private int prjIndex;
 	private int pltIndex;
 	private int toolIndex;
@@ -54,10 +57,10 @@ public class SelectionDialog extends TitleAreaDialog {
 	public void setSwampApiWrapper(SwampApiWrapper w) {
 		api = w;
 	}
-	private void setComboElements(Combo c, Type type) {
+	private String[] getComboElements(Type type) {
 		ArrayList<String> stringList = new ArrayList<String>();
 		if (type == Type.PROJECT) {
-			List<? extends Project> projects;
+			
 			//list = ParseCommandLine.getProjectList(handler);
 			projects = api.getAllProjects();
 			for (Project p : projects) {
@@ -66,7 +69,6 @@ public class SelectionDialog extends TitleAreaDialog {
 			stringList.add(0,"Create new project");
 		}
 		else if (type == Type.PLATFORM) {
-			List<? extends Platform> platforms;
 			//list = ParseCommandLine.getPlatformList(handler);
 			platforms = api.getAllPlatforms();
 			for (Platform p : platforms) {
@@ -74,34 +76,43 @@ public class SelectionDialog extends TitleAreaDialog {
 			}
 		}
 		else {
-			List<? extends Tool> tools;
 			//list = ParseCommandLine.getToolList(handler);
 			tools = api.getAllTools();
 			for (Tool t : tools) {
 				stringList.add(t.getName());
 			}
 		}
-		setComboList(c, stringList);
+		return getComboList(stringList);
 	}
 	
-	private void setComboList(Combo c, ArrayList<String> list) {
+	private String[] getComboList(ArrayList<String> list) {
+		String[] ary = null;
 		if (list != null) {
-			String[] ary = new String[list.size()];
+			ary = new String[list.size()];
 			list.toArray(ary);
-			c.setItems(ary);
 		}
+		return ary;
 	}
 	
-	public int getProjectIndex() {
-		return prjIndex;
+	public String getProjectUUID() {
+		if (prjIndex-1 < 0) { // -1 because we've added Create new project as first element
+			return null;
+		}
+		return projects.get(prjIndex-1).getUUIDString();
 	}
 	
-	public int getPlatformIndex() {
-		return pltIndex;
+	public String getPlatformUUID() {
+		if (pltIndex < 0) {
+			return null;
+		}
+		return platforms.get(pltIndex).getUUIDString();
 	}
 	
-	public int getToolIndex() {
-		return toolIndex;
+	public String getToolUUID() {
+		if (toolIndex < 0) {
+			return null;
+		}
+		return tools.get(toolIndex).getUUIDString();
 	}
 	
 	@Override
@@ -130,13 +141,10 @@ public class SelectionDialog extends TitleAreaDialog {
 	}
 	
 	private Combo addCombo(Composite container, String labelText, Type type, GridData lblGridData, GridData comboGridData) {
-		Label label = new Label(container, SWT.NONE);
-		label.setText(labelText);
-		label.setLayoutData(lblGridData);
-		Combo c = new Combo(container, SWT.DROP_DOWN);
-		setComboElements(c, type);
+		DialogUtil.initializeLabelWidget(labelText, SWT.NONE, container, lblGridData);
+		String[] comboOptions = getComboElements(type);
+		Combo c = DialogUtil.initializeComboWidget(container, comboGridData, comboOptions);
 		c.addSelectionListener(new ComboSelectionListener(c, type));
-		c.setLayoutData(comboGridData);
 		return c;
 	}
 	
@@ -160,8 +168,11 @@ public class SelectionDialog extends TitleAreaDialog {
 					toolCombo.removeAll();
 				}
 				else {
-					setComboElements(platCombo, Type.PLATFORM);
-					setComboElements(toolCombo, Type.TOOL);
+					String[] comboOptions;
+					comboOptions = getComboElements(Type.PLATFORM);
+					platCombo.setItems(comboOptions);
+					comboOptions = getComboElements(Type.TOOL);
+					toolCombo.setItems(comboOptions);
 				}
 				// logic for creating a project
 			}

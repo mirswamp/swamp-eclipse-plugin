@@ -62,11 +62,12 @@ public class ConfigDialog extends TitleAreaDialog {
 		super(parentShell);
 	}
 	
-	private void setProjectCombo(Combo c) {
+	private String[] getProjectOptions() {
 		IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		System.out.println("Workspace: " + ResourcesPlugin.getWorkspace());
 		System.out.println("Root: " + ResourcesPlugin.getWorkspace().getRoot());
 		ArrayList<String> list = new ArrayList<String>();
+		String[] ary = null;
 		for (IProject prj : projects) {
 			System.out.println(prj.getName());
 			list.add(prj.getName());
@@ -79,10 +80,10 @@ public class ConfigDialog extends TitleAreaDialog {
 			System.out.println("Project path2: " + prj.getLocation());
 		}
 		if (list != null) {
-			String[] ary = new String[list.size()];
+			ary = new String[list.size()];
 			list.toArray(ary);
-			c.setItems(ary);
 		}
+		return ary;
 	}
 	
 	@Override
@@ -102,52 +103,24 @@ public class ConfigDialog extends TitleAreaDialog {
 		GridData elementGridData = new GridData();
 		elementGridData.horizontalAlignment = GridData.FILL;
 		elementGridData.grabExcessHorizontalSpace = true;
-		
-		
-		Label prjName = new Label(container, SWT.NONE);
-		prjName.setText("Project Name: ");
-		prjName.setLayoutData(lblGridData);
-		
-		/*
-		Text prjText = new Text(container, SWT.SINGLE | SWT.BORDER);
-		prjText.setLayoutData(elementGridData);
-		*/
-		
-		Combo project = new Combo(container, SWT.DROP_DOWN);
-		setProjectCombo(project);
-		project.setLayoutData(elementGridData);
+				
+		DialogUtil.initializeLabelWidget("Project Name: ", SWT.NONE, container, lblGridData);
+		String prjOptions[] = getProjectOptions();
+		Combo project = DialogUtil.initializeComboWidget(container, elementGridData, prjOptions);
 		project.addSelectionListener(new ComboSelectionListener(project, Type.PROJECT));
 		
-		
-		Label prjVersion = new Label(container, SWT.NONE);
-		prjVersion.setText("Project Version: ");
-		prjVersionText = new Text(container, SWT.SINGLE | SWT.BORDER);
-		prjVersionText.setLayoutData(elementGridData);
-		
-		Label prjFilepath = new Label(container, SWT.NONE);
-		prjFilepath.setText("Project Filepath: ");
-		prjFilepath.setLayoutData(lblGridData);
-		
-		// This should probably be a label
-		prjFilePathText = new Text(container, SWT.SINGLE | SWT.BORDER);
-		prjFilePathText.setLayoutData(elementGridData);
-		/*Text prjFilepathText = new Text(container, SWT.SINGLE | SWT.BORDER);
-		prjFilepathText.setLayoutData(elementGridData);
-		*/
-		Label buildSystem = new Label(container, SWT.NONE);
-		buildSystem.setText("Build System: ");
-		buildSystem.setLayoutData(lblGridData);
-		Combo buildSysCombo = new Combo(container, SWT.DROP_DOWN);
-		// set its elements
-		buildSysCombo.setLayoutData(elementGridData);
-		buildSysCombo.setItems(buildOptions);
+		DialogUtil.initializeLabelWidget("Project Version: ", SWT.NONE, container, lblGridData);
+		prjVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);	
+
+		DialogUtil.initializeLabelWidget("Filepath: ", SWT.NONE, container, lblGridData);
+		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);	
+	
+		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container, lblGridData);
+		Combo buildSysCombo = DialogUtil.initializeComboWidget(container, elementGridData, buildOptions);		
 		buildSysCombo.addSelectionListener(new ComboSelectionListener(buildSysCombo, Type.BUILD));
 		
-		Label buildFilepath = new Label(container, SWT.NONE);
-		buildFilepath.setText("Build Filepath: ");
-		buildFilepath.setLayoutData(lblGridData);
-		buildText = new Text(container, SWT.SINGLE | SWT.BORDER);
-		buildText.setLayoutData(elementGridData);
+		DialogUtil.initializeLabelWidget("Build Filepath: ", SWT.NONE, container, lblGridData);
+		buildText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);
 		
 		return area;
 	}
