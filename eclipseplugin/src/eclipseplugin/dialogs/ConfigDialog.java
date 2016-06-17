@@ -54,6 +54,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		return pkgVersion;
 	}
 	
+	public IProject getProject() {
+		return project;
+	}
+	
 	private enum Type {
 		PROJECT, BUILD
 	}

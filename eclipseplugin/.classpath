@@ -24,5 +24,10 @@
 	<classpathentry kind="lib" path="lib/ncsa-swamp-1.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/swamp-api-client-1.0-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/commons-logging-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/eclipse2ant_1.3.5.jar">
+		<accessrules>
+			<accessrule kind="accessible" pattern="**"/>
+		</accessrules>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

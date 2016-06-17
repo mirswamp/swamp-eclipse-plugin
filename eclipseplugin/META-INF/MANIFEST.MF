@@ -32,3 +32,6 @@ Bundle-ClassPath: .,
  lib/ncsa-swamp-1.0-SNAPSHOT.jar,
  lib/swamp-api-client-1.0-SNAPSHOT.jar,
  lib/commons-logging-1.2.jar
+ lib/eclipse2ant_1.3.5.jar
+Import-Package: org.eclipse.ant.internal.ui.datatransfer,
+ org.eclipse.jdt.core
