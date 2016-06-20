@@ -19,7 +19,6 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import eclipseplugin.PackageInfo;
 import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.ConfigDialog;
-import eclipseplugin.dialogs.NewProjectDialog;
 import eclipseplugin.dialogs.SelectionDialog;
 
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -97,14 +96,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				String prjUUID = s.getProjectUUID();
 				String toolUUID = s.getToolUUID();
 				String pltUUID = s.getPlatformUUID();
-				if (prjUUID == null) {
-					// TODO Make NewProjectDialog
-					NewProjectDialog n = new NewProjectDialog(window.getShell());
-					if (n.open() != Window.OK) {
-						// TODO Handle error
-					}
-					prjUUID = n.getProjectUUID();
-				}
+				
 				ConfigDialog c = new ConfigDialog(window.getShell());
 				//c.setHandlerFactory(h);
 				c.create();
