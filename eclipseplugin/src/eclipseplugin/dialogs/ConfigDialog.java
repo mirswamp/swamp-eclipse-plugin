@@ -19,18 +19,24 @@ import java.util.ArrayList;
 
 public class ConfigDialog extends TitleAreaDialog {
 
-	private Text buildText;
+	private Text buildPathText;
+	private Text buildTargetText;
 	private Text prjFilePathText;
 	private Text prjVersionText;
 	private IProject project;
+	private Combo prjCombo;
+	private Combo buildSysCombo;
 	
 	private boolean needsBuildFile;
 	private String pkgVersion;
 	private String pkgName;
 	private String buildSys;
 	private String buildTarget;
+	private String buildPath;
 	private String pkgPath;
 	private String buildOptions[] = { "Auto-generate build file", "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", "no-build", "other" };
+	private static int NO_BUILD = 11;
+	private static int AUTO_GENERATE_BUILD = 0;
 	
 	public String getPkgPath() {
 		return pkgPath;
@@ -42,6 +48,10 @@ public class ConfigDialog extends TitleAreaDialog {
 	
 	public String getBuildSys() {
 		return buildSys;
+	}
+	
+	public String getBuildPath() {
+		return buildPath;
 	}
 	
 	public String getBuildTarget() {
@@ -106,24 +116,27 @@ public class ConfigDialog extends TitleAreaDialog {
 		elementGridData.horizontalAlignment = GridData.FILL;
 		elementGridData.grabExcessHorizontalSpace = true;
 				
-		DialogUtil.initializeLabelWidget("Project Name: ", SWT.NONE, container, lblGridData);
+		DialogUtil.initializeLabelWidget("Package Name: ", SWT.NONE, container, lblGridData);
 		String prjOptions[] = getProjectOptions();
-		Combo project = DialogUtil.initializeComboWidget(container, elementGridData, prjOptions);
-		project.addSelectionListener(new ComboSelectionListener(project, Type.PROJECT));
+		prjCombo = DialogUtil.initializeComboWidget(container, elementGridData, prjOptions);
+		prjCombo.addSelectionListener(new ComboSelectionListener(prjCombo, Type.PROJECT));
 		
-		DialogUtil.initializeLabelWidget("Project Version: ", SWT.NONE, container, lblGridData);
+		DialogUtil.initializeLabelWidget("Package Version: ", SWT.NONE, container, lblGridData);
 		prjVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);	
 
 		DialogUtil.initializeLabelWidget("Filepath: ", SWT.NONE, container, lblGridData);
 		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);	
 	
 		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container, lblGridData);
-		Combo buildSysCombo = DialogUtil.initializeComboWidget(container, elementGridData, buildOptions);		
+		buildSysCombo = DialogUtil.initializeComboWidget(container, elementGridData, buildOptions);		
 		buildSysCombo.addSelectionListener(new ComboSelectionListener(buildSysCombo, Type.BUILD));
 		
 		DialogUtil.initializeLabelWidget("Build Filepath: ", SWT.NONE, container, lblGridData);
-		buildText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);
-		
+		buildPathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);
+
+		DialogUtil.initializeLabelWidget("Build Target: ", SWT.NONE, container, lblGridData);
+		buildTargetText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);
+
 		return area;
 	}
 	
@@ -132,7 +145,26 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	private boolean isValid() {
-		// TODO add actual checks here for the text and combo fields
+		if (prjCombo.getSelectionIndex() < 0) {
+			this.setMessage("Please select a project");
+			return false;
+		}
+		int selection = buildSysCombo.getSelectionIndex();
+		if (selection < 0) {
+			this.setMessage("Please select a build system");
+			return false;
+		}
+		if ((selection == NO_BUILD) || (selection == AUTO_GENERATE_BUILD)) {
+			return true;
+		}
+		if (buildPathText.getText().equals("")) {
+			this.setMessage("Please enter a valid build filepath");
+			return false;
+		}
+		if (buildTargetText.getText().equals("")) {
+			this.setMessage("Please enter a valid build target");
+			return false;
+		}
 		return true;
 	}
 	
@@ -141,8 +173,8 @@ public class ConfigDialog extends TitleAreaDialog {
 		// Here we do some checks to make sure that everything has actually been populated
 		if (isValid()) {
 			pkgVersion = prjVersionText.getText();
-			buildTarget = buildText.getText();
-			
+			buildPath = buildPathText.getText();
+			buildTarget = buildTargetText.getText();
 			super.okPressed();
 		}
 	}
@@ -160,15 +192,18 @@ public class ConfigDialog extends TitleAreaDialog {
 			int selection = combo.getSelectionIndex();
 			System.out.println("Index " + selection + " selected");
 			if (type == Type.BUILD) {
-				if (selection == 0) {
-					buildText.setText("");
-					buildText.setEnabled(false);
+				if (selection == NO_BUILD || selection == AUTO_GENERATE_BUILD) {
+					buildTargetText.setText("");
+					buildTargetText.setEnabled(false);
+					buildPathText.setText("");
+					buildPathText.setEnabled(false);
 				}
 				else {
-					buildText.setEnabled(true);
+					buildTargetText.setEnabled(true);
+					buildPathText.setEnabled(true);
 				}
 				if (selection > -1) {
-					if (selection == 0) {
+					if (selection == AUTO_GENERATE_BUILD) {
 						needsBuildFile = true;
 						buildSys = "Ant";
 					}

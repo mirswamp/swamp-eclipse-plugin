@@ -1,6 +1,4 @@
 TODO:
--Properly ship package to SWAMP
-    -Right now package is always empty
 -Better configure automatic export
 -Test automatic export
 -Test assessment submission in general

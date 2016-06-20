@@ -24,19 +24,21 @@ public class PackageInfo {
 
 	private String shortName;
 	private String version;
-	// Zip File
 	private String zipPath;
 	private String md5hash;
 	private String sha512hash;
-	private String pkgDir;
+	private String pkgName;
 	private String buildSys;
 	private String buildTarget;
 	private String parentDir;
+	private String zipName;
 	
 	public PackageInfo(String dirPath, String outputName) {
 		
-		pkgDir = dirPath;
+		zipName = outputName;
 		zipPath = zipPackage(dirPath, outputName);
+		
+		pkgName = new org.eclipse.core.runtime.Path(dirPath).lastSegment();
 		
 		MessageDigest md5 = null;
 		MessageDigest sha512 = null;
@@ -167,10 +169,10 @@ public class PackageInfo {
 		}
 		writer.println("package-short-name=" + shortName);
 		writer.println("package-version=" + version);
-		writer.println("package-archive=" + zipPath);
+		writer.println("package-archive=" + zipName);
 		writer.println("package-archive-md5=" + md5hash);
 		writer.println("package-archive-sha512=" + sha512hash);
-		writer.println("package-dir=" + pkgDir);
+		writer.println("package-dir=" + pkgName);
 		writer.println("package-language=" + "Java");
 		writer.println("build-sys=" + buildSys);
 		writer.println("build-target=" + buildTarget);

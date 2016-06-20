@@ -145,6 +145,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					String path = c.getPkgPath();
 					String filename = timestamp + "-" + pkgName + ".zip";
 					String filenameNoSpaces = filename.replace(" ", "-");
+					//String filenameNoSpaces = "dummyfilename.zip";
 					System.out.println("Package Name: " + pkgName);
 					System.out.println("Path: " + path);
 					System.out.println("Filename: " + filenameNoSpaces);

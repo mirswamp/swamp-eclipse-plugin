@@ -66,7 +66,6 @@ public class SelectionDialog extends TitleAreaDialog {
 			for (Project p : projects) {
 				stringList.add(p.getFullName());
 			}
-			stringList.add(0,"Create new project");
 		}
 		else if (type == Type.PLATFORM) {
 			//list = ParseCommandLine.getPlatformList(handler);
@@ -76,7 +75,6 @@ public class SelectionDialog extends TitleAreaDialog {
 			}
 		}
 		else {
-			//list = ParseCommandLine.getToolList(handler);
 			tools = api.getAllTools();
 			for (Tool t : tools) {
 				stringList.add(t.getName());
@@ -95,10 +93,10 @@ public class SelectionDialog extends TitleAreaDialog {
 	}
 	
 	public String getProjectUUID() {
-		if (prjIndex-1 < 0) { // -1 because we've added Create new project as first element
+		if (prjIndex < 0) { 
 			return null;
 		}
-		return projects.get(prjIndex-1).getUUIDString();
+		return projects.get(prjIndex).getUUIDString();
 	}
 	
 	public String getPlatformUUID() {
@@ -113,6 +111,23 @@ public class SelectionDialog extends TitleAreaDialog {
 			return null;
 		}
 		return tools.get(toolIndex).getUUIDString();
+	}
+	
+	@Override
+	protected void okPressed() {
+		// Here we do some checks to make sure that everything has actually been populated
+		if (projCombo.getSelectionIndex() < 0) {
+			this.setMessage("Invalid project selected.");
+		}
+		else if (platCombo.getSelectionIndex() < 0) {
+			this.setMessage("Invalid platform selected.");
+		}
+		else if (toolCombo.getSelectionIndex() < 0) {
+			this.setMessage("Invalid tool selected.");
+		}
+		else {
+			super.okPressed();
+		}
 	}
 	
 	@Override
@@ -162,9 +177,6 @@ public class SelectionDialog extends TitleAreaDialog {
 			System.out.println("Index " + selection + " selected");
 			if (type == Type.PROJECT) {
 				prjIndex = selection;
-				if (selection == 0) {
-					System.out.println("Create a project selected");
-				}
 			}
 			else if (type == Type.PLATFORM) {
 				pltIndex = selection;
