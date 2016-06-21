@@ -2,5 +2,4 @@ TODO:
 -Better configure automatic export
 -Test automatic export
 -Test assessment submission in general
--Maintain persistent connection
 -Add handling for when assessment results come in (?)

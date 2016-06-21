@@ -55,6 +55,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 	/**
 	 * The constructor.
 	 */
+	private static String SESSION_STRING = ".SESSION";
 	public SampleAction() {
 	}
 
@@ -74,104 +75,113 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 			return;
 		}
 		
+		if (!api.restoreSession(SESSION_STRING)) {
 		// Add authentication dialog here
-		AuthenticationDialog d = new AuthenticationDialog(window.getShell());
-		d.create();
-		d.setSwampApiWrapper(api);
-		if (d.open() != Window.OK) {
+			AuthenticationDialog d = new AuthenticationDialog(window.getShell());
+			d.create();
+			d.setSwampApiWrapper(api);
+			if (d.open() != Window.OK) {
+				return;
+			}
+			api.saveSession(SESSION_STRING);
+		}
+		//HandlerFactory h = d.getHandlerFactory();
+		SelectionDialog s = new SelectionDialog(window.getShell());
+		//s.setHandlerFactory(h);
+		s.setSwampApiWrapper(api);
+		s.create();
+		if (s.open() != Window.OK) {
 			// TODO Handle error
 		}
 		else {
-			//HandlerFactory h = d.getHandlerFactory();
-			SelectionDialog s = new SelectionDialog(window.getShell());
-			//s.setHandlerFactory(h);
-			s.setSwampApiWrapper(api);
-			s.create();
-			if (s.open() != Window.OK) {
+			// TODO Get the project or create a new project here
+			//Project project = ParseCommandLine.getProjectFromIndex(s.getProjectIndex());
+			String prjUUID = s.getProjectUUID();
+			String toolUUID = s.getToolUUID();
+			String pltUUID = s.getPlatformUUID();
+			
+			ConfigDialog c = new ConfigDialog(window.getShell());
+			//c.setHandlerFactory(h);
+			c.create();
+			System.out.println("Made it to config dialog");
+			if (c.open() != Window.OK) {
 				// TODO Handle error
 			}
 			else {
-				// TODO Get the project or create a new project here
-				//Project project = ParseCommandLine.getProjectFromIndex(s.getProjectIndex());
-				String prjUUID = s.getProjectUUID();
-				String toolUUID = s.getToolUUID();
-				String pltUUID = s.getPlatformUUID();
-				
-				ConfigDialog c = new ConfigDialog(window.getShell());
-				//c.setHandlerFactory(h);
-				c.create();
-				System.out.println("Made it to config dialog");
-				if (c.open() != Window.OK) {
-					// TODO Handle error
-				}
-				else {
-					if (c.needsGeneratedBuildFile()) {
-						// Generating Buildfile
-						IProject proj = c.getProject();
-						BuildFileCreator.setOptions("build.xml", "jUnit", true, true);
-						IJavaProject project = JavaCore.create(proj);
-						Set<IJavaProject> projects = new HashSet<IJavaProject>();
-						projects.add(project);
-						try {
-							BuildFileCreator.createBuildFiles(projects, window.getShell(), null);
-						} catch (JavaModelException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (TransformerConfigurationException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (ParserConfigurationException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (TransformerException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (CoreException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
+				if (c.needsGeneratedBuildFile()) {
+					// Generating Buildfile
+					IProject proj = c.getProject();
+					BuildFileCreator.setOptions("build.xml", "jUnit", true, true);
+					IJavaProject project = JavaCore.create(proj);
+					Set<IJavaProject> projects = new HashSet<IJavaProject>();
+					projects.add(project);
+					try {
+						BuildFileCreator.createBuildFiles(projects, window.getShell(), null);
+					} catch (JavaModelException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (TransformerConfigurationException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (ParserConfigurationException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (TransformerException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (CoreException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
-					
-					// Zipping and generating package.conf
-					Date date = new Date();
-					String timestamp = date.toString();
-					String pkgName = c.getPkgName();
-					String path = c.getPkgPath();
-					String filename = timestamp + "-" + pkgName + ".zip";
-					String filenameNoSpaces = filename.replace(" ", "-");
-					//String filenameNoSpaces = "dummyfilename.zip";
-					System.out.println("Package Name: " + pkgName);
-					System.out.println("Path: " + path);
-					System.out.println("Filename: " + filenameNoSpaces);
-					// output name should be some combination of pkg name, version, timestamp, extension (.zip)
-					
-					PackageInfo pkg = new PackageInfo(path, filenameNoSpaces); // pass in path and output zip file name
-					pkg.setPkgShortName(pkgName);
-					pkg.setVersion(c.getPkgVersion());
-					pkg.setBuildSys(c.getBuildSys());
-					pkg.setBuildTarget(c.getBuildTarget());
-					
-					pkg.writePkgConfFile();
+				}
+				
+				// Zipping and generating package.conf
+				Date date = new Date();
+				String timestamp = date.toString();
+				String pkgName = c.getPkgName();
+				String path = c.getPkgPath();
+				String filename = timestamp + "-" + pkgName + ".zip";
+				String filenameNoSpaces = filename.replace(" ", "-");
+				//String filenameNoSpaces = "dummyfilename.zip";
+				System.out.println("Package Name: " + pkgName);
+				System.out.println("Path: " + path);
+				System.out.println("Filename: " + filenameNoSpaces);
+				// output name should be some combination of pkg name, version, timestamp, extension (.zip)
+				
+				PackageInfo pkg = new PackageInfo(path, filenameNoSpaces); // pass in path and output zip file name
+				pkg.setPkgShortName(pkgName);
+				pkg.setVersion(c.getPkgVersion());
+				pkg.setBuildSys(c.getBuildSys());
+				pkg.setBuildTarget(c.getBuildTarget());
+				
+				pkg.writePkgConfFile();
 
-					String parentDir = pkg.getParentPath();
-					// Upload package
-					System.out.println("Uploading package");
-					System.out.println("Package-conf directory: " + parentDir + "/package.conf");
-					System.out.println("Archive directory: " + parentDir + "/" + filenameNoSpaces);
-					String pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filenameNoSpaces, prjUUID); 
-					
-					// Submit assessment
-					System.out.println("Package UUID: " + pkgUUID);
-					System.out.println("Tool UUID: " + toolUUID);
-					System.out.println("Project UUID: " + prjUUID);
-					System.out.println("Platform UUID: " + pltUUID);
-					api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
+				String parentDir = pkg.getParentPath();
+				// Upload package
+				System.out.println("Uploading package");
+				System.out.println("Package-conf directory: " + parentDir + "/package.conf");
+				System.out.println("Archive directory: " + parentDir + "/" + filenameNoSpaces);
+				String pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filenameNoSpaces, prjUUID); 
+				if (pkgUUID == null) {
+					// TODO handle error here
+					System.err.println("Error in uploading package.");
+				}
+				
+				// Submit assessment
+				System.out.println("Package UUID: " + pkgUUID);
+				System.out.println("Tool UUID: " + toolUUID);
+				System.out.println("Project UUID: " + prjUUID);
+				System.out.println("Platform UUID: " + pltUUID);
+				String assessUUID = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
+				if (assessUUID == null) {
+					// TODO handle error here
+					System.err.println("Error in running assessment.");
 				}
 			}
 
