@@ -32,9 +32,12 @@ public class PackageInfo {
 	private String buildTarget;
 	private String parentDir;
 	private String zipName;
+	private String buildDir;
+	private String buildFile;
 	
 	public PackageInfo(String dirPath, String outputName) {
 		
+		buildDir = ".";
 		zipName = outputName;
 		zipPath = zipPackage(dirPath, outputName);
 		
@@ -82,6 +85,14 @@ public class PackageInfo {
 	
 	public void setBuildTarget(String target) {
 		buildTarget = target;
+	}
+	
+	public void setBuildDir(String dir) {
+		buildDir = dir;
+	}
+	
+	public void setBuildFile(String filename) {
+		buildFile = filename;
 	}
 	
 	public String getParentPath() {
@@ -175,7 +186,11 @@ public class PackageInfo {
 		writer.println("package-dir=" + pkgName);
 		writer.println("package-language=" + "Java");
 		writer.println("build-sys=" + buildSys);
-		writer.println("build-target=" + buildTarget);
+		if (!buildDir.equals("")) {
+			writer.println("build-dir=" + buildDir);
+			writer.println("build-file=" + buildFile);
+			writer.println("build-target=" + buildTarget);
+		}
 		writer.close();
 	}
 }

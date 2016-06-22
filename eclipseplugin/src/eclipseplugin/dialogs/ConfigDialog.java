@@ -19,7 +19,8 @@ import java.util.ArrayList;
 
 public class ConfigDialog extends TitleAreaDialog {
 
-	private Text buildPathText;
+	private Text buildDirText;
+	private Text buildFileText;
 	private Text buildTargetText;
 	private Text prjFilePathText;
 	private Text prjVersionText;
@@ -32,7 +33,8 @@ public class ConfigDialog extends TitleAreaDialog {
 	private String pkgName;
 	private String buildSys;
 	private String buildTarget;
-	private String buildPath;
+	private String buildDir;
+	private String buildFile;
 	private String pkgPath;
 	private String buildOptions[] = { "Auto-generate build file", "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", "no-build", "other" };
 	private static int NO_BUILD = 11;
@@ -50,8 +52,12 @@ public class ConfigDialog extends TitleAreaDialog {
 		return buildSys;
 	}
 	
-	public String getBuildPath() {
-		return buildPath;
+	public String getBuildDir() {
+		return buildDir;
+	}
+	
+	public String getBuildFile() {
+		return buildFile;
 	}
 	
 	public String getBuildTarget() {
@@ -131,8 +137,12 @@ public class ConfigDialog extends TitleAreaDialog {
 		buildSysCombo = DialogUtil.initializeComboWidget(container, elementGridData, buildOptions);		
 		buildSysCombo.addSelectionListener(new ComboSelectionListener(buildSysCombo, Type.BUILD));
 		
-		DialogUtil.initializeLabelWidget("Build Filepath: ", SWT.NONE, container, lblGridData);
-		buildPathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);
+		DialogUtil.initializeLabelWidget("Build Directory: ", SWT.NONE, container, lblGridData);
+		buildDirText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);
+		buildDirText.setText(".");
+
+		DialogUtil.initializeLabelWidget("Build File: ", SWT.NONE, container, lblGridData);
+		buildFileText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);
 
 		DialogUtil.initializeLabelWidget("Build Target: ", SWT.NONE, container, lblGridData);
 		buildTargetText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);
@@ -157,9 +167,12 @@ public class ConfigDialog extends TitleAreaDialog {
 		if ((selection == NO_BUILD) || (selection == AUTO_GENERATE_BUILD)) {
 			return true;
 		}
-		if (buildPathText.getText().equals("")) {
-			this.setMessage("Please enter a valid build filepath");
+		if (buildDirText.getText().equals("")) {
+			this.setMessage("Please enter a valid build directory");
 			return false;
+		}
+		if (buildFileText.getText().equals("")) {
+			this.setMessage("Please enter a valid build file");
 		}
 		if (buildTargetText.getText().equals("")) {
 			this.setMessage("Please enter a valid build target");
@@ -173,8 +186,12 @@ public class ConfigDialog extends TitleAreaDialog {
 		// Here we do some checks to make sure that everything has actually been populated
 		if (isValid()) {
 			pkgVersion = prjVersionText.getText();
-			buildPath = buildPathText.getText();
-			buildTarget = buildTargetText.getText();
+			int selection = buildSysCombo.getSelectionIndex();
+			if ((selection != NO_BUILD) && (selection != AUTO_GENERATE_BUILD)) {
+				buildDir = buildDirText.getText();
+				buildFile = buildFileText.getText();
+				buildTarget = buildTargetText.getText();
+			}
 			super.okPressed();
 		}
 	}
@@ -195,17 +212,22 @@ public class ConfigDialog extends TitleAreaDialog {
 				if (selection == NO_BUILD || selection == AUTO_GENERATE_BUILD) {
 					buildTargetText.setText("");
 					buildTargetText.setEnabled(false);
-					buildPathText.setText("");
-					buildPathText.setEnabled(false);
+					buildDirText.setText("");
+					buildDirText.setEnabled(false);
+					buildFileText.setText("");
+					buildFileText.setEnabled(false);
 				}
 				else {
 					buildTargetText.setEnabled(true);
-					buildPathText.setEnabled(true);
+					buildDirText.setEnabled(true);
+					buildFileText.setEnabled(true);
 				}
 				if (selection > -1) {
 					if (selection == AUTO_GENERATE_BUILD) {
 						needsBuildFile = true;
 						buildSys = "Ant";
+						buildTarget = "build";
+						buildDir = ".";
 					}
 					else {
 						buildSys = buildOptions[selection];

@@ -147,8 +147,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				String pkgName = c.getPkgName();
 				String path = c.getPkgPath();
 				String filename = timestamp + "-" + pkgName + ".zip";
-				String filenameNoSpaces = filename.replace(" ", "-");
-				//String filenameNoSpaces = "dummyfilename.zip";
+				String filenameNoSpaces = filename.replace(" ", "-").replace(":", "").toLowerCase(); // PackageVersionHandler mangles the name for some reason if there are colons or uppercase letters
 				System.out.println("Package Name: " + pkgName);
 				System.out.println("Path: " + path);
 				System.out.println("Filename: " + filenameNoSpaces);
@@ -158,6 +157,8 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				pkg.setPkgShortName(pkgName);
 				pkg.setVersion(c.getPkgVersion());
 				pkg.setBuildSys(c.getBuildSys());
+				pkg.setBuildDir(c.getBuildDir());
+				pkg.setBuildFile(c.getBuildFile());
 				pkg.setBuildTarget(c.getBuildTarget());
 				
 				pkg.writePkgConfFile();
@@ -167,6 +168,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				System.out.println("Uploading package");
 				System.out.println("Package-conf directory: " + parentDir + "/package.conf");
 				System.out.println("Archive directory: " + parentDir + "/" + filenameNoSpaces);
+				System.out.println("Project UUID: " + prjUUID);
 				String pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filenameNoSpaces, prjUUID); 
 				if (pkgUUID == null) {
 					// TODO handle error here
