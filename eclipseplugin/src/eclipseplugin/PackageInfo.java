@@ -67,6 +67,21 @@ public class PackageInfo {
 		sha512hash = getDigest(zipBytes, sha512);
 	}
 	
+	public void deleteFile(String filepath) {
+		File f = new File(filepath);
+		if (f != null) {
+			if (!f.delete()) {
+				System.out.println("Unable to delete " + filepath);
+			}
+		}
+	}
+	
+	public void deleteFiles() {
+		// Delete the archive and package.conf
+		deleteFile(zipPath);
+		deleteFile(parentDir + "/package.conf");
+	}
+	
 	private String getDigest(byte[] bytes, MessageDigest m) {
 		byte[] retArray = m.digest(bytes);
 		return Hex.encodeHexString(retArray);

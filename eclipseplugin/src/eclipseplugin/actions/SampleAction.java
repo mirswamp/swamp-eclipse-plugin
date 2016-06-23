@@ -25,6 +25,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import java.util.HashSet;
@@ -108,7 +109,8 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				// TODO Handle error
 			}
 			else {
-				if (c.needsGeneratedBuildFile()) {
+				boolean autoGenBuild = c.needsGeneratedBuildFile();
+				if (autoGenBuild) {
 					// Generating Buildfile
 					IProject proj = c.getProject();
 					BuildFileCreator.setOptions("build.xml", "jUnit", true, false);
@@ -175,6 +177,20 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					// TODO handle error here
 					System.err.println("Error in uploading package.");
 				}
+				
+				// Deletion code - uncomment for release
+				/*
+				pkg.deleteFiles();
+				if (autoGenBuild) {
+					System.out.println("Auto-generated build file at " + path + "/build.xml");
+					File f = new File(path + "/build.xml");
+					if (f != null) {
+						if (!f.delete()) {
+							System.err.println("Unable to delete auto-generated build file");
+						}
+					}
+				}
+				*/
 				
 				// Submit assessment
 				System.out.println("Package UUID: " + pkgUUID);
