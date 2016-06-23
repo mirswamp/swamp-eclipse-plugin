@@ -16,10 +16,9 @@ public class DialogUtil {
 		return text;
 	}
 	
-	public static Label initializeLabelWidget(String text, int style, Composite container, GridData griddata) {
+	public static Label initializeLabelWidget(String text, int style, Composite container) {
 		Label label = new Label(container, style);
 		label.setText(text);
-		label.setLayoutData(griddata);
 		return label;
 	}
 	

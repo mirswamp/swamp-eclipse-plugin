@@ -49,26 +49,21 @@ public class SelectionDialog extends TitleAreaDialog {
 	
 	public SelectionDialog(Shell parentShell) {
 		super(parentShell);
-		//projectList = new ArrayList<String>();
-		//platformList = new ArrayList<String>();
-		//toolList = new ArrayList<String>();
 	}
 	
 	public void setSwampApiWrapper(SwampApiWrapper w) {
 		api = w;
 	}
+
 	private String[] getComboElements(Type type) {
 		ArrayList<String> stringList = new ArrayList<String>();
 		if (type == Type.PROJECT) {
-			
-			//list = ParseCommandLine.getProjectList(handler);
 			projects = api.getAllProjects();
 			for (Project p : projects) {
 				stringList.add(p.getFullName());
 			}
 		}
 		else if (type == Type.PLATFORM) {
-			//list = ParseCommandLine.getPlatformList(handler);
 			platforms = api.getAllPlatforms();
 			for (Platform p : platforms) {
 				stringList.add(p.getName());
@@ -147,16 +142,16 @@ public class SelectionDialog extends TitleAreaDialog {
 		gd.grabExcessHorizontalSpace = true;
 		gd.horizontalAlignment = GridData.FILL;
 		
-		projCombo = addCombo(container, "Project: ", Type.PROJECT, lblGridData, gd);
-		platCombo = addCombo(container, "Platform: ", Type.PLATFORM, lblGridData, gd);
-		toolCombo = addCombo(container, "Tool: ", Type.TOOL, lblGridData, gd);
+		projCombo = addCombo(container, "Project: ", Type.PROJECT, gd);
+		platCombo = addCombo(container, "Platform: ", Type.PLATFORM, gd);
+		toolCombo = addCombo(container, "Tool: ", Type.TOOL, gd);
 
 		return area;
 		
 	}
 	
-	private Combo addCombo(Composite container, String labelText, Type type, GridData lblGridData, GridData comboGridData) {
-		DialogUtil.initializeLabelWidget(labelText, SWT.NONE, container, lblGridData);
+	private Combo addCombo(Composite container, String labelText, Type type, GridData comboGridData) {
+		DialogUtil.initializeLabelWidget(labelText, SWT.NONE, container);
 		String[] comboOptions = getComboElements(type);
 		Combo c = DialogUtil.initializeComboWidget(container, comboGridData, comboOptions);
 		c.addSelectionListener(new ComboSelectionListener(c, type));

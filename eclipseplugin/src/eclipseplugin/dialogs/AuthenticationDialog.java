@@ -45,18 +45,14 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 
-		GridData gd = new GridData();
-		gd.horizontalAlignment = GridData.FILL;
-		gd.grabExcessHorizontalSpace = false;
-		
 		GridData griddata = new GridData();
 		griddata.grabExcessHorizontalSpace = true;
 		griddata.horizontalAlignment = GridData.FILL;
 
-		DialogUtil.initializeLabelWidget("Username: ", SWT.NONE, container, gd);
+		DialogUtil.initializeLabelWidget("Username: ", SWT.NONE, container);
 		usernameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, griddata);
 		
-		DialogUtil.initializeLabelWidget("Password: ", SWT.NONE, container, gd);
+		DialogUtil.initializeLabelWidget("Password: ", SWT.NONE, container);
 		passwordText = DialogUtil.initializeTextWidget(SWT.PASSWORD | SWT.BORDER, container, griddata);
 				
 		return area;
