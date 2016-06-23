@@ -111,8 +111,9 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				if (c.needsGeneratedBuildFile()) {
 					// Generating Buildfile
 					IProject proj = c.getProject();
-					BuildFileCreator.setOptions("build.xml", "jUnit", true, true);
+					BuildFileCreator.setOptions("build.xml", "jUnit", true, false);
 					IJavaProject project = JavaCore.create(proj);
+					System.out.println("Output directory: " + project.readOutputLocation());
 					Set<IJavaProject> projects = new HashSet<IJavaProject>();
 					projects.add(project);
 					try {

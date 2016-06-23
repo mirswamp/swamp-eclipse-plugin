@@ -225,9 +225,10 @@ public class ConfigDialog extends TitleAreaDialog {
 				if (selection > -1) {
 					if (selection == AUTO_GENERATE_BUILD) {
 						needsBuildFile = true;
-						buildSys = "Ant";
+						buildSys = "ant";
 						buildTarget = "build";
 						buildDir = ".";
+						buildFile = "build.xml";
 					}
 					else {
 						buildSys = buildOptions[selection];
