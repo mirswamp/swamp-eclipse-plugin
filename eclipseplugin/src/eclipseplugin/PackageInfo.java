@@ -37,9 +37,10 @@ public class PackageInfo {
 	
 	public PackageInfo(String dirPath, String outputName) {
 		
+		String targetDir = "bin";
 		buildDir = ".";
 		zipName = outputName;
-		zipPath = zipPackage(dirPath, outputName);
+		zipPath = zipPackage(dirPath, outputName, targetDir);
 		
 		pkgName = new org.eclipse.core.runtime.Path(dirPath).lastSegment();
 		
@@ -100,7 +101,7 @@ public class PackageInfo {
 	}
 	
 	/* Adapted from example code provided at http://www.oracle.com/technetwork/articles/java/compress-1565076.html */
-	private String zipPackage(String dirPath, String outputName) {
+	private String zipPackage(String dirPath, String outputName, String target) {
 		String finalPath = "";
 		System.out.println("Writing a zip file of " + dirPath + " to file " + outputName);
 		// this needs to zip the directory specified by Path dir and return the path to the zipped file
@@ -116,7 +117,7 @@ public class PackageInfo {
 			finalPath = parentDir + "/" + outputName;
 			FileOutputStream fileOS = new FileOutputStream(finalPath);
 			ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(fileOS));
-			addEntries(dirPath, lastSegment, out);
+			addEntries(dirPath, lastSegment, out, target, false);
 			out.close();
 		}
 		catch (Exception e) {
@@ -125,7 +126,7 @@ public class PackageInfo {
 		return finalPath;
 	}
 	
-	private void addEntries(String pathname, String basePath, ZipOutputStream out) {
+	private void addEntries(String pathname, String basePath, ZipOutputStream out, String target, boolean excludeClass) {
 		File file = new File(pathname);
 		String filename;
 		String files[] = file.list();
@@ -133,13 +134,19 @@ public class PackageInfo {
 		for (int i = 0; i < files.length; i++) {
 			filename = pathname + "/" + files[i];
 			System.out.println("Filename: " + filename);
-			File f = new File(pathname + "/" + files[i]);
+			File f = new File(filename);
 			System.out.println(f);
 			if (f.isDirectory()) {
-				addEntries(filename, basePath + "/" + files[i],out);
+				boolean excl = (files[i].equals(target)) ? true : excludeClass;
+				addEntries(filename, basePath + "/" + files[i], out, target, excl);
 			}
 			else {
-				addFileToZip(filename, basePath + "/" + files[i],out);
+				if ((!excludeClass) || (!files[i].matches(".+\\.class"))) {
+					addFileToZip(filename, basePath + "/" + files[i], out);
+				}
+				else {
+					System.out.println("Excluded Class: " + files[i]);
+				}
 			}
 		}
 	}
