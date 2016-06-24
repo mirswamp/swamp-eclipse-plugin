@@ -17,9 +17,9 @@
          </menu>
          <action
                label="Launch SWAMP"
-               icon="icons/sample.gif"
+               icon="icons/swamp-logo-height-20.png"
                class="eclipseplugin.actions.SampleAction"
-               tooltip="Say Hello to the SWAMP"
+               tooltip="Upload and assess projects in the SWAMP"
                menubarPath="SWAMPMenu/sampleGroup"
                toolbarPath="sampleGroup"
                id="eclipseplugin.actions.SampleAction">
