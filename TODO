@@ -2,3 +2,7 @@ TODO:
 -Test automatic export
 -Test assessment submission in general
 -Add handling for when assessment results come in (?)
+
+-Keep information about previous assessments
+-Allow multiple tools and platforms to be chosen at once
+-Add feedback for the user (Bolo suggested feedback in the Monitor view)
