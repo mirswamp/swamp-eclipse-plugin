@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
+import eclipseplugin.ClasspathHandler;
 import eclipseplugin.PackageInfo;
 import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.ConfigDialog;
@@ -110,14 +111,16 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 			}
 			else {
 				boolean autoGenBuild = c.needsGeneratedBuildFile();
+				ClasspathHandler classpathHandler = null;
 				if (autoGenBuild) {
 					// Generating Buildfile
 					IProject proj = c.getProject();
-					BuildFileCreator.setOptions("build.xml", "jUnit", true, false);
-					IJavaProject project = JavaCore.create(proj);
-					System.out.println("Output directory: " + project.readOutputLocation());
+					IJavaProject javaProj = JavaCore.create(proj);
+					classpathHandler = new ClasspathHandler(javaProj, c.getPkgPath());
 					Set<IJavaProject> projects = new HashSet<IJavaProject>();
-					projects.add(project);
+					// projects = classpathHandler.getProjects();
+					projects.add(javaProj);
+					BuildFileCreator.setOptions("build.xml", "jUnit", true, false);
 					try {
 						BuildFileCreator.createBuildFiles(projects, window.getShell(), null);
 					} catch (JavaModelException e) {
@@ -142,6 +145,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
+					classpathHandler.revertClasspath();
 				}
 				
 				// Zipping and generating package.conf
@@ -201,6 +205,10 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				if (assessUUID == null) {
 					// TODO handle error here
 					System.err.println("Error in running assessment.");
+				}
+				
+				if (classpathHandler != null) {
+					classpathHandler.revertClasspath();
 				}
 			}
 

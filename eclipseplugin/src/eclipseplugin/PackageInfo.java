@@ -146,6 +146,14 @@ public class PackageInfo {
 		String filename;
 		String files[] = file.list();
 		System.out.println("Adding entries from: " + basePath);
+		
+		System.out.println("\n\n\n\n========================");
+		for (String string : files) {
+			System.out.println(string);
+		}
+		System.out.println("========================\n\n\n\n");
+		
+		
 		for (int i = 0; i < files.length; i++) {
 			filename = pathname + "/" + files[i];
 			System.out.println("Filename: " + filename);
@@ -177,7 +185,7 @@ public class PackageInfo {
 			out.putNextEntry(entry);
 			int cnt;
 			while ((cnt = in.read(data, 0, BUF_SIZE)) != -1) {
-				System.out.println(cnt + " bytes read");
+				//System.out.println(cnt + " bytes read");
 				out.write(data, 0, cnt);
 			}
 			in.close();

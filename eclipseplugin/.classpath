@@ -29,5 +29,6 @@
 		</accessrules>
 	</classpathentry>
 	<classpathentry kind="lib" path="lib/commons-logging-1.1.3.jar"/>
+	<classpathentry kind="lib" path="lib/commons-io-2.5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
