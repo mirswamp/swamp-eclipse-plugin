@@ -145,7 +145,6 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					classpathHandler.revertClasspath();
 				}
 				
 				// Zipping and generating package.conf

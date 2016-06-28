@@ -1,4 +1,2 @@
 High:
--.eclipsepluginbin directory and its contents aren't always written to disk
-    -Solution: use java.nio.Files methods such as write with OpenOption.SYNC
 -classpath somehow always has a bunch of extra elements that aren't actually on the classpath or in the directory that they say they are in. This messes up the end user's classpath
