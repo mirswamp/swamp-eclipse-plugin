@@ -8,39 +8,29 @@
 package eclipseplugin.dialogs;
 
 import org.eclipse.jface.dialogs.TitleAreaDialog;
-//import org.eclipse.jface.viewers.ILabelProvider;
-//import org.eclipse.jface.viewers.ILabelProviderListener;
 import org.eclipse.swt.widgets.*;
-//import org.eclipse.ui.dialogs.FilteredList;
-//import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.events.SelectionListener;
 import java.util.ArrayList;
 import java.util.List;
 
 import edu.uiuc.ncsa.swamp.api.Project;
 import edu.uiuc.ncsa.swamp.api.Tool;
-//import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
 import edu.wisc.cs.swamp.SwampApiWrapper;
-import edu.uiuc.ncsa.swamp.api.Platform;
+import edu.uiuc.ncsa.swamp.api.Platform; 
 
 public class SelectionDialog extends TitleAreaDialog {
 	
-	//private ArrayList<String> projectList;
-	//private ArrayList<String> platformList;
-	//private ArrayList<String> toolList;
 	private Combo projCombo;
-	private Combo platCombo;
-	private Combo toolCombo;
+	private org.eclipse.swt.widgets.List platformList;
+	private org.eclipse.swt.widgets.List toolList;
 	private List<? extends Project> projects;
 	private List<? extends Tool> tools;
 	private List<? extends Platform> platforms;
 	private int prjIndex;
-	private int pltIndex;
-	private int toolIndex;
+	private int platformIndices[];
+	private int toolIndices[];
 	private SwampApiWrapper api;
 
 	private enum Type {
@@ -55,7 +45,7 @@ public class SelectionDialog extends TitleAreaDialog {
 		api = w;
 	}
 
-	private String[] getComboElements(Type type) {
+	private String[] getSelectionElements(Type type) {
 		ArrayList<String> stringList = new ArrayList<String>();
 		if (type == Type.PROJECT) {
 			projects = api.getAllProjects();
@@ -94,35 +84,45 @@ public class SelectionDialog extends TitleAreaDialog {
 		return projects.get(prjIndex).getUUIDString();
 	}
 	
-	public String getPlatformUUID() {
-		if (pltIndex < 0) {
-			return null;
+	public List<String> getPlatformUUIDs() {
+		List<String> uuidList = new ArrayList<String>();
+		for (int i : platformIndices) {
+			uuidList.add(platforms.get(i).getUUIDString());
 		}
-		return platforms.get(pltIndex).getUUIDString();
+		return uuidList;
 	}
 	
-	public String getToolUUID() {
-		if (toolIndex < 0) {
-			return null;
+	public List<String> getToolUUIDs() {
+		List<String> uuidList = new ArrayList<String>();
+		for (int i : toolIndices) {
+			uuidList.add(tools.get(i).getUUIDString());
 		}
-		return tools.get(toolIndex).getUUIDString();
+		return uuidList;
 	}
 	
 	@Override
 	protected void okPressed() {
 		// Here we do some checks to make sure that everything has actually been populated
-		if (projCombo.getSelectionIndex() < 0) {
+		// We also set things appropriately
+		int comboSelection = projCombo.getSelectionIndex();
+		if (comboSelection < 0) {
 			this.setMessage("Invalid project selected.");
+			return;
 		}
-		else if (platCombo.getSelectionIndex() < 0) {
-			this.setMessage("Invalid platform selected.");
+		int platformAry[] = platformList.getSelectionIndices();
+		if (platformAry == null || platformAry.length < 1) {
+			this.setMessage("No platform selected.");
+			return;
 		}
-		else if (toolCombo.getSelectionIndex() < 0) {
-			this.setMessage("Invalid tool selected.");
+		int toolAry[] = toolList.getSelectionIndices();
+		if (toolAry == null || toolAry.length < 1) {
+			this.setMessage("No tool selected.");
+			return;
 		}
-		else {
-			super.okPressed();
-		}
+		prjIndex = comboSelection;
+		platformIndices = platformAry;
+		toolIndices = toolAry;
+		super.okPressed();
 	}
 	
 	@Override
@@ -132,60 +132,37 @@ public class SelectionDialog extends TitleAreaDialog {
 		
 		this.setTitle("Project Configuration");
 		
-		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		GridLayout layout = new GridLayout(2, false);
-		container.setLayout(layout);
-		GridData lblGridData = new GridData();
-		lblGridData.horizontalAlignment = SWT.FILL;
-		lblGridData.grabExcessHorizontalSpace = true;
-		GridData gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = GridData.FILL;
+		/* Note: From GridData JavaDoc, "Do not reuse GridData objects. Every control in a composite
+		 * that is managed by a GridLayout must have a unique GridData object.
+		 */
 		
-		projCombo = addCombo(container, "Project: ", Type.PROJECT, gd);
-		platCombo = addCombo(container, "Platform: ", Type.PLATFORM, gd);
-		toolCombo = addCombo(container, "Tool: ", Type.TOOL, gd);
+		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+		container.setLayout(new GridLayout(2, false));
+
+		GridData comboGridData = new GridData();
+		comboGridData.grabExcessHorizontalSpace = true;
+		comboGridData.horizontalAlignment = GridData.FILL;
+
+		projCombo = addCombo(container, "Project: ", Type.PROJECT, new GridData(SWT.FILL, SWT.NONE, true, false));
+		platformList = addList(container, "Platform: ", Type.PLATFORM, new GridData(GridData.FILL_BOTH));
+		toolList = addList(container, "Tool: ", Type.TOOL, new GridData(GridData.FILL_BOTH));
 
 		return area;
 		
 	}
 	
+	private org.eclipse.swt.widgets.List addList(Composite container, String labelText, Type type, GridData listGriddata) {
+		DialogUtil.initializeLabelWidget(labelText, SWT.NONE, container);
+		String[] listOptions = getSelectionElements(type);
+		org.eclipse.swt.widgets.List list = DialogUtil.initializeListWidget(container, listGriddata, listOptions);
+		return list;
+	}
+	
 	private Combo addCombo(Composite container, String labelText, Type type, GridData comboGridData) {
 		DialogUtil.initializeLabelWidget(labelText, SWT.NONE, container);
-		String[] comboOptions = getComboElements(type);
+		String[] comboOptions = getSelectionElements(type);
 		Combo c = DialogUtil.initializeComboWidget(container, comboGridData, comboOptions);
-		c.addSelectionListener(new ComboSelectionListener(c, type));
 		return c;
 	}
 	
-	private class ComboSelectionListener implements SelectionListener {
-		Combo combo;
-		Type type;
-		public ComboSelectionListener(Combo c, Type t) {
-			combo = c;
-			type = t;
-		}
-		
-		@Override
-		public void widgetSelected(SelectionEvent e) {
-			int selection = combo.getSelectionIndex();
-			System.out.println("Index " + selection + " selected");
-			if (type == Type.PROJECT) {
-				prjIndex = selection;
-			}
-			else if (type == Type.PLATFORM) {
-				pltIndex = selection;
-			}
-			else {
-				toolIndex = selection;
-			}
-		}
-		
-		@Override
-		public void widgetDefaultSelected(SelectionEvent e) {
-			int selection = combo.getSelectionIndex();
-			System.out.println("Index " + selection + " selected");
-		}
-	}
-
 }

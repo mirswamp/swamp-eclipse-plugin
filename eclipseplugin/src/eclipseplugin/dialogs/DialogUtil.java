@@ -5,6 +5,7 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.List;
 import org.eclipse.swt.widgets.Text;
 
 public class DialogUtil {
@@ -19,6 +20,7 @@ public class DialogUtil {
 	public static Label initializeLabelWidget(String text, int style, Composite container) {
 		Label label = new Label(container, style);
 		label.setText(text);
+		label.setLayoutData(new GridData(SWT.FILL, SWT.NONE, false, false));
 		return label;
 	}
 	
@@ -27,5 +29,12 @@ public class DialogUtil {
 		combo.setLayoutData(griddata);
 		combo.setItems(options);
 		return combo;
+	}
+	
+	public static List initializeListWidget(Composite container, GridData griddata, String[] options) {
+		List list = new List(container, SWT.MULTI + SWT.V_SCROLL);
+		list.setLayoutData(griddata);
+		list.setItems(options);
+		return list;
 	}
 }

@@ -99,8 +99,6 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 			// TODO Get the project or create a new project here
 			//Project project = ParseCommandLine.getProjectFromIndex(s.getProjectIndex());
 			String prjUUID = s.getProjectUUID();
-			String toolUUID = s.getToolUUID();
-			String pltUUID = s.getPlatformUUID();
 			
 			ConfigDialog c = new ConfigDialog(window.getShell());
 			//c.setHandlerFactory(h);
@@ -195,20 +193,16 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				}
 				*/
 				
-				// Submit assessment
-				System.out.println("Package UUID: " + pkgUUID);
-				System.out.println("Tool UUID: " + toolUUID);
-				System.out.println("Project UUID: " + prjUUID);
-				System.out.println("Platform UUID: " + pltUUID);
-				String assessUUID = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
-				if (assessUUID == null) {
-					// TODO handle error here
-					System.err.println("Error in running assessment.");
-				}
-				
 				if (classpathHandler != null) {
 					classpathHandler.revertClasspath();
 				}
+				
+				for (String platformUUID : s.getPlatformUUIDs()) {
+					for (String toolUUID : s.getToolUUIDs()) {
+						submitAssessment(api, pkgUUID, toolUUID, prjUUID, platformUUID);
+					}
+				}
+				
 			}
 
 		// Here's where the business logic goes
@@ -231,6 +225,19 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 			window.getShell(),
 			"Success",
 			"Here's the information about your submission");*/
+	}
+	
+	private void submitAssessment(SwampApiWrapper api, String pkgUUID, String toolUUID, String prjUUID, String pltUUID) {
+		// Submit assessment
+		System.out.println("Package UUID: " + pkgUUID);
+		System.out.println("Tool UUID: " + toolUUID);
+		System.out.println("Project UUID: " + prjUUID);
+		System.out.println("Platform UUID: " + pltUUID);
+		String assessUUID = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
+		if (assessUUID == null) {
+			// TODO handle error here
+			System.err.println("Error in running assessment.");
+		}
 	}
 	
 

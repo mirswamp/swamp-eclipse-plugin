@@ -114,34 +114,30 @@ public class ConfigDialog extends TitleAreaDialog {
 		GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 		
-		GridData elementGridData = new GridData();
-		elementGridData.horizontalAlignment = GridData.FILL;
-		elementGridData.grabExcessHorizontalSpace = true;
-				
 		DialogUtil.initializeLabelWidget("Package Name: ", SWT.NONE, container);
 		String prjOptions[] = getProjectOptions();
-		prjCombo = DialogUtil.initializeComboWidget(container, elementGridData, prjOptions);
+		prjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), prjOptions);
 		prjCombo.addSelectionListener(new ComboSelectionListener(prjCombo, Type.PROJECT));
 		
 		DialogUtil.initializeLabelWidget("Package Version: ", SWT.NONE, container);
-		prjVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);	
+		prjVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));	
 
 		DialogUtil.initializeLabelWidget("Filepath: ", SWT.NONE, container);
-		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);	
+		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));	
 	
 		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container);
-		buildSysCombo = DialogUtil.initializeComboWidget(container, elementGridData, buildOptions);		
+		buildSysCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), buildOptions);		
 		buildSysCombo.addSelectionListener(new ComboSelectionListener(buildSysCombo, Type.BUILD));
 		
 		DialogUtil.initializeLabelWidget("Build Directory: ", SWT.NONE, container);
-		buildDirText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);
+		buildDirText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		buildDirText.setText(".");
 
 		DialogUtil.initializeLabelWidget("Build File: ", SWT.NONE, container);
-		buildFileText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);
+		buildFileText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 
 		DialogUtil.initializeLabelWidget("Build Target: ", SWT.NONE, container);
-		buildTargetText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, elementGridData);
+		buildTargetText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 
 		return area;
 	}
