@@ -6,3 +6,5 @@ TODO:
 -Keep information about previous assessments
 -Allow multiple tools and platforms to be chosen at once
 -Add feedback for the user (Bolo suggested feedback in the Monitor view)
+
+-Stop copying over Java run-time (rt.jar) - this is very expensive

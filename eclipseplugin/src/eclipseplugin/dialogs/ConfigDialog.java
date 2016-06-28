@@ -95,7 +95,6 @@ public class ConfigDialog extends TitleAreaDialog {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			System.out.println("Project path2: " + prj.getLocation());
 		}
 		if (list != null) {
 			ary = new String[list.size()];

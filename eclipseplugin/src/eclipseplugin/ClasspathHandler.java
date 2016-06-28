@@ -1,15 +1,23 @@
 package eclipseplugin;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.management.openmbean.OpenMBeanOperationInfoSupport;
+
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -37,7 +45,7 @@ public class ClasspathHandler {
 		PROJECT_ROOT = root.getElementName();
 		System.out.println("PROJECT ROOT: " + PROJECT_ROOT);
 		try {
-			oldEntries = project.getResolvedClasspath(true);
+			oldEntries = project.getRawClasspath();
 		} catch (JavaModelException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -45,19 +53,25 @@ public class ClasspathHandler {
 		if (oldEntries == null) {
 			return;
 		}
-		targetDir = new File(path + "/.eclipsepluginbin");
-		
-		try {
-			FileUtils.forceMkdir(targetDir);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		targetDir = new File(path + "/.swampbin");
+		if (targetDir.exists()) {
+			try {
+				FileUtils.deleteDirectory(targetDir);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 		
-		/*if (!targetDir.mkdirs()) {
+		if (!targetDir.mkdirs()) {
+			System.err.println("Here is a huge problem!");
+			System.err.println("We were unable to make the directories");
 			// TODO This is a bad error that'll pretty much stop us in our tracks
 		}
-		*/
+		else {
+			System.out.println("Created directory successfully");
+		}
+		
 		for (IClasspathEntry entry : oldEntries) {
 			System.out.println(entry.getPath());
 			// for each entry check if it's outside of our current directory
@@ -68,6 +82,7 @@ public class ClasspathHandler {
 			// CPE_VARIABLE - we'll need to use JavaCore.getResolvedClasspathEntry(entry) to give us either a CPE_LIBRARY or CPE_PROJECT
 			// CPE_CONTAINER - lol this is a container which can contain a bunch of the other 3
 			// make a directory named eclipse_swamp/lib
+			// TODO accomodate access rules, inclusion patterns, extra attributes, etc. - basically just copy over as much other info as possible from the original entry
 			int kind = entry.getEntryKind();
 			if (kind == IClasspathEntry.CPE_SOURCE) {
 				newEntries.add(entry);
@@ -75,12 +90,40 @@ public class ClasspathHandler {
 			else if (kind == IClasspathEntry.CPE_LIBRARY) {
 				handleLibrary(entry);
 			}
-			else  {//(kind == IClasspathEntry.CPE_PROJECT)
+			else if (kind == IClasspathEntry.CPE_CONTAINER) {
+				try {
+					// TODO Question: Is it safe to not ship system libraries? Talk to Vamshi about this in the future
+					IClasspathContainer container = JavaCore.getClasspathContainer(entry.getPath(), project);
+					for (IClasspathEntry subEntry : container.getClasspathEntries()) {
+						if (subEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
+							handleLibrary(subEntry);
+						}
+						else { // subEntry.getEntryKind() == IClasspathEntry.CPE_PROJECT
+							handleProject(subEntry);
+						}
+					}
+				} catch (JavaModelException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			else {//(kind == IClasspathEntry.CPE_PROJECT)
 				// TODO handle project function
 			}
 		}
+		ClasspathHandler.listEntries("Resolved entries", this.oldEntries);
 		setProjectClasspath(newEntries);
 		
+	}
+	
+	private static void listEntries(String category, IClasspathEntry[] array) {
+		System.out.println("-----------------------------------------------------");
+		System.out.println(category);
+		System.out.println(array.length);
+		for (IClasspathEntry entry : array) {
+			System.out.println(entry);
+		}
+		System.out.println("-----------------------------------------------------");
 	}
 	
 	public boolean isEmpty() {
@@ -122,19 +165,9 @@ public class ClasspathHandler {
 
 	private boolean isInRootDirectory(IClasspathEntry entry) {
 		return (entry.getPath().segment(0) == PROJECT_ROOT);
-		/*
-		Path p = ClasspathHandler.getPathFromIPath(entry.getPath());
-		System.out.println("Old path: " + p);
-		Path dirPath = targetDir.toPath();//.toRealPath(null);
-		System.out.println("Dir path:" + dirPath);
-		return p.toString().contains(dirPath.toString());
-		*/
 	}
 	
 	private static Path getPathFromIPath(IPath p) {
-		System.out.println(p);
-		System.out.println(p.toFile());
-		System.out.println(p.toFile().toPath());
 		return p.toFile().toPath();
 	}
 	
@@ -145,14 +178,12 @@ public class ClasspathHandler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		/*
 		try {
 			project.setRawClasspath(oldEntries, null);
 		} catch (JavaModelException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}*/
-		
+		}
 	}
 	
 	private IClasspathEntry copyIntoDirectory(IClasspathEntry entry) {
@@ -172,14 +203,26 @@ public class ClasspathHandler {
 			System.out.println("Classpath entry points to non-existent file: " + src);
 			return null;
 		}
-		File f = new File(targetDir + "/" + lastSegment);
+		File f = new File(targetDir.getAbsolutePath() + "/" + lastSegment);
 		Path dest = f.toPath();
 		try {
 			System.out.println("Written to destination: " + dest);
-			Files.copy(src, dest);
+			// This copy needs to be forced to disk
+			byte[] bytes;
+			try {
+				bytes = Files.readAllBytes(src);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return null;
+			}
+			OpenOption options[] = {StandardOpenOption.DSYNC , StandardOpenOption.CREATE , StandardOpenOption.WRITE};
+			Files.write(dest, bytes, options);
+			//Files.copy(src, dest);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return null;
 		}
 		IPath newPath = new org.eclipse.core.runtime.Path(dest.toString());
 		return JavaCore.newLibraryEntry(newPath, newPath, null);
