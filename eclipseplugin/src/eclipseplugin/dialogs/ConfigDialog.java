@@ -4,12 +4,14 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -25,12 +27,12 @@ public class ConfigDialog extends TitleAreaDialog {
 	private Text buildTargetText;
 	private Text prjFilePathText;
 	private Text prjVersionText;
-	private IProject project;
 	private Combo prjCombo;
 	private Combo buildSysCombo;
 	
 	/* Instance variables representing state */
 	private boolean needsBuildFile;
+	private IProject project;
 	private int prjIndex;
 	private String pkgVersion;
 	private String pkgName;
@@ -130,6 +132,22 @@ public class ConfigDialog extends TitleAreaDialog {
 		buildTarget = null;
 		buildDir = null;
 		buildFile = null;
+		project = null;
+	}
+	
+	private void resetWidgets() {
+		buildDirText.setText("");
+		buildDirText.setEnabled(true);
+		buildFileText.setText("");
+		buildFileText.setEnabled(true);
+		buildTargetText.setText("");
+		buildTargetText.setEnabled(true);
+		prjFilePathText.setText("");
+		prjFilePathText.setEnabled(true);
+		prjVersionText.setText("");
+		prjVersionText.setEnabled(true);
+		prjCombo.deselectAll();
+		buildSysCombo.deselectAll();
 	}
 
 	public boolean initializeProject(String strPackageName, String strPackagePath) {
@@ -181,6 +199,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
+		
 		Composite container = new Composite(area, SWT.NONE);
 		
 		setTitle("Build Configuration");
@@ -233,8 +252,23 @@ public class ConfigDialog extends TitleAreaDialog {
 				buildTargetText.setText(buildTarget);
 			}
 		}
+		
+		//Button button = DialogUtil.initializeButtonWidget(parent, "Clear All", new GridData(SWT.LEFT, SWT.BOTTOM, false, false));
+		//button.addSelectionListener(new ClearButtonSelectionListener(button));
+		
 
 		return area;
+	}
+	
+	@Override
+	protected void createButtonsForButtonBar(Composite parent) {
+		
+		parent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
+		
+		Button button = createButton(parent, IDialogConstants.NO_ID, "Clear All", false);
+		button.addSelectionListener(new ClearButtonSelectionListener());
+		createButton(parent, IDialogConstants.OK_ID, "OK", true);
+		createButton(parent, IDialogConstants.CANCEL_ID, "Cancel", false);
 	}
 	
 	public void handleBuildSelection(int selection) {
@@ -280,6 +314,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		pkgPath = p.toString();//project.getWorkingLocation(pkgName).toString();
 		prjFilePathText.setText(pkgPath);
 		prjFilePathText.setEnabled(false);
+		prjVersionText.setText(pkgVersion);
 	}
 	
 	public boolean needsGeneratedBuildFile() {
@@ -352,6 +387,23 @@ public class ConfigDialog extends TitleAreaDialog {
 		public void widgetDefaultSelected(SelectionEvent e) {
 			int selection = combo.getSelectionIndex();
 			System.out.println("Index " + selection + " selected");
+		}
+	}
+	
+	private class ClearButtonSelectionListener implements SelectionListener {
+		
+		public ClearButtonSelectionListener() {
+		}
+		
+		@Override
+		public void widgetSelected(SelectionEvent e) {
+			resetState();
+			resetWidgets();
+
+		}
+		
+		@Override
+		public void widgetDefaultSelected(SelectionEvent e) {
 		}
 	}
 }

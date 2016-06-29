@@ -7,11 +7,16 @@
 
 package eclipseplugin.dialogs;
 
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.widgets.*;
+
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -156,6 +161,12 @@ public class SelectionDialog extends TitleAreaDialog {
 		toolIndices = null;
 	}
 	
+	private void resetWidgets() {
+		projCombo.deselectAll();
+		platformList.deselectAll();
+		toolList.deselectAll();
+	}
+	
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
@@ -196,6 +207,17 @@ public class SelectionDialog extends TitleAreaDialog {
 		
 	}
 	
+	@Override
+	protected void createButtonsForButtonBar(Composite parent) {
+		
+		parent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
+		
+		Button button = createButton(parent, IDialogConstants.NO_ID, "Clear All", false);
+		button.addSelectionListener(new ClearButtonSelectionListener());
+		createButton(parent, IDialogConstants.OK_ID, "OK", true);
+		createButton(parent, IDialogConstants.CANCEL_ID, "Cancel", false);
+	}
+	
 	private org.eclipse.swt.widgets.List addList(Composite container, String labelText, Type type, GridData listGriddata) {
 		DialogUtil.initializeLabelWidget(labelText, SWT.NONE, container);
 		String[] listOptions = getSelectionElements(type);
@@ -208,6 +230,23 @@ public class SelectionDialog extends TitleAreaDialog {
 		String[] comboOptions = getSelectionElements(type);
 		Combo c = DialogUtil.initializeComboWidget(container, comboGridData, comboOptions);
 		return c;
+	}
+	
+	private class ClearButtonSelectionListener implements SelectionListener {
+		
+		public ClearButtonSelectionListener() {
+		}
+		
+		@Override
+		public void widgetSelected(SelectionEvent e) {
+			resetState();
+			resetWidgets();
+
+		}
+		
+		@Override
+		public void widgetDefaultSelected(SelectionEvent e) {
+		}
 	}
 	
 }

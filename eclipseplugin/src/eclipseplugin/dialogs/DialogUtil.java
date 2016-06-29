@@ -2,6 +2,7 @@ package eclipseplugin.dialogs;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
@@ -36,5 +37,12 @@ public class DialogUtil {
 		list.setLayoutData(griddata);
 		list.setItems(options);
 		return list;
+	}
+	
+	public static Button initializeButtonWidget(Composite container, String text, GridData griddata) {
+		Button button = new Button(container, SWT.PUSH);
+		button.setText(text);
+		button.setLayoutData(griddata);
+		return button;
 	}
 }
