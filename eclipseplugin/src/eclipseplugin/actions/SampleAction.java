@@ -120,10 +120,14 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					// Generating Buildfile
 					IProject proj = cd.getProject();
 					IJavaProject javaProj = JavaCore.create(proj);
-					classpathHandler = new ClasspathHandler(javaProj, cd.getPkgPath());
-					Set<IJavaProject> projects = new HashSet<IJavaProject>();
+					classpathHandler = new ClasspathHandler(null, javaProj, cd.getPkgPath());
+					if (classpathHandler.hasCycles()) {
+						System.err.println("Huge error. Cyclic dependencies!");
+					}
+					Set<IJavaProject> projects = classpathHandler.getProjectList();
+					//Set<IJavaProject> projects = new HashSet<IJavaProject>();
 					// projects = classpathHandler.getProjects();
-					projects.add(javaProj);
+					//projects.add(javaProj);
 					BuildFileCreator.setOptions("build.xml", "jUnit", true, false);
 					try {
 						BuildFileCreator.createBuildFiles(projects, window.getShell(), null);

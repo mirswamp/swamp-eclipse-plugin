@@ -1,21 +1,20 @@
 package eclipseplugin;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-import javax.management.openmbean.OpenMBeanOperationInfoSupport;
-
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -26,23 +25,25 @@ import org.apache.commons.io.*;
 
 public class ClasspathHandler {
 
-	Set<IPath> paths;
-	Set<File> files;
-	IClasspathEntry oldEntries[]; // old classpath entries
-	List<IClasspathEntry> newEntries;
-	int index;
-	File targetDir;
-	IJavaProject project;
+	private Map<IPath, IClasspathEntry> cache;
+	private IClasspathEntry oldEntries[]; // old classpath entries
+	private List<IClasspathEntry> newEntries;
+	private File targetDir;
+	private IJavaProject project;
+	private List<ClasspathHandler> dependentProjects;
 	private static String PROJECT_ROOT;
+	private ClasspathHandler root;
+	private boolean hasCycles; // TODO throw exception instead of using this
 	
-	public ClasspathHandler(IJavaProject root, String path) {
-		index = 0;
-		project = root;
-		paths = new HashSet<IPath>();
+	public ClasspathHandler(ClasspathHandler root, IJavaProject projectRoot, String path) {
+		project = projectRoot;
 		oldEntries = null;
 		newEntries = new ArrayList<IClasspathEntry>();
+		dependentProjects = null;
+		cache = null;
+		hasCycles = false;
 		
-		PROJECT_ROOT = root.getElementName();
+		PROJECT_ROOT = projectRoot.getElementName();
 		System.out.println("PROJECT ROOT: " + PROJECT_ROOT);
 		try {
 			oldEntries = project.getRawClasspath();
@@ -53,25 +54,23 @@ public class ClasspathHandler {
 		if (oldEntries == null) {
 			return;
 		}
-		targetDir = new File(path + "/.swampbin");
-		if (targetDir.exists()) {
-			try {
-				FileUtils.deleteDirectory(targetDir);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		if (root == null) {
+			if (ClasspathHandler.hasCycle(this.project, new HashSet<IProject>())) {
+				System.err.println("There are cyclic dependencies preventing this project from being built");
+				System.err.println("Please remove all cycles before resubmitting.");
+				// throw some sort of cyclic dependency exception
+				hasCycles = true;
+				return;
 			}
-		}
-		
-		if (!targetDir.mkdirs()) {
-			System.err.println("Here is a huge problem!");
-			System.err.println("We were unable to make the directories");
-			// TODO This is a bad error that'll pretty much stop us in our tracks
+			dependentProjects = new ArrayList<ClasspathHandler>();
+			cache = new HashMap<IPath, IClasspathEntry>();
+			setupTargetDirectory(path);
+			this.root = this;
 		}
 		else {
-			System.out.println("Created directory successfully");
+			this.root = root;
 		}
-		
+
 		for (IClasspathEntry entry : oldEntries) {
 			System.out.println(entry.getPath());
 			// for each entry check if it's outside of our current directory
@@ -107,13 +106,146 @@ public class ClasspathHandler {
 					e.printStackTrace();
 				}
 			}
+			else if (kind == IClasspathEntry.CPE_VARIABLE) {
+				handleVariable(entry);
+			}
 			else {//(kind == IClasspathEntry.CPE_PROJECT)
-				// TODO handle project function
+				handleProject(entry);
 			}
 		}
 		ClasspathHandler.listEntries("Resolved entries", this.oldEntries);
 		setProjectClasspath(newEntries);
 		
+	}
+	
+	public boolean hasCycles() {
+		return this.hasCycles;
+	}
+	
+	public void handleVariable(IClasspathEntry entry) {
+		IClasspathEntry resolvedEntry = JavaCore.getResolvedClasspathEntry(entry);
+		if (resolvedEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
+			handleLibrary(resolvedEntry);
+		}
+		else {
+			handleProject(resolvedEntry);
+		}
+	}
+	
+	public void setupTargetDirectory(String path) {
+		targetDir = new File(path + "/.swampbin");
+		if (targetDir.exists()) {
+			try {
+				FileUtils.deleteDirectory(targetDir);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		if (!targetDir.mkdirs()) {
+			System.err.println("Here is a huge problem!");
+			System.err.println("We were unable to make the directories");
+			// TODO This is a bad error that'll pretty much stop us in our tracks
+		}
+		else {
+			System.out.println("Created directory successfully");
+		}
+	}
+	
+	public static IProject convertEntryToProject(IProject root, IClasspathEntry entry) {
+		// Get the IProject from the IJavaProject
+		IProject[] projArray = null;
+		try {
+			projArray = root.getReferencedProjects();
+		} catch (CoreException e) {
+			// TODO Auto-generated catch block
+			System.err.println("Make sure all of the referenced projects are open");
+			e.printStackTrace();
+		}
+		// Call getReferencedProjects on IProject to get an array of IProjects
+		if (projArray != null) {
+			for (IProject p : projArray) {
+				System.out.println("Entry path: " + entry.getPath());
+				System.out.println("Full path: " + p.getFullPath());
+				System.out.println("Entry absolute path: " + entry.getPath().makeAbsolute());
+				System.out.println("Full absolute path: " + p.getFullPath().makeAbsolute());
+				// Check whether one of those has the same path as this entry
+				if (entry.getPath().makeAbsolute().equals(p.getFullPath().makeAbsolute())) { // check whether entry absolute path and full absolute path will match
+					return p;
+				}
+			}
+		}
+		return null;
+	}
+	
+	public static boolean hasCycle(IJavaProject root, Set<IProject> projectSet) {
+		IClasspathEntry[] entryArray = null;
+		try {
+			entryArray = root.getRawClasspath();
+		} catch (JavaModelException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		for (IClasspathEntry e : entryArray) {
+			int kind = e.getEntryKind();
+			if (kind == IClasspathEntry.CPE_PROJECT) {
+				IProject p = ClasspathHandler.convertEntryToProject(root.getProject(), e);
+				if (p != null) {
+					if (projectSet.contains(p)) {
+						return true;
+					}
+					else {
+						projectSet.add(p);
+					}
+				}
+			}
+			else if (kind == IClasspathEntry.CPE_VARIABLE) {
+				IClasspathEntry resolvedEntry = e.getResolvedEntry();
+				if (resolvedEntry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
+					IProject p = ClasspathHandler.convertEntryToProject(root.getProject(), resolvedEntry);
+					if (p != null) {
+						if (projectSet.contains(p)) {
+							return true;
+						}
+						else {
+							projectSet.add(p);
+						}
+					}
+				}
+			}
+			else if (kind == IClasspathEntry.CPE_CONTAINER) {
+				IClasspathContainer container = null;
+				try {
+					container = JavaCore.getClasspathContainer(e.getPath(), root);
+				} catch (JavaModelException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				for (IClasspathEntry subEntry : container.getClasspathEntries()) {
+					if (subEntry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
+						IProject p = ClasspathHandler.convertEntryToProject(root.getProject(), subEntry);
+						if (p != null) {
+							if (projectSet.contains(p)) {
+								return true;
+							}
+						}
+						else {
+							projectSet.add(p);
+						}
+					}
+				}
+			}
+		}
+		return false;
+	}
+		
+	public Set<IJavaProject> getProjectList() {
+		Set<IJavaProject> set = new HashSet<IJavaProject>();
+		for (ClasspathHandler c : dependentProjects) {
+			set.add(c.project);
+		}
+		return set;
 	}
 	
 	private static void listEntries(String category, IClasspathEntry[] array) {
@@ -144,8 +276,24 @@ public class ClasspathHandler {
 		return list.toArray(array);
 	}
 	
+	public void addDependentProject(ClasspathHandler cph) {
+		dependentProjects.add(cph);
+	}
+	
 	private void handleProject(IClasspathEntry entry) {
-		
+		IProject project = ClasspathHandler.convertEntryToProject(this.project.getProject(), entry);
+		if (project != null) {
+			ClasspathHandler cph = new ClasspathHandler(this.root, JavaCore.create(project), entry.getPath().toString());
+			this.root.addDependentProject(cph);
+		}
+	}
+	
+	public boolean containsClasspathEntry(IPath path) {
+		return cache.containsKey(path);
+	}
+	
+	public void addClasspathEntry(IPath path, IClasspathEntry entry) {
+		cache.put(path, entry);
 	}
 	
 	private void handleLibrary(IClasspathEntry entry) {
@@ -155,7 +303,14 @@ public class ClasspathHandler {
 			newEntry = entry;
 		}
 		else {
-			newEntry = copyIntoDirectory(entry);
+			IPath path = entry.getPath().makeAbsolute();
+			if (this.root.containsClasspathEntry(path)) {
+				newEntry = this.root.cache.get(path);
+			}
+			else {
+				newEntry = copyIntoDirectory(entry);
+				this.root.addClasspathEntry(path, newEntry);
+			}
 			if (newEntry == null) {
 				return;
 			}
@@ -172,6 +327,14 @@ public class ClasspathHandler {
 	}
 	
 	public void revertClasspath() {
+		for (ClasspathHandler c : dependentProjects) {
+			try {
+				c.project.setRawClasspath(c.oldEntries, null);
+			} catch (JavaModelException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 		try {
 			FileUtils.deleteDirectory(targetDir);
 		} catch (IOException e) {
@@ -228,8 +391,5 @@ public class ClasspathHandler {
 		return JavaCore.newLibraryEntry(newPath, newPath, null);
 	}
 	
-	public Set<File> getCreatedFiles() {
-		return files;
-	}
 	
 }
