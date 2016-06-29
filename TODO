@@ -3,7 +3,13 @@ TODO:
 -Test assessment submission in general
 -Add handling for when assessment results come in (?)
 
--Keep information about previous assessments
 -Add feedback for the user (Bolo suggested feedback in the Monitor view)
 
--Stop copying over Java run-time (rt.jar) - this is very expensive
+-(?) Stop copying over Java run-time (rt.jar) - this is very expensive
+-Make "Clear" buttons for SelectionDialog, ConfigDialog, and maybe AuthenticationDialog
+    -This will be easy. Just call resetState() and write a resetWidgets() method to reset the List, Combo, and Text widgets
+
+-Get cookies working properly (Vamshi's working on this)
+
+-Programmatically determine the type of Eclipse project and as much build as possible
+    -e.g. if it's a Maven project in Eclipse, set that as the build system and populate the build info

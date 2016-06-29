@@ -17,6 +17,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
 import eclipseplugin.ClasspathHandler;
+import eclipseplugin.FileSerializer;
 import eclipseplugin.PackageInfo;
 import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.ConfigDialog;
@@ -38,6 +39,7 @@ import javax.xml.transform.TransformerException;
 
 import org.eclipse.ant.internal.ui.datatransfer.BuildFileCreator;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IJavaProject;
@@ -69,6 +71,13 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 	 */
 	public void run(IAction action) {
 		SwampApiWrapper api;
+		SelectionDialog sd;
+		ConfigDialog cd;
+		String serializedConfigFilepath;
+		
+		serializedConfigFilepath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + "/.swampconfig";
+		System.out.println(serializedConfigFilepath);
+		
 		try {
 			api = new SwampApiWrapper(SwampApiWrapper.HostType.DEVELOPMENT);
 		} catch (Exception e) {
@@ -77,44 +86,41 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 			return;
 		}
 		
+		sd = new SelectionDialog(window.getShell());
+		sd.setSwampApiWrapper(api);
+		cd = new ConfigDialog(window.getShell());
 		if (!api.restoreSession(SESSION_STRING)) {
 		// Add authentication dialog here
-			AuthenticationDialog d = new AuthenticationDialog(window.getShell());
-			d.create();
-			d.setSwampApiWrapper(api);
-			if (d.open() != Window.OK) {
+			AuthenticationDialog ad = new AuthenticationDialog(window.getShell());
+			ad.create();
+			ad.setSwampApiWrapper(api);
+			if (ad.open() != Window.OK) {
 				return;
 			}
 			api.saveSession(SESSION_STRING);
 		}
-		//HandlerFactory h = d.getHandlerFactory();
-		SelectionDialog s = new SelectionDialog(window.getShell());
-		//s.setHandlerFactory(h);
-		s.setSwampApiWrapper(api);
-		s.create();
-		if (s.open() != Window.OK) {
+		else {
+			// deserialize from file
+			boolean returnCode = FileSerializer.deserialize(serializedConfigFilepath, sd, cd);
+		}
+		sd.create();
+		if (sd.open() != Window.OK) {
 			// TODO Handle error
 		}
 		else {
-			// TODO Get the project or create a new project here
-			//Project project = ParseCommandLine.getProjectFromIndex(s.getProjectIndex());
-			String prjUUID = s.getProjectUUID();
-			
-			ConfigDialog c = new ConfigDialog(window.getShell());
-			//c.setHandlerFactory(h);
-			c.create();
+			cd.create();
 			System.out.println("Made it to config dialog");
-			if (c.open() != Window.OK) {
+			if (cd.open() != Window.OK) {
 				// TODO Handle error
 			}
 			else {
-				boolean autoGenBuild = c.needsGeneratedBuildFile();
+				boolean autoGenBuild = cd.needsGeneratedBuildFile();
 				ClasspathHandler classpathHandler = null;
 				if (autoGenBuild) {
 					// Generating Buildfile
-					IProject proj = c.getProject();
+					IProject proj = cd.getProject();
 					IJavaProject javaProj = JavaCore.create(proj);
-					classpathHandler = new ClasspathHandler(javaProj, c.getPkgPath());
+					classpathHandler = new ClasspathHandler(javaProj, cd.getPkgPath());
 					Set<IJavaProject> projects = new HashSet<IJavaProject>();
 					// projects = classpathHandler.getProjects();
 					projects.add(javaProj);
@@ -148,8 +154,8 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				// Zipping and generating package.conf
 				Date date = new Date();
 				String timestamp = date.toString();
-				String pkgName = c.getPkgName();
-				String path = c.getPkgPath();
+				String pkgName = cd.getPkgName();
+				String path = cd.getPkgPath();
 				String filename = timestamp + "-" + pkgName + ".zip";
 				String filenameNoSpaces = filename.replace(" ", "-").replace(":", "").toLowerCase(); // PackageVersionHandler mangles the name for some reason if there are colons or uppercase letters
 				System.out.println("Package Name: " + pkgName);
@@ -159,16 +165,19 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				
 				PackageInfo pkg = new PackageInfo(path, filenameNoSpaces); // pass in path and output zip file name
 				pkg.setPkgShortName(pkgName);
-				pkg.setVersion(c.getPkgVersion());
-				pkg.setBuildSys(c.getBuildSys());
-				pkg.setBuildDir(c.getBuildDir());
-				pkg.setBuildFile(c.getBuildFile());
-				pkg.setBuildTarget(c.getBuildTarget());
+				pkg.setVersion(cd.getPkgVersion());
+				pkg.setBuildSys(cd.getBuildSys());
+				pkg.setBuildDir(cd.getBuildDir());
+				pkg.setBuildFile(cd.getBuildFile());
+				pkg.setBuildTarget(cd.getBuildTarget());
+				
+				boolean retCode = FileSerializer.serialize(serializedConfigFilepath, sd, cd); 
 				
 				pkg.writePkgConfFile();
 
 				String parentDir = pkg.getParentPath();
 				// Upload package
+				String prjUUID = sd.getProjectUUID();
 				System.out.println("Uploading package");
 				System.out.println("Package-conf directory: " + parentDir + "/package.conf");
 				System.out.println("Archive directory: " + parentDir + "/" + filenameNoSpaces);
@@ -197,8 +206,8 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					classpathHandler.revertClasspath();
 				}
 				
-				for (String platformUUID : s.getPlatformUUIDs()) {
-					for (String toolUUID : s.getToolUUIDs()) {
+				for (String platformUUID : sd.getPlatformUUIDs()) {
+					for (String toolUUID : sd.getToolUUIDs()) {
 						submitAssessment(api, pkgUUID, toolUUID, prjUUID, platformUUID);
 					}
 				}

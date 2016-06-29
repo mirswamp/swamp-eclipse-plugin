@@ -39,6 +39,7 @@ public class SelectionDialog extends TitleAreaDialog {
 	
 	public SelectionDialog(Shell parentShell) {
 		super(parentShell);
+		resetState();
 	}
 	
 	public void setSwampApiWrapper(SwampApiWrapper w) {
@@ -65,16 +66,40 @@ public class SelectionDialog extends TitleAreaDialog {
 				stringList.add(t.getName());
 			}
 		}
-		return getComboList(stringList);
+		return getElementList(stringList);
 	}
 	
-	private String[] getComboList(ArrayList<String> list) {
+	private String[] getElementList(ArrayList<String> list) {
 		String[] ary = null;
 		if (list != null) {
 			ary = new String[list.size()];
 			list.toArray(ary);
 		}
 		return ary;
+	}
+	
+	public int getProjectIndex() {
+		return prjIndex;
+	}
+	
+	public void setProjectIndex(int index) {
+		prjIndex = index;
+	}
+	
+	public int[] getPlatformIndices() {
+		return platformIndices;
+	}
+	
+	public void setPlatformIndices(int[] array) {
+		platformIndices = array;
+	}
+	
+	public int[] getToolIndices() {
+		return toolIndices;
+	}
+	
+	public void setToolIndices(int[] array) {
+		toolIndices = array;
 	}
 	
 	public String getProjectUUID() {
@@ -125,6 +150,12 @@ public class SelectionDialog extends TitleAreaDialog {
 		super.okPressed();
 	}
 	
+	public void resetState() {
+		prjIndex = -1;
+		platformIndices = null;
+		toolIndices = null;
+	}
+	
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
@@ -146,6 +177,20 @@ public class SelectionDialog extends TitleAreaDialog {
 		projCombo = addCombo(container, "Project: ", Type.PROJECT, new GridData(SWT.FILL, SWT.NONE, true, false));
 		platformList = addList(container, "Platform: ", Type.PLATFORM, new GridData(GridData.FILL_BOTH));
 		toolList = addList(container, "Tool: ", Type.TOOL, new GridData(GridData.FILL_BOTH));
+		
+		if (prjIndex > -1) {
+			projCombo.select(prjIndex);
+		}
+		if (platformIndices != null) {
+			for (int i : platformIndices) {
+				platformList.select(i);
+			}
+		}
+		if (toolIndices != null) {
+			for (int i : toolIndices) {
+				toolList.select(i);
+			}
+		}
 
 		return area;
 		

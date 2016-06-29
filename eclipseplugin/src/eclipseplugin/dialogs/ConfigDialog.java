@@ -19,6 +19,7 @@ import java.util.ArrayList;
 
 public class ConfigDialog extends TitleAreaDialog {
 
+	/* Instance variables representing widgets */
 	private Text buildDirText;
 	private Text buildFileText;
 	private Text buildTargetText;
@@ -28,15 +29,20 @@ public class ConfigDialog extends TitleAreaDialog {
 	private Combo prjCombo;
 	private Combo buildSysCombo;
 	
+	/* Instance variables representing state */
 	private boolean needsBuildFile;
+	private int prjIndex;
 	private String pkgVersion;
 	private String pkgName;
+	private String pkgPath;
 	private String buildSys;
+	private int buildSysIndex;
 	private String buildTarget;
 	private String buildDir;
 	private String buildFile;
-	private String pkgPath;
 	private String buildOptions[] = { "Auto-generate build file", "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", "no-build", "other" };
+	
+	
 	private static int NO_BUILD = 11;
 	private static int AUTO_GENERATE_BUILD = 0;
 	
@@ -44,32 +50,64 @@ public class ConfigDialog extends TitleAreaDialog {
 		return pkgPath;
 	}
 	
+	public void setPkgPath(String path) {
+		pkgPath = path;
+	}
+	
 	public String getPkgName() {
 		return pkgName;
+	}
+	
+	public void setPkgName(String name) {
+		pkgName = name;
 	}
 	
 	public String getBuildSys() {
 		return buildSys;
 	}
 	
+	public void setBuildSys(String strBuildSys) {
+		buildSys = strBuildSys;
+	}
+	
 	public String getBuildDir() {
 		return buildDir;
+	}
+	
+	public void setBuildDir(String strBuildDir) {
+		buildDir = strBuildDir;
 	}
 	
 	public String getBuildFile() {
 		return buildFile;
 	}
 	
+	public void setBuildFile(String strBuildFile) {
+		buildFile = strBuildFile;
+	}
+	
 	public String getBuildTarget() {
 		return buildTarget;
+	}
+	
+	public void setBuildTarget(String strBuildTarget) {
+		buildTarget = strBuildTarget;
 	}
 	
 	public String getPkgVersion() {
 		return pkgVersion;
 	}
 	
+	public void setPkgVersion(String strPkgVersion) {
+		pkgVersion = strPkgVersion;
+	}
+	
 	public IProject getProject() {
 		return project;
+	}
+	
+	public int getBuildSysIndex() {
+		return buildSysIndex;
 	}
 	
 	private enum Type {
@@ -78,6 +116,43 @@ public class ConfigDialog extends TitleAreaDialog {
 	
 	public ConfigDialog(Shell parentShell) {
 		super(parentShell);
+		resetState();
+	}
+	
+	public void resetState() {
+		prjIndex = -1;
+		buildSysIndex = -1;
+		needsBuildFile = false;
+		pkgVersion = null;
+		pkgName = null;
+		pkgPath = null;
+		buildSys = null;
+		buildTarget = null;
+		buildDir = null;
+		buildFile = null;
+	}
+
+	public boolean initializeProject(String strPackageName, String strPackagePath) {
+		IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		for (int i = 0; i < projects.length; i++) {
+			IProject project = projects[i];
+			if (project.getName().equals(strPackageName) && project.getLocation().toString().equals(strPackagePath)) {
+				prjIndex = i;
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean initializeBuild(int iBuildIndex, String strBuildFile, String strBuildDir, String strBuildTarget) {
+		if (iBuildIndex > -1 && iBuildIndex < buildOptions.length ) {
+			buildSysIndex = iBuildIndex;
+			buildFile = strBuildFile;
+			buildDir = strBuildDir;
+			buildTarget = strBuildTarget;
+			return true;
+		}
+		return false;
 	}
 	
 	private String[] getProjectOptions() {
@@ -123,7 +198,13 @@ public class ConfigDialog extends TitleAreaDialog {
 		prjVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));	
 
 		DialogUtil.initializeLabelWidget("Filepath: ", SWT.NONE, container);
-		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));	
+		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
+		
+		if (prjIndex > -1) {
+			// TODO Test whether this raises an event in the selection listener
+			prjCombo.select(prjIndex);
+			handleProjectSelection(prjIndex);
+		}
 	
 		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container);
 		buildSysCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), buildOptions);		
@@ -138,8 +219,67 @@ public class ConfigDialog extends TitleAreaDialog {
 
 		DialogUtil.initializeLabelWidget("Build Target: ", SWT.NONE, container);
 		buildTargetText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
+		
+		if (buildSysIndex > -1) {
+			buildSysCombo.select(buildSysIndex);
+			handleBuildSelection(buildSysIndex);
+			if (buildDir != null) {
+				buildDirText.setText(buildDir);
+			}
+			if (buildFile != null && !buildFile.equals("")) {
+				buildFileText.setText(buildFile);
+			}
+			if (buildTarget != null) {
+				buildTargetText.setText(buildTarget);
+			}
+		}
 
 		return area;
+	}
+	
+	public void handleBuildSelection(int selection) {
+		if (selection == NO_BUILD || selection == AUTO_GENERATE_BUILD) {
+			buildTargetText.setText("");
+			buildTargetText.setEnabled(false);
+			buildDirText.setText("");
+			buildDirText.setEnabled(false);
+			buildFileText.setText("");
+			buildFileText.setEnabled(false);
+		}
+		else {
+			buildTargetText.setEnabled(true);
+			buildDirText.setEnabled(true);
+			buildFileText.setEnabled(true);
+		}
+		if (selection > -1) {
+			buildSysIndex = selection;
+			if (selection == AUTO_GENERATE_BUILD) {
+				needsBuildFile = true;
+				buildSys = "ant";
+				buildTarget = "build";
+				buildDir = ".";
+				buildFile = "build.xml";
+			}
+			else {
+				buildSys = buildOptions[selection];
+			}
+		}
+		else {
+			buildSys = null;
+		}
+	}
+	
+	public void handleProjectSelection(int selection) {
+		// populate filepath text
+		IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		project = projects[selection];
+		pkgName = project.getName();
+		IPath p = project.getLocation();
+		if (p == null)
+			return;
+		pkgPath = p.toString();//project.getWorkingLocation(pkgName).toString();
+		prjFilePathText.setText(pkgPath);
+		prjFilePathText.setEnabled(false);
 	}
 	
 	public boolean needsGeneratedBuildFile() {
@@ -201,46 +341,10 @@ public class ConfigDialog extends TitleAreaDialog {
 			int selection = combo.getSelectionIndex();
 			System.out.println("Index " + selection + " selected");
 			if (type == Type.BUILD) {
-				if (selection == NO_BUILD || selection == AUTO_GENERATE_BUILD) {
-					buildTargetText.setText("");
-					buildTargetText.setEnabled(false);
-					buildDirText.setText("");
-					buildDirText.setEnabled(false);
-					buildFileText.setText("");
-					buildFileText.setEnabled(false);
-				}
-				else {
-					buildTargetText.setEnabled(true);
-					buildDirText.setEnabled(true);
-					buildFileText.setEnabled(true);
-				}
-				if (selection > -1) {
-					if (selection == AUTO_GENERATE_BUILD) {
-						needsBuildFile = true;
-						buildSys = "ant";
-						buildTarget = "build";
-						buildDir = ".";
-						buildFile = "build.xml";
-					}
-					else {
-						buildSys = buildOptions[selection];
-					}
-				}
-				else {
-					buildSys = null;
-				}
+				handleBuildSelection(selection);
 			}
 			else if (type == Type.PROJECT) {
-				// populate filepath text
-				IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-				project = projects[selection];
-				pkgName = project.getName();
-				IPath p = project.getLocation();
-				if (p == null)
-					return;
-				pkgPath = p.toString();//project.getWorkingLocation(pkgName).toString();
-				prjFilePathText.setText(pkgPath);
-				prjFilePathText.setEnabled(false);
+				handleProjectSelection(selection);
 			}
 		}
 		
