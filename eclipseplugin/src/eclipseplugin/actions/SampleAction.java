@@ -215,7 +215,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				System.out.println("Package-conf directory: " + parentDir + "/package.conf");
 				System.out.println("Archive directory: " + parentDir + "/" + filenameNoSpaces);
 				System.out.println("Project UUID: " + prjUUID);
-				String pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filenameNoSpaces, prjUUID); 
+				String pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filenameNoSpaces, prjUUID, true); 
 				if (pkgUUID == null) {
 					// TODO handle error here
 					out.println("Error: There was an error in uploading your package to the SWAMP");
@@ -263,9 +263,9 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		System.out.println("Tool UUID: " + toolUUID);
 		System.out.println("Project UUID: " + prjUUID);
 		System.out.println("Platform UUID: " + pltUUID);
-		String toolName = "[insert tool name here]";//api.getTool(toolUUID).getName();
-		String pkgName = "[insert package name here]"; //api.getPackage(pkgUUID).getName();
-		String platformName = "[insert platform name here]";//api.getPlatform(pltUUID).getName();
+		String toolName = api.getTool(toolUUID).getName();
+		String pkgName = api.getPackage(pkgUUID).getPackageThing().getName();
+		String platformName = api.getPlatform(pltUUID).getName();
 
 		String assessUUID = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
 		if (assessUUID == null) {
