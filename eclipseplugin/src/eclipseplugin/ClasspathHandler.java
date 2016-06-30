@@ -33,7 +33,7 @@ public class ClasspathHandler {
 	private List<ClasspathHandler> dependentProjects;
 	private static String PROJECT_ROOT;
 	private ClasspathHandler root;
-	private boolean hasCycles; // TODO throw exception instead of using this
+	private boolean foundCycle;
 	
 	public ClasspathHandler(ClasspathHandler root, IJavaProject projectRoot, String path) {
 		project = projectRoot;
@@ -41,7 +41,7 @@ public class ClasspathHandler {
 		newEntries = new ArrayList<IClasspathEntry>();
 		dependentProjects = null;
 		cache = null;
-		hasCycles = false;
+		foundCycle = false;
 		
 		PROJECT_ROOT = projectRoot.getElementName();
 		System.out.println("PROJECT ROOT: " + PROJECT_ROOT);
@@ -55,11 +55,10 @@ public class ClasspathHandler {
 			return;
 		}
 		if (root == null) {
-			if (ClasspathHandler.hasCycle(this.project, new HashSet<IProject>())) {
+			if (projectHasCycle(projectRoot)) {
 				System.err.println("There are cyclic dependencies preventing this project from being built");
 				System.err.println("Please remove all cycles before resubmitting.");
 				// throw some sort of cyclic dependency exception
-				hasCycles = true;
 				return;
 			}
 			dependentProjects = new ArrayList<ClasspathHandler>();
@@ -118,10 +117,6 @@ public class ClasspathHandler {
 		
 	}
 	
-	public boolean hasCycles() {
-		return this.hasCycles;
-	}
-	
 	public void handleVariable(IClasspathEntry entry) {
 		IClasspathEntry resolvedEntry = JavaCore.getResolvedClasspathEntry(entry);
 		if (resolvedEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
@@ -130,6 +125,10 @@ public class ClasspathHandler {
 		else {
 			handleProject(resolvedEntry);
 		}
+	}
+	
+	public boolean hasCycles() {
+		return foundCycle;
 	}
 	
 	public void setupTargetDirectory(String path) {
@@ -179,67 +178,102 @@ public class ClasspathHandler {
 		return null;
 	}
 	
-	public static boolean hasCycle(IJavaProject root, Set<IProject> projectSet) {
-		IClasspathEntry[] entryArray = null;
-		try {
-			entryArray = root.getRawClasspath();
-		} catch (JavaModelException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+	// Generate adjacency list from root IJavaProject and then look for cycles
+	public boolean projectHasCycle(IJavaProject root) {
+		List<ArrayList<Integer>> adjList = new ArrayList<ArrayList<Integer>>();
+		Set<Integer> visitedVertices = new HashSet<Integer>();
+		Map<IPath, Integer> map = new HashMap<IPath, Integer>();
+		ClasspathHandler.generateDigraphFromIJavaProject(root, 0, 1, map, adjList, visitedVertices);
+		return digraphHasCycle(adjList, visitedVertices.size()); 
+	}
+	
+	public boolean digraphHasCycle(List<ArrayList<Integer>> adjacencyList, int numVertices) {
+		boolean[] visited = new boolean[numVertices];
+		boolean[] completed = new boolean[numVertices];
+		search(0, adjacencyList, visited, completed);
+		return foundCycle;
+	}
+	
+	private void search(int vertex, List<ArrayList<Integer>> adjList, boolean[] visited, boolean[] completed) {
+		visited[vertex] = true;
+		for (Integer i : adjList.get(vertex)) {
+			if (!visited[i]) {
+				search(i, adjList, visited, completed);
+				//return search(i, adjList, visited, completed);
+			}
+			else {
+				if (!completed[i]) {
+					foundCycle = true;
+					return; //true; // this means we have a cycle
+				}
+			}
+			completed[i] = true;
 		}
-		for (IClasspathEntry e : entryArray) {
-			int kind = e.getEntryKind();
-			if (kind == IClasspathEntry.CPE_PROJECT) {
-				IProject p = ClasspathHandler.convertEntryToProject(root.getProject(), e);
-				if (p != null) {
-					if (projectSet.contains(p)) {
-						return true;
-					}
-					else {
-						projectSet.add(p);
-					}
-				}
-			}
-			else if (kind == IClasspathEntry.CPE_VARIABLE) {
-				IClasspathEntry resolvedEntry = e.getResolvedEntry();
-				if (resolvedEntry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
-					IProject p = ClasspathHandler.convertEntryToProject(root.getProject(), resolvedEntry);
+	}
+	
+	public static void generateDigraphFromIJavaProject(IJavaProject root, int vertex, int vertexCount, Map<IPath, Integer> map, List<ArrayList<Integer>> adjacencyList, Set<Integer> visited) {
+		//Map<IPath, Integer> map = new HashMap<IPath, Integer>();
+		adjacencyList.add(vertex, new ArrayList<Integer>());
+		List<IProject> projects = new ArrayList<IProject>();
+		try {
+			for (IClasspathEntry e : root.getRawClasspath()) {
+				int kind = e.getEntryKind();
+				IProject p = null;
+				if (kind == IClasspathEntry.CPE_PROJECT) {
+					p = ClasspathHandler.convertEntryToProject(root.getProject(), e);
 					if (p != null) {
-						if (projectSet.contains(p)) {
-							return true;
-						}
-						else {
-							projectSet.add(p);
+						projects.add(p);
+					}
+				}
+				else if (kind == IClasspathEntry.CPE_VARIABLE) {
+					IClasspathEntry resolvedEntry = e.getResolvedEntry();
+					if (resolvedEntry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
+						p = ClasspathHandler.convertEntryToProject(root.getProject(), resolvedEntry);
+						if (p != null) {
+							projects.add(p);
 						}
 					}
 				}
-			}
-			else if (kind == IClasspathEntry.CPE_CONTAINER) {
-				IClasspathContainer container = null;
-				try {
-					container = JavaCore.getClasspathContainer(e.getPath(), root);
-				} catch (JavaModelException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				for (IClasspathEntry subEntry : container.getClasspathEntries()) {
-					if (subEntry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
-						IProject p = ClasspathHandler.convertEntryToProject(root.getProject(), subEntry);
-						if (p != null) {
-							if (projectSet.contains(p)) {
-								return true;
+				else if (kind == IClasspathEntry.CPE_CONTAINER) {
+					IClasspathContainer container = null;
+					try {
+						container = JavaCore.getClasspathContainer(e.getPath(), root);
+					} catch (JavaModelException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					for (IClasspathEntry subEntry : container.getClasspathEntries()) {
+						if (subEntry.getEntryKind() == IClasspathEntry.CPE_PROJECT) {
+							IProject proj = ClasspathHandler.convertEntryToProject(root.getProject(), subEntry);
+							if (proj != null) {
+								projects.add(proj);
 							}
 						}
-						else {
-							projectSet.add(p);
-						}
 					}
 				}
 			}
+				
+			for (IProject proj : projects) {
+				IPath path = proj.getFullPath();
+				int v;
+				if (map.containsKey(path)) {
+					v = map.get(path);
+				}
+				else {
+					v = vertexCount++;
+				}
+				adjacencyList.get(vertex).add(v);
+				if (!visited.contains(v)) {
+					visited.add(v);
+					generateDigraphFromIJavaProject(JavaCore.create(proj), v, vertexCount, map, adjacencyList, visited);
+				}
+			}
+		} catch (JavaModelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		return false;
 	}
-		
+	
 	public Set<IJavaProject> getProjectList() {
 		Set<IJavaProject> set = new HashSet<IJavaProject>();
 		for (ClasspathHandler c : dependentProjects) {
