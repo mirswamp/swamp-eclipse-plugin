@@ -10,3 +10,5 @@ TODO:
 
 -Programmatically determine the type of Eclipse project and as much build as possible
     -e.g. if it's a Maven project in Eclipse, set that as the build system and populate the build info
+
+-Refactor dialogs/selection dialogs (interface/inheritance)
