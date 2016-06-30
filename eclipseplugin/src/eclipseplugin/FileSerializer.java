@@ -185,6 +185,11 @@ public class FileSerializer {
 		return true;
 		
 	}
+
+	public static void deleteFile(String filepath) {
+		File file = new File(filepath);
+		file.delete();
+	}
 	
 	private static int[] readIntArray(String line) {
 		String[] ary = line.split(DELIMITER);

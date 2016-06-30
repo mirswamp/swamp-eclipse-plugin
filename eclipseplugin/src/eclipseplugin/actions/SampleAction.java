@@ -120,6 +120,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		cd = new ConfigDialog(window.getShell());
 		if (!api.restoreSession(SESSION_STRING)) {
 		// Add authentication dialog here
+			FileSerializer.deleteFile(serializedConfigFilepath);
 			AuthenticationDialog ad = new AuthenticationDialog(window.getShell(), api, out);
 			ad.create();
 			if (ad.open() != Window.OK) {

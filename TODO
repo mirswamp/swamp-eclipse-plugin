@@ -11,5 +11,7 @@ TODO:
 
 -Refactor dialogs/selection dialogs (interface/inheritance)
 
--Add sensible default behaviors (e.g. if there's only one project, that should be the project selected)
 -Add Combo for SWAMP package to Config Dialog - this way we won't always submit a new package
+
+DONE:
+-Add sensible default behaviors (e.g. if there's only one project, that should be the project selected)

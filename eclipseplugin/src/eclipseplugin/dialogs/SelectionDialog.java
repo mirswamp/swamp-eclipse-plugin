@@ -160,8 +160,17 @@ public class SelectionDialog extends TitleAreaDialog {
 	
 	private void resetWidgets() {
 		projCombo.deselectAll();
+		if (projCombo.getItemCount() == 1) {
+			projCombo.select(0);
+		}
 		platformList.deselectAll();
+		if (platformList.getItemCount() == 1) {
+			platformList.select(0);
+		}
 		toolList.deselectAll();
+		if (toolList.getItemCount() == 1) {
+			toolList.select(0);
+		}
 	}
 	
 	@Override
@@ -189,9 +198,19 @@ public class SelectionDialog extends TitleAreaDialog {
 		if (prjIndex > -1) {
 			projCombo.select(prjIndex);
 		}
+		else {
+			if (projCombo.getItemCount() == 1) {
+				projCombo.select(0);
+			}
+		}
 		if (platformIndices != null) {
 			for (int i : platformIndices) {
 				platformList.select(i);
+			}
+		}
+		else {
+			if (platformList.getItemCount() == 1) {
+				platformList.select(0);
 			}
 		}
 		if (toolIndices != null) {
@@ -199,6 +218,12 @@ public class SelectionDialog extends TitleAreaDialog {
 				toolList.select(i);
 			}
 		}
+		else {
+			if (toolList.getItemCount() == 1) {
+				toolList.select(0);
+			}
+		}
+		
 
 		return area;
 		

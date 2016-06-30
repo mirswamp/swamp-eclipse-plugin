@@ -147,11 +147,19 @@ public class ConfigDialog extends TitleAreaDialog {
 		prjVersionText.setText("");
 		prjVersionText.setEnabled(true);
 		prjCombo.deselectAll();
+		if (prjCombo.getItemCount() == 1) {
+			prjCombo.select(0);
+			handleProjectSelection(0);
+		}
 		buildSysCombo.deselectAll();
+		if (buildSysCombo.getItemCount() == 1) {
+			buildSysCombo.select(0);
+			handleBuildSelection(0);
+		}
 	}
 
 	public boolean initializeProject(String strPackageName, String strPackagePath) {
-		IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		for (int i = 0; i < projects.length; i++) {
 			IProject project = projects[i];
 			if (project.getName().equals(strPackageName) && project.getLocation().toString().equals(strPackagePath)) {
@@ -213,6 +221,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		prjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), prjOptions);
 		prjCombo.addSelectionListener(new ComboSelectionListener(prjCombo, Type.PROJECT));
 		
+		
 		DialogUtil.initializeLabelWidget("Package Version: ", SWT.NONE, container);
 		prjVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));	
 
@@ -220,9 +229,18 @@ public class ConfigDialog extends TitleAreaDialog {
 		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		
 		if (prjIndex > -1) {
-			// TODO Test whether this raises an event in the selection listener
+			// We've read this from file
 			prjCombo.select(prjIndex);
 			handleProjectSelection(prjIndex);
+			if (pkgVersion != null) {
+				prjVersionText.setText(pkgVersion);
+			}
+		}
+		else {
+			if (prjCombo.getItemCount() == 1) {
+				prjCombo.select(0);
+				handleProjectSelection(0);
+			}
 		}
 	
 		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container);
@@ -240,23 +258,28 @@ public class ConfigDialog extends TitleAreaDialog {
 		buildTargetText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		
 		if (buildSysIndex > -1) {
+			// We've read this from file
 			buildSysCombo.select(buildSysIndex);
 			handleBuildSelection(buildSysIndex);
-			if (buildDir != null) {
-				buildDirText.setText(buildDir);
+			if (!(buildSysIndex == NO_BUILD) && (!(buildSysIndex == AUTO_GENERATE_BUILD))) {
+				if (buildDir != null) {
+					buildDirText.setText(buildDir);
+				}
+				if (buildFile != null && !buildFile.equals("")) {
+					buildFileText.setText(buildFile);
+				}
+				if (buildTarget != null) {
+					buildTargetText.setText(buildTarget);
+				}
 			}
-			if (buildFile != null && !buildFile.equals("")) {
-				buildFileText.setText(buildFile);
-			}
-			if (buildTarget != null) {
-				buildTargetText.setText(buildTarget);
+		}
+		else {
+			if (buildSysCombo.getItemCount() == 1) {
+				buildSysCombo.select(0);
+				handleBuildSelection(0);
 			}
 		}
 		
-		//Button button = DialogUtil.initializeButtonWidget(parent, "Clear All", new GridData(SWT.LEFT, SWT.BOTTOM, false, false));
-		//button.addSelectionListener(new ClearButtonSelectionListener(button));
-		
-
 		return area;
 	}
 	
@@ -285,36 +308,17 @@ public class ConfigDialog extends TitleAreaDialog {
 			buildDirText.setEnabled(true);
 			buildFileText.setEnabled(true);
 		}
-		if (selection > -1) {
-			buildSysIndex = selection;
-			if (selection == AUTO_GENERATE_BUILD) {
-				needsBuildFile = true;
-				buildSys = "ant";
-				buildTarget = "build";
-				buildDir = ".";
-				buildFile = "build.xml";
-			}
-			else {
-				buildSys = buildOptions[selection];
-			}
-		}
-		else {
-			buildSys = null;
-		}
 	}
 	
 	public void handleProjectSelection(int selection) {
 		// populate filepath text
 		IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
-		project = projects[selection];
-		pkgName = project.getName();
+		IProject project = projects[selection];
 		IPath p = project.getLocation();
 		if (p == null)
 			return;
-		pkgPath = p.toString();//project.getWorkingLocation(pkgName).toString();
-		prjFilePathText.setText(pkgPath);
+		prjFilePathText.setText(p.toString());
 		prjFilePathText.setEnabled(false);
-		prjVersionText.setText(pkgVersion);
 	}
 	
 	public boolean needsGeneratedBuildFile() {
@@ -353,8 +357,25 @@ public class ConfigDialog extends TitleAreaDialog {
 		// Here we do some checks to make sure that everything has actually been populated
 		if (isValid()) {
 			pkgVersion = prjVersionText.getText();
-			int selection = buildSysCombo.getSelectionIndex();
-			if ((selection != NO_BUILD) && (selection != AUTO_GENERATE_BUILD)) {
+			IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+			project = projects[prjCombo.getSelectionIndex()];
+			pkgName = project.getName();
+			pkgPath = project.getLocation().toString();
+			buildSysIndex = buildSysCombo.getSelectionIndex();
+			if (buildSysIndex == AUTO_GENERATE_BUILD) {
+				needsBuildFile = true;
+				buildSys = "ant";
+				buildTarget = "build";
+				buildDir = ".";
+				buildFile = "build.xml";
+			}
+			else if (buildSysIndex == NO_BUILD) {
+				buildSys = "no-build";
+				buildTarget = "";
+				buildDir = "";
+				buildFile = "";
+			}
+			else {
 				buildDir = buildDirText.getText();
 				buildFile = buildFileText.getText();
 				buildTarget = buildTargetText.getText();
