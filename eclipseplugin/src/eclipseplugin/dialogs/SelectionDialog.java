@@ -10,7 +10,7 @@ package eclipseplugin.dialogs;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.widgets.*;
-
+import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.SWT;
@@ -42,15 +42,12 @@ public class SelectionDialog extends TitleAreaDialog {
 		PROJECT, PLATFORM, TOOL
 	}
 	
-	public SelectionDialog(Shell parentShell) {
+	public SelectionDialog(Shell parentShell, SwampApiWrapper swampApi) {
 		super(parentShell);
+		api = swampApi;
 		resetState();
 	}
 	
-	public void setSwampApiWrapper(SwampApiWrapper w) {
-		api = w;
-	}
-
 	private String[] getSelectionElements(Type type) {
 		ArrayList<String> stringList = new ArrayList<String>();
 		if (type == Type.PROJECT) {

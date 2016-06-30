@@ -10,6 +10,7 @@ package eclipseplugin.dialogs;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -25,14 +26,14 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	private static final String INVALID_MESSAGE = "Invalid username or password.";
 	private SwampApiWrapper api;
 	private String id;
+	private MessageConsoleStream out;
 	
-	public AuthenticationDialog(Shell parentShell) {
+	public AuthenticationDialog(Shell parentShell, SwampApiWrapper swampApi, MessageConsoleStream stream) {
 		super(parentShell);
+		api = swampApi;
+		out = stream;
 	}
 	
-	public void setSwampApiWrapper(SwampApiWrapper w) {
-		api = w;
-	}
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
@@ -65,7 +66,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	}
 	
 	void setInvalidMsgAndClearPrompts() {
-		// TODO: Add some formatting to the invalid message (e.g. bold)
+		out.println("Error: Invalid username and/or password entered.");
 		this.setMessage(INVALID_MESSAGE + "\n" + AUTHENTICATION_PROMPT);
 		usernameText.setText("");
 		passwordText.setText("");

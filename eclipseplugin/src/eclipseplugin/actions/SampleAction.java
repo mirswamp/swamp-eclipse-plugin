@@ -13,8 +13,18 @@ import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.console.ConsolePlugin;
+import org.eclipse.ui.console.IConsole;
+import org.eclipse.ui.console.IConsoleConstants;
+import org.eclipse.ui.console.IConsoleManager;
+import org.eclipse.ui.console.IConsoleView;
+import org.eclipse.ui.console.MessageConsole;
+import org.eclipse.ui.console.MessageConsoleStream;
 
 import eclipseplugin.ClasspathHandler;
 import eclipseplugin.FileSerializer;
@@ -56,11 +66,30 @@ import org.eclipse.jdt.core.JavaModelException;
  */
 public class SampleAction implements IWorkbenchWindowActionDelegate {
 	private IWorkbenchWindow window;
+	private MessageConsoleStream out;
 	/**
 	 * The constructor.
 	 */
 	private static String SESSION_STRING = ".SESSION";
 	public SampleAction() {
+	}
+	
+	private MessageConsoleStream initializeConsole(String consoleName) {
+		/* View http://wiki.eclipse.org/FAQ_How_do_I_write_to_the_console_from_a_plug-in%3F for more details */
+		/* Adapted from the above link */
+		ConsolePlugin plugin = ConsolePlugin.getDefault();
+		IConsoleManager conMgr = plugin.getConsoleManager();
+		MessageConsole console = new MessageConsole(consoleName, null);
+		conMgr.addConsoles(new IConsole[]{console});
+		IWorkbenchPage page = window.getActivePage();
+		try {
+			IConsoleView view = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
+			view.display(console);
+		} catch (PartInitException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return console.newMessageStream();
 	}
 
 	/**
@@ -77,23 +106,22 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		
 		serializedConfigFilepath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + "/.swampconfig";
 		System.out.println(serializedConfigFilepath);
-		
+		out = initializeConsole("SWAMP Plugin");
+		out.println("Status: Launched SWAMP plugin");
 		try {
 			api = new SwampApiWrapper(SwampApiWrapper.HostType.DEVELOPMENT);
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
+			out.println("Error: Unable to initialize SWAMP API.");
 			e.printStackTrace();
 			return;
 		}
 		
-		sd = new SelectionDialog(window.getShell());
-		sd.setSwampApiWrapper(api);
+		sd = new SelectionDialog(window.getShell(), api);
 		cd = new ConfigDialog(window.getShell());
 		if (!api.restoreSession(SESSION_STRING)) {
 		// Add authentication dialog here
-			AuthenticationDialog ad = new AuthenticationDialog(window.getShell());
+			AuthenticationDialog ad = new AuthenticationDialog(window.getShell(), api, out);
 			ad.create();
-			ad.setSwampApiWrapper(api);
 			if (ad.open() != Window.OK) {
 				return;
 			}
@@ -102,27 +130,31 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		else {
 			// deserialize from file
 			boolean returnCode = FileSerializer.deserialize(serializedConfigFilepath, sd, cd);
+			if (!returnCode) {
+				out.println("Warning: Unable to completely restore previous assessment information");
+			}
 		}
 		sd.create();
 		if (sd.open() != Window.OK) {
-			// TODO Handle error
+			// TODO Handle error - These aren't actually errors - this is just user canceling out
 		}
 		else {
 			cd.create();
-			System.out.println("Made it to config dialog");
 			if (cd.open() != Window.OK) {
-				// TODO Handle error
+				// TODO Handle error - These aren't actually errors - this is just user canceling out
 			}
 			else {
 				boolean autoGenBuild = cd.needsGeneratedBuildFile();
 				ClasspathHandler classpathHandler = null;
 				if (autoGenBuild) {
 					// Generating Buildfile
+					out.println("Status: Generating build file");
 					IProject proj = cd.getProject();
 					IJavaProject javaProj = JavaCore.create(proj);
 					classpathHandler = new ClasspathHandler(javaProj, cd.getPkgPath());
 					Set<IJavaProject> projects = new HashSet<IJavaProject>();
 					// projects = classpathHandler.getProjects();
+					// TODO Add console logging for a problem in generating buildfile (e.g. cycles)
 					projects.add(javaProj);
 					BuildFileCreator.setOptions("build.xml", "jUnit", true, false);
 					try {
@@ -152,6 +184,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				}
 				
 				// Zipping and generating package.conf
+				out.println("Status: Generating .zip archive");
 				Date date = new Date();
 				String timestamp = date.toString();
 				String pkgName = cd.getPkgName();
@@ -185,6 +218,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				String pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filenameNoSpaces, prjUUID); 
 				if (pkgUUID == null) {
 					// TODO handle error here
+					out.println("Error: There was an error in uploading your package to the SWAMP");
 					System.err.println("Error in uploading package.");
 				}
 				
@@ -214,22 +248,9 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				
 			}
 
-		// Here's where the business logic goes
 		}
 		
-		// Trying to do automated menu selection
-		Menu menu = window.getShell().getMenu();
-		if (menu == null) {
-			System.out.println("Empty menu");
-		}
-		else {
-			MenuItem[] menuItems = menu.getItems();
-			for (MenuItem m : menuItems) {
-				System.out.println(m);
-			}
-		}
-		
-		
+		out.println("Status: Plugin completed executing");
 		/*MessageDialog.openInformation(
 			window.getShell(),
 			"Success",
@@ -242,10 +263,18 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		System.out.println("Tool UUID: " + toolUUID);
 		System.out.println("Project UUID: " + prjUUID);
 		System.out.println("Platform UUID: " + pltUUID);
+		String toolName = "[insert tool name here]";//api.getTool(toolUUID).getName();
+		String pkgName = "[insert package name here]"; //api.getPackage(pkgUUID).getName();
+		String platformName = "[insert platform name here]";//api.getPlatform(pltUUID).getName();
+
 		String assessUUID = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
 		if (assessUUID == null) {
+			out.println("Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");
 			// TODO handle error here
 			System.err.println("Error in running assessment.");
+		}
+		else {
+			out.println("Status: Successfully submitted assessment with tool {" + toolName + "} on platform {" + platformName +"}");
 		}
 	}
 	

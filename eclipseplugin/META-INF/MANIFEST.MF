@@ -35,4 +35,5 @@ Bundle-ClassPath: .,
  lib/commons-io-2.5.jar,
  lib/eclipse2ant_1.3.5.jar
 Import-Package: org.eclipse.ant.internal.ui.datatransfer,
- org.eclipse.jdt.core
+ org.eclipse.jdt.core,
+ org.eclipse.ui.console
