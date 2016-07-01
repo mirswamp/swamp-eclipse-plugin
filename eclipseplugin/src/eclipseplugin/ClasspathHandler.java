@@ -25,12 +25,13 @@ import org.apache.commons.io.*;
 
 public class ClasspathHandler {
 
-	private Map<IPath, IClasspathEntry> cache;
+	private Map<String, IClasspathEntry> cache;
 	private IClasspathEntry oldEntries[]; // old classpath entries
 	private List<IClasspathEntry> newEntries;
 	private File targetDir;
 	private IJavaProject project;
 	private List<ClasspathHandler> dependentProjects;
+	private Set<String> projectsVisited;
 	private static String PROJECT_ROOT;
 	private ClasspathHandler root;
 	private boolean foundCycle;
@@ -40,6 +41,7 @@ public class ClasspathHandler {
 		oldEntries = null;
 		newEntries = new ArrayList<IClasspathEntry>();
 		dependentProjects = null;
+		projectsVisited = null;
 		cache = null;
 		foundCycle = false;
 		
@@ -62,7 +64,8 @@ public class ClasspathHandler {
 				return;
 			}
 			dependentProjects = new ArrayList<ClasspathHandler>();
-			cache = new HashMap<IPath, IClasspathEntry>();
+			projectsVisited = new HashSet<String>();
+			cache = new HashMap<String, IClasspathEntry>();
 			setupTargetDirectory(path);
 			this.root = this;
 		}
@@ -321,17 +324,25 @@ public class ClasspathHandler {
 	
 	private void handleProject(IClasspathEntry entry) {
 		IProject project = ClasspathHandler.convertEntryToProject(this.project.getProject(), entry);
-		if (project != null) {
-			ClasspathHandler cph = new ClasspathHandler(this.root, JavaCore.create(project), entry.getPath().toString());
-			this.root.addDependentProject(cph);
+		if (project == null) {
+			return;
+		}
+		String projectPath = project.getLocation().toString();
+		System.out.println("Project path: " + projectPath);
+		if (!this.root.projectsVisited.contains(projectPath)) {
+			this.root.projectsVisited.add(projectPath);
+			if (project != null) {
+				ClasspathHandler cph = new ClasspathHandler(this.root, JavaCore.create(project), entry.getPath().toString());
+				this.root.addDependentProject(cph);
+			}
 		}
 	}
 	
-	public boolean containsClasspathEntry(IPath path) {
+	public boolean containsClasspathEntry(String path) {
 		return cache.containsKey(path);
 	}
 	
-	public void addClasspathEntry(IPath path, IClasspathEntry entry) {
+	public void addClasspathEntry(String path, IClasspathEntry entry) {
 		cache.put(path, entry);
 	}
 	
@@ -343,12 +354,13 @@ public class ClasspathHandler {
 		}
 		else {
 			IPath path = entry.getPath().makeAbsolute();
-			if (this.root.containsClasspathEntry(path)) {
-				newEntry = this.root.cache.get(path);
+			String strPath = path.toString();
+			if (this.root.containsClasspathEntry(strPath)) {
+				newEntry = this.root.cache.get(strPath);
 			}
 			else {
 				newEntry = copyIntoDirectory(entry);
-				this.root.addClasspathEntry(path, newEntry);
+				this.root.addClasspathEntry(strPath, newEntry);
 			}
 			if (newEntry == null) {
 				return;
@@ -405,7 +417,7 @@ public class ClasspathHandler {
 			System.out.println("Classpath entry points to non-existent file: " + src);
 			return null;
 		}
-		File f = new File(targetDir.getAbsolutePath() + "/" + lastSegment);
+		File f = new File(this.root.targetDir.getAbsolutePath() + "/" + lastSegment);
 		Path dest = f.toPath();
 		try {
 			System.out.println("Written to destination: " + dest);

@@ -2,6 +2,7 @@ High:
 
 
 Medium:
-
+-.swampbin directory is being created for each dependency project, but those aren't included when we're zipping
+    -Solution: put all of them in the same .swampbin directory (name them by path except with "/" repaced by "-" to avoid collision)
 
 Low:
