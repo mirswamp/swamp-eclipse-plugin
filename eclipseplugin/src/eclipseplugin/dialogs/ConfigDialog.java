@@ -17,7 +17,14 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
+
+import edu.uiuc.ncsa.swamp.api.PackageThing;
+import edu.uiuc.ncsa.swamp.api.PackageVersion;
+import edu.uiuc.ncsa.swamp.api.Platform;
+import edu.wisc.cs.swamp.SwampApiWrapper;
+
 import java.util.ArrayList;
+import java.util.List;
 
 public class ConfigDialog extends TitleAreaDialog {
 
@@ -28,15 +35,23 @@ public class ConfigDialog extends TitleAreaDialog {
 	private Text prjFilePathText;
 	private Text prjVersionText;
 	private Combo prjCombo;
+	private Combo pkgCombo;
+	private Text pkgNameText;
 	private Combo buildSysCombo;
 	
 	/* Instance variables representing state */
+	private SwampApiWrapper api;
 	private boolean needsBuildFile;
+	// Eclipse Project
 	private IProject project;
 	private int prjIndex;
+	private boolean createNewPackage;
+	// SWAMP Package
+	//private PackageThing pkg;
 	private String pkgVersion;
+	private int pkgIndex;
 	private String pkgName;
-	private String pkgPath;
+	// Build
 	private String buildSys;
 	private int buildSysIndex;
 	private String buildTarget;
@@ -44,32 +59,32 @@ public class ConfigDialog extends TitleAreaDialog {
 	private String buildFile;
 	private String buildOptions[] = { "Auto-generate build file", "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", "no-build", "other" };
 	
-	
 	private static int NO_BUILD = 11;
 	private static int AUTO_GENERATE_BUILD = 0;
+	private static int CREATE_NEW_PACKAGE = 0;
 	
-	public String getPkgPath() {
-		return pkgPath;
-	}
-	
-	public void setPkgPath(String path) {
-		pkgPath = path;
+ 	public String getprjPath() {
+		return project.getLocation().toString();
 	}
 	
 	public String getPkgName() {
 		return pkgName;
 	}
 	
-	public void setPkgName(String name) {
-		pkgName = name;
+	public boolean createNewPackage() {
+		return createNewPackage;
 	}
-	
+
 	public String getBuildSys() {
 		return buildSys;
 	}
 	
 	public void setBuildSys(String strBuildSys) {
 		buildSys = strBuildSys;
+	}
+	
+	public int getBuildSysIndex() {
+		return buildSysIndex;
 	}
 	
 	public String getBuildDir() {
@@ -108,31 +123,30 @@ public class ConfigDialog extends TitleAreaDialog {
 		return project;
 	}
 	
-	public int getBuildSysIndex() {
-		return buildSysIndex;
-	}
-	
 	private enum Type {
-		PROJECT, BUILD
+		PROJECT, BUILD, PACKAGE
 	}
 	
-	public ConfigDialog(Shell parentShell) {
+	public ConfigDialog(Shell parentShell, SwampApiWrapper swampApi) {
 		super(parentShell);
+		api = swampApi;
 		resetState();
 	}
 	
 	public void resetState() {
 		prjIndex = -1;
 		buildSysIndex = -1;
+		pkgIndex = -1;
 		needsBuildFile = false;
 		pkgVersion = null;
-		pkgName = null;
-		pkgPath = null;
 		buildSys = null;
 		buildTarget = null;
 		buildDir = null;
 		buildFile = null;
 		project = null;
+		//pkg = null;
+		createNewPackage = false;
+		pkgName = null;
 	}
 	
 	private void resetWidgets() {
@@ -151,15 +165,41 @@ public class ConfigDialog extends TitleAreaDialog {
 			prjCombo.select(0);
 			handleProjectSelection(0);
 		}
+		pkgCombo.deselectAll();
+		if (pkgCombo.getItemCount() == 1) {
+			pkgCombo.select(0);
+			handlePackageSelection(0);
+		}
 		buildSysCombo.deselectAll();
 		if (buildSysCombo.getItemCount() == 1) {
 			buildSysCombo.select(0);
 			handleBuildSelection(0);
 		}
 	}
+	
+	public boolean initializePackage(String pkgUUID) {
+		PackageVersion pkgVers = api.getPackage(pkgUUID);
+		if (pkgVers == null) {
+			return false;
+		}
+		PackageThing pkgThing = pkgVers.getPackageThing();
+		if (pkgThing == null) {
+			System.out.println("PackageVersion without a PackageThing");
+			return false;
+		}
+		String pkgThingUUID = pkgVers.getPackageThing().getUUIDString();
+		List<? extends PackageThing> packages = api.getAllPackages();
+		for (int i = 0; i < packages.size(); i++) {
+			if (packages.get(i).getUUIDString().equals(pkgThingUUID)) {
+				pkgIndex = i;
+				return true;
+			}
+		}
+		return false;
+	}
 
 	public boolean initializeProject(String strPackageName, String strPackagePath) {
-IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		for (int i = 0; i < projects.length; i++) {
 			IProject project = projects[i];
 			if (project.getName().equals(strPackageName) && project.getLocation().toString().equals(strPackagePath)) {
@@ -204,6 +244,17 @@ IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		return ary;
 	}
 	
+	private String[] getPackageOptions() {
+		List<? extends PackageThing> list = api.getAllPackages();
+		int numPackages = list.size() + 1;
+		String[] pkgNames = new String[numPackages];
+		pkgNames[0] = "Create new package";
+		for (int i = 1; i < numPackages; i++) {
+			pkgNames[i] = list.get(i-1).getName();
+		}
+		return pkgNames; 
+	}
+	
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
@@ -216,11 +267,30 @@ IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 		
-		DialogUtil.initializeLabelWidget("Package Name: ", SWT.NONE, container);
+		DialogUtil.initializeLabelWidget("Eclipse Project: ", SWT.NONE, container);
 		String prjOptions[] = getProjectOptions();
 		prjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), prjOptions);
 		prjCombo.addSelectionListener(new ComboSelectionListener(prjCombo, Type.PROJECT));
 		
+		DialogUtil.initializeLabelWidget("SWAMP Package: ", SWT.NONE, container);
+		String pkgOptions[] = getPackageOptions();
+		pkgCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgOptions);
+		pkgCombo.addSelectionListener(new ComboSelectionListener(pkgCombo, Type.PACKAGE));
+		
+		if (pkgIndex > -1) {
+			// We've read this from file
+			pkgCombo.select(pkgIndex);
+			handlePackageSelection(pkgIndex);
+		}
+		else {
+			if (pkgCombo.getItemCount() == 1) {
+				pkgCombo.select(0);
+				handlePackageSelection(0);
+			}
+		}
+		
+		DialogUtil.initializeLabelWidget("New Package Name: ", SWT.NONE, container);
+		pkgNameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		
 		DialogUtil.initializeLabelWidget("Package Version: ", SWT.NONE, container);
 		prjVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));	
@@ -321,15 +391,39 @@ IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		prjFilePathText.setEnabled(false);
 	}
 	
+	public void handlePackageSelection(int selection) {
+		if (selection == CREATE_NEW_PACKAGE) {
+			pkgNameText.setEnabled(true);
+		}
+		else {
+			pkgNameText.setText("");
+			pkgNameText.setEnabled(false);
+		}
+	}
+	
 	public boolean needsGeneratedBuildFile() {
 		return needsBuildFile;
 	}
 	
 	private boolean isValid() {
 		if (prjCombo.getSelectionIndex() < 0) {
-			this.setMessage("Please select a project");
+			this.setMessage("Please select an Eclipse project");
 			return false;
 		}
+		int pkgSelection = pkgCombo.getSelectionIndex();
+		if (pkgSelection < 0) {
+			this.setMessage("Please select a package");
+			return false;
+		}
+		if (pkgSelection == CREATE_NEW_PACKAGE) {
+			// TODO Add stronger regex for checking new package names
+			String newPackageName = pkgNameText.getText();
+			if (newPackageName.equals("")) {
+				this.setMessage("Please add a name for your new package");
+				return false;
+			}
+		}
+
 		int selection = buildSysCombo.getSelectionIndex();
 		if (selection < 0) {
 			this.setMessage("Please select a build system");
@@ -359,8 +453,19 @@ IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 			pkgVersion = prjVersionText.getText();
 			IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 			project = projects[prjCombo.getSelectionIndex()];
-			pkgName = project.getName();
-			pkgPath = project.getLocation().toString();
+			// handle Package
+			List<? extends PackageThing> list = api.getAllPackages();
+			int pkgSelection = pkgCombo.getSelectionIndex();
+			if (pkgSelection == CREATE_NEW_PACKAGE) {
+				createNewPackage = true;
+				pkgName = pkgNameText.getText();
+			}
+			else {
+				// pkg = list.get(pkgCombo.getSelectionIndex()+1);
+				PackageThing pkg = list.get(pkgCombo.getSelectionIndex()+1);
+				pkgName = pkg.getName();
+			}
+			
 			buildSysIndex = buildSysCombo.getSelectionIndex();
 			if (buildSysIndex == AUTO_GENERATE_BUILD) {
 				needsBuildFile = true;
@@ -401,6 +506,9 @@ IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 			}
 			else if (type == Type.PROJECT) {
 				handleProjectSelection(selection);
+			}
+			else { // type == Type.PACKAGE
+				handlePackageSelection(selection);
 			}
 		}
 		

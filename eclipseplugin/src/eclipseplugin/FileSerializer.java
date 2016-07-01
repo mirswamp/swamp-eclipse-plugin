@@ -11,11 +11,13 @@ import org.eclipse.core.resources.IProject;
 
 import eclipseplugin.dialogs.ConfigDialog;
 import eclipseplugin.dialogs.SelectionDialog;
+import edu.uiuc.ncsa.swamp.api.PackageThing;
+import edu.uiuc.ncsa.swamp.api.PackageVersion;
 
 public class FileSerializer {
 	
 	private static String DELIMITER = ",";
-	public static boolean serialize(String filepath, SelectionDialog sd, ConfigDialog cd) {
+	public static boolean serialize(String filepath, SelectionDialog sd, ConfigDialog cd, String pkgUUID) {
 		File file = new File(filepath);
 		if (file.exists()) {
 			file.delete();
@@ -56,7 +58,7 @@ public class FileSerializer {
 			writer.write("\n");
 		}
 		catch (Exception e) {
-			System.err.println("Unable to deserialize file");
+			System.err.println("Unable to serialize file");
 			e.printStackTrace();
 			sd.resetState();
 			return false;
@@ -67,8 +69,11 @@ public class FileSerializer {
 			IProject project = cd.getProject();
 			writer.write(project.getName());
 			writer.write("\n");
-			// Package (IProject) filepath
+			// Project (IProject) filepath
 			writer.write(project.getLocation().toString());
+			writer.write("\n");
+			// SWAMP Package
+			writer.write(pkgUUID);
 			writer.write("\n");
 			// Package Version
 			writer.write(cd.getPkgVersion());
@@ -126,12 +131,13 @@ public class FileSerializer {
 				sd.setToolIndices(intAry);
 			}
 			
-			// Package Name
+			// Eclipse Project Name
 			String pkgName = null, pkgPath = null;
 			str = reader.readLine();
 			if (str != null && !str.equals("\n")) {
 				pkgName = str;
 			}
+			// Eclipse Project Path
 			str = reader.readLine();
 			if (str != null & !str.equals("\n")) {
 				pkgPath = str;
@@ -140,6 +146,12 @@ public class FileSerializer {
 				reader.close();
 				System.out.println("We were unable to find the last selected project");
 				return false;
+			}
+			
+			// SWAMP Package UUID
+			str = reader.readLine();
+			if (str != null && !str.equals("\n")) {
+				cd.initializePackage(str);
 			}
 
 			// initialize these - only do the following if we can find the project

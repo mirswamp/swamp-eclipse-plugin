@@ -34,8 +34,12 @@ import eclipseplugin.dialogs.ConfigDialog;
 import eclipseplugin.dialogs.SelectionDialog;
 
 import org.eclipse.jface.dialogs.MessageDialog;
+
+import edu.uiuc.ncsa.swamp.api.PackageThing;
+import edu.uiuc.ncsa.swamp.api.PackageVersion;
 import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
 import edu.wisc.cs.swamp.SwampApiWrapper;
+import edu.wisc.cs.swamp.exceptions.SessionExpiredException;
 
 import java.io.File;
 import java.io.IOException;
@@ -103,6 +107,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		SelectionDialog sd;
 		ConfigDialog cd;
 		String serializedConfigFilepath;
+		boolean isAuthenticated = false;
 		
 		serializedConfigFilepath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + "/.swampconfig";
 		System.out.println(serializedConfigFilepath);
@@ -117,138 +122,139 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		}
 		
 		sd = new SelectionDialog(window.getShell(), api);
-		cd = new ConfigDialog(window.getShell());
-		if (!api.restoreSession(SESSION_STRING)) {
-		// Add authentication dialog here
-			FileSerializer.deleteFile(serializedConfigFilepath);
-			AuthenticationDialog ad = new AuthenticationDialog(window.getShell(), api, out);
-			ad.create();
-			if (ad.open() != Window.OK) {
-				return;
+		cd = new ConfigDialog(window.getShell(), api);
+		try {
+			if (!api.restoreSession(SESSION_STRING)) {
+				isAuthenticated = launchAuthentication(serializedConfigFilepath, api);
 			}
-			api.saveSession(SESSION_STRING);
-		}
-		else {
-			// deserialize from file
-			boolean returnCode = FileSerializer.deserialize(serializedConfigFilepath, sd, cd);
-			if (!returnCode) {
-				out.println("Warning: Unable to completely restore previous assessment information");
+			else {
+				isAuthenticated = true;
+				// deserialize from file
+				boolean returnCode = FileSerializer.deserialize(serializedConfigFilepath, sd, cd);
+				if (!returnCode) {
+					out.println("Warning: Unable to completely restore previous assessment information");
+				}
 			}
+		} catch (SessionExpiredException e1) {
+			isAuthenticated = launchAuthentication(serializedConfigFilepath, api);
 		}
-		sd.create();
-		if (sd.open() != Window.OK) {
-			// TODO Handle error - These aren't actually errors - this is just user canceling out
-		}
-		else {
-			cd.create();
-			if (cd.open() != Window.OK) {
+		if (isAuthenticated) {
+	sd.create();
+			if (sd.open() != Window.OK) {
 				// TODO Handle error - These aren't actually errors - this is just user canceling out
 			}
 			else {
-				boolean autoGenBuild = cd.needsGeneratedBuildFile();
-				ClasspathHandler classpathHandler = null;
-				if (autoGenBuild) {
-					// Generating Buildfile
-					out.println("Status: Generating build file");
-					IProject proj = cd.getProject();
-					IJavaProject javaProj = JavaCore.create(proj);
-					classpathHandler = new ClasspathHandler(javaProj, cd.getPkgPath());
-					Set<IJavaProject> projects = new HashSet<IJavaProject>();
-					// projects = classpathHandler.getProjects();
-					// TODO Add console logging for a problem in generating buildfile (e.g. cycles)
-					projects.add(javaProj);
-					BuildFileCreator.setOptions("build.xml", "jUnit", true, false);
-					try {
-						BuildFileCreator.createBuildFiles(projects, window.getShell(), null);
-					} catch (JavaModelException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (TransformerConfigurationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (ParserConfigurationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (TransformerException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (CoreException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
+				cd.create();
+				if (cd.open() != Window.OK) {
+					// TODO Handle error - These aren't actually errors - this is just user canceling out
 				}
-				
-				// Zipping and generating package.conf
-				out.println("Status: Generating .zip archive");
-				Date date = new Date();
-				String timestamp = date.toString();
-				String pkgName = cd.getPkgName();
-				String path = cd.getPkgPath();
-				String filename = timestamp + "-" + pkgName + ".zip";
-				String filenameNoSpaces = filename.replace(" ", "-").replace(":", "").toLowerCase(); // PackageVersionHandler mangles the name for some reason if there are colons or uppercase letters
-				System.out.println("Package Name: " + pkgName);
-				System.out.println("Path: " + path);
-				System.out.println("Filename: " + filenameNoSpaces);
-				// output name should be some combination of pkg name, version, timestamp, extension (.zip)
-				
-				PackageInfo pkg = new PackageInfo(path, filenameNoSpaces); // pass in path and output zip file name
-				pkg.setPkgShortName(pkgName);
-				pkg.setVersion(cd.getPkgVersion());
-				pkg.setBuildSys(cd.getBuildSys());
-				pkg.setBuildDir(cd.getBuildDir());
-				pkg.setBuildFile(cd.getBuildFile());
-				pkg.setBuildTarget(cd.getBuildTarget());
-				
-				boolean retCode = FileSerializer.serialize(serializedConfigFilepath, sd, cd); 
-				
-				pkg.writePkgConfFile();
-
-				String parentDir = pkg.getParentPath();
-				// Upload package
-				String prjUUID = sd.getProjectUUID();
-				System.out.println("Uploading package");
-				System.out.println("Package-conf directory: " + parentDir + "/package.conf");
-				System.out.println("Archive directory: " + parentDir + "/" + filenameNoSpaces);
-				System.out.println("Project UUID: " + prjUUID);
-				String pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filenameNoSpaces, prjUUID, true); 
-				if (pkgUUID == null) {
-					// TODO handle error here
-					out.println("Error: There was an error in uploading your package to the SWAMP");
-					System.err.println("Error in uploading package.");
-				}
-				
-				// Deletion code - uncomment for release
-				/*
-				pkg.deleteFiles();
-				if (autoGenBuild) {
-					System.out.println("Auto-generated build file at " + path + "/build.xml");
-					File f = new File(path + "/build.xml");
-					if (f != null) {
-						if (!f.delete()) {
-							System.err.println("Unable to delete auto-generated build file");
+				else {
+					boolean autoGenBuild = cd.needsGeneratedBuildFile();
+					ClasspathHandler classpathHandler = null;
+					if (autoGenBuild) {
+						// Generating Buildfile
+						out.println("Status: Generating build file");
+						IProject proj = cd.getProject();
+						IJavaProject javaProj = JavaCore.create(proj);
+						classpathHandler = new ClasspathHandler(javaProj, cd.getprjPath());
+						Set<IJavaProject> projects = new HashSet<IJavaProject>();
+						// projects = classpathHandler.getProjects();
+						// TODO Add console logging for a problem in generating buildfile (e.g. cycles)
+						projects.add(javaProj);
+						BuildFileCreator.setOptions("build.xml", "jUnit", true, false);
+						try {
+							BuildFileCreator.createBuildFiles(projects, window.getShell(), null);
+						} catch (JavaModelException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (TransformerConfigurationException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (ParserConfigurationException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (TransformerException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (CoreException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
 						}
 					}
-				}
-				*/
-				
-				if (classpathHandler != null) {
-					classpathHandler.revertClasspath();
-				}
-				
-				for (String platformUUID : sd.getPlatformUUIDs()) {
-					for (String toolUUID : sd.getToolUUIDs()) {
-						submitAssessment(api, pkgUUID, toolUUID, prjUUID, platformUUID);
+					
+					// Zipping and generating package.conf
+					out.println("Status: Generating .zip archive");
+					Date date = new Date();
+					String timestamp = date.toString();
+					String pkgName = cd.getPkgName();
+					String path = cd.getprjPath();
+					String filename = timestamp + "-" + pkgName + ".zip";
+					String filenameNoSpaces = filename.replace(" ", "-").replace(":", "").toLowerCase(); // PackageVersionHandler mangles the name for some reason if there are colons or uppercase letters
+					System.out.println("Package Name: " + pkgName);
+					System.out.println("Path: " + path);
+					System.out.println("Filename: " + filenameNoSpaces);
+					// output name should be some combination of pkg name, version, timestamp, extension (.zip)
+					
+					PackageInfo pkg = new PackageInfo(path, filenameNoSpaces); // pass in path and output zip file name
+					pkg.setPkgShortName(pkgName);
+					pkg.setVersion(cd.getPkgVersion());
+					pkg.setBuildSys(cd.getBuildSys());
+					pkg.setBuildDir(cd.getBuildDir());
+					pkg.setBuildFile(cd.getBuildFile());
+					pkg.setBuildTarget(cd.getBuildTarget());
+					
+					// TODO only do this after getting a package UUID
+					
+					pkg.writePkgConfFile();
+	
+					String parentDir = pkg.getParentPath();
+					// Upload package
+					String prjUUID = sd.getProjectUUID();
+					System.out.println("Uploading package");
+					System.out.println("Package-conf directory: " + parentDir + "/package.conf");
+					System.out.println("Archive directory: " + parentDir + "/" + filenameNoSpaces);
+					System.out.println("Project UUID: " + prjUUID);
+					String pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filenameNoSpaces, prjUUID, cd.createNewPackage()); 
+					if (pkgUUID == null) {
+						// TODO handle error here
+						out.println("Error: There was an error in uploading your package to the SWAMP");
+						System.err.println("Error in uploading package.");
 					}
+					boolean retCode = FileSerializer.serialize(serializedConfigFilepath, sd, cd, pkgUUID); 
+					
+					// Deletion code - uncomment for release
+					/*
+					pkg.deleteFiles();
+					if (autoGenBuild) {
+						System.out.println("Auto-generated build file at " + path + "/build.xml");
+						File f = new File(path + "/build.xml");
+						if (f != null) {
+							if (!f.delete()) {
+								System.err.println("Unable to delete auto-generated build file");
+							}
+						}
+					}
+					*/
+					
+					if (classpathHandler != null) {
+						classpathHandler.revertClasspath();
+					}
+					
+					for (String platformUUID : sd.getPlatformUUIDs()) {
+						for (String toolUUID : sd.getToolUUIDs()) {
+							submitAssessment(api, pkgUUID, toolUUID, prjUUID, platformUUID);
+						}
+					}
+					
 				}
-				
+	
 			}
-
 		}
 		
 		out.println("Status: Plugin completed executing");
@@ -258,13 +264,32 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 			"Here's the information about your submission");*/
 	}
 	
+	private boolean launchAuthentication(String filepath, SwampApiWrapper api) {
+		// Add authentication dialog here
+		FileSerializer.deleteFile(filepath);
+		AuthenticationDialog ad = new AuthenticationDialog(window.getShell(), api, out);
+		ad.create();
+		if (ad.open() != Window.OK) {
+			return false;
+		}
+		api.saveSession(SESSION_STRING);
+		return true;
+	}
+	
 	private void submitAssessment(SwampApiWrapper api, String pkgUUID, String toolUUID, String prjUUID, String pltUUID) {
 		// Submit assessment
 		System.out.println("Package UUID: " + pkgUUID);
 		System.out.println("Tool UUID: " + toolUUID);
 		System.out.println("Project UUID: " + prjUUID);
 		System.out.println("Platform UUID: " + pltUUID);
+		
+		api.printAllPackages(true);
+		
 		String toolName = api.getTool(toolUUID).getName();
+		PackageVersion pkg = api.getPackage(pkgUUID);
+		assert(pkg != null);
+		PackageThing pkgThing = pkg.getPackageThing();
+		assert (pkgThing != null);
 		String pkgName = api.getPackage(pkgUUID).getPackageThing().getName();
 		String platformName = api.getPlatform(pltUUID).getName();
 
