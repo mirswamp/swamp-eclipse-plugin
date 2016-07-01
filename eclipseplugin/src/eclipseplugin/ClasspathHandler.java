@@ -182,7 +182,9 @@ public class ClasspathHandler {
 	public boolean projectHasCycle(IJavaProject root) {
 		List<ArrayList<Integer>> adjList = new ArrayList<ArrayList<Integer>>();
 		Set<Integer> visitedVertices = new HashSet<Integer>();
-		Map<IPath, Integer> map = new HashMap<IPath, Integer>();
+		visitedVertices.add(0);
+		Map<String, Integer> map = new HashMap<String, Integer>();
+		map.put(root.getPath().makeAbsolute().toString(), 0);
 		ClasspathHandler.generateDigraphFromIJavaProject(root, 0, 1, map, adjList, visitedVertices);
 		return digraphHasCycle(adjList, visitedVertices.size()); 
 	}
@@ -211,7 +213,7 @@ public class ClasspathHandler {
 		}
 	}
 	
-	public static void generateDigraphFromIJavaProject(IJavaProject root, int vertex, int vertexCount, Map<IPath, Integer> map, List<ArrayList<Integer>> adjacencyList, Set<Integer> visited) {
+	public static void generateDigraphFromIJavaProject(IJavaProject root, int vertex, int vertexCount, Map<String, Integer> map, List<ArrayList<Integer>> adjacencyList, Set<Integer> visited) {
 		//Map<IPath, Integer> map = new HashMap<IPath, Integer>();
 		adjacencyList.add(vertex, new ArrayList<Integer>());
 		List<IProject> projects = new ArrayList<IProject>();
@@ -254,13 +256,16 @@ public class ClasspathHandler {
 			}
 				
 			for (IProject proj : projects) {
-				IPath path = proj.getFullPath();
+				String path = proj.getFullPath().makeAbsolute().toString();
+				System.out.println("Key: " + path);
+				//IPath path = proj.getFullPath();
 				int v;
 				if (map.containsKey(path)) {
 					v = map.get(path);
 				}
 				else {
 					v = vertexCount++;
+					map.put(path, v);
 				}
 				adjacencyList.get(vertex).add(v);
 				if (!visited.contains(v)) {

@@ -123,6 +123,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					classpathHandler = new ClasspathHandler(null, javaProj, cd.getPkgPath());
 					if (classpathHandler.hasCycles()) {
 						System.err.println("Huge error. Cyclic dependencies!");
+						// TODO Add message to console - out.println("Error: Project has cyclic dependencies");
 					}
 					Set<IJavaProject> projects = classpathHandler.getProjectList();
 					//Set<IJavaProject> projects = new HashSet<IJavaProject>();
