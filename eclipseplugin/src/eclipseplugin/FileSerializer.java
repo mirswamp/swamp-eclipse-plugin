@@ -154,6 +154,7 @@ public class FileSerializer {
 			String buildDir = null;
 			String buildTarget = null;
 			// Build system index
+			str = reader.readLine();
 			if (str != null && !str.equals("\n")) {
 				buildSysIndex = Integer.parseInt(str);
 			}

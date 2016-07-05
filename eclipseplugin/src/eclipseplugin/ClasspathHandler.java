@@ -83,7 +83,7 @@ public class ClasspathHandler {
 			// CPE_VARIABLE - we'll need to use JavaCore.getResolvedClasspathEntry(entry) to give us either a CPE_LIBRARY or CPE_PROJECT
 			// CPE_CONTAINER - lol this is a container which can contain a bunch of the other 3
 			// make a directory named eclipse_swamp/lib
-			// TODO accomodate access rules, inclusion patterns, extra attributes, etc. - basically just copy over as much other info as possible from the original entry
+			// TODO accommodate access rules, inclusion patterns, extra attributes, etc. - basically just copy over as much other info as possible from the original entry
 			int kind = entry.getEntryKind();
 			if (kind == IClasspathEntry.CPE_SOURCE) {
 				newEntries.add(entry);
@@ -287,6 +287,7 @@ public class ClasspathHandler {
 		for (ClasspathHandler c : dependentProjects) {
 			set.add(c.project);
 		}
+		set.add(this.project);
 		return set;
 	}
 	
@@ -325,8 +326,11 @@ public class ClasspathHandler {
 	private void handleProject(IClasspathEntry entry) {
 		IProject project = ClasspathHandler.convertEntryToProject(this.project.getProject(), entry);
 		if (project == null) {
+			// TODO add some error handling
 			return;
 		}
+		// TODO we'll have to copy the project into one of our subdirectories
+		newEntries.add(entry);
 		String projectPath = project.getLocation().toString();
 		System.out.println("Project path: " + projectPath);
 		if (!this.root.projectsVisited.contains(projectPath)) {
@@ -403,21 +407,28 @@ public class ClasspathHandler {
 	private IClasspathEntry copyIntoDirectory(IClasspathEntry entry) {
 		// add to new entries, files
 		// TODO Worry about softlinks
-		// TODO Instead of just doing lastSegment, do the entire path and replace separator (e.g. "/") with some other char (e.g. "-")
 		// get path from the entry
+		char SEPARATOR = '/';
+		char DASH = '-';
 		IPath path = entry.getPath();
 		IPath sourceAttachmentPath = entry.getSourceAttachmentPath();
 		if (sourceAttachmentPath != null) {
 			System.out.println("Source attachment path: " + sourceAttachmentPath);
 		}
-		String lastSegment = path.lastSegment();
+		//String lastSegment = path.lastSegment();
+		String strPath = path.toString();
+		if (strPath.charAt(0) == SEPARATOR) {
+			strPath = strPath.substring(1);
+		}
+		strPath = strPath.replace(SEPARATOR, DASH);
 		Path src = ClasspathHandler.getPathFromIPath(path);
 		if (!src.toFile().exists()) {
 			// TODO Some serious logging
 			System.out.println("Classpath entry points to non-existent file: " + src);
 			return null;
 		}
-		File f = new File(this.root.targetDir.getAbsolutePath() + "/" + lastSegment);
+		//File f = new File(this.root.targetDir.getAbsolutePath() + "/" + lastSegment);
+		File f = new File(this.root.targetDir.getAbsolutePath() + "/" + strPath);
 		Path dest = f.toPath();
 		try {
 			System.out.println("Written to destination: " + dest);
