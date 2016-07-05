@@ -4,7 +4,6 @@ TODO:
 -Add handling for when assessment results come in (?)
 
 -(?) Stop copying over Java run-time (rt.jar) - this is very expensive
--Get cookies working properly (Vamshi's working on this)
 
 -Programmatically determine the type of Eclipse project and as much build as possible
     -e.g. if it's a Maven project in Eclipse, set that as the build system and populate the build info
@@ -14,3 +13,4 @@ TODO:
 DONE:
 -Add sensible default behaviors (e.g. if there's only one project, that should be the project selected)
 -Add Combo for SWAMP package to Config Dialog - this way we won't always submit a new package
+-Get cookies working properly (Vamshi's working on this)
