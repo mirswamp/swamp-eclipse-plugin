@@ -42,6 +42,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -136,6 +137,17 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 						// TODO Add message to console - out.println("Error: Project has cyclic dependencies");
 					}
 					Set<IJavaProject> projects = classpathHandler.getProjectList();
+					for (IJavaProject jp : projects) {
+						System.out.println("Project location: " + jp.getResource().getLocation());
+						try {
+							for (IClasspathEntry e : jp.getRawClasspath()) {
+								System.out.println(e);
+							}
+						} catch (JavaModelException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
 					//Set<IJavaProject> projects = new HashSet<IJavaProject>();
 					// projects = classpathHandler.getProjects();
 					//projects.add(javaProj);
