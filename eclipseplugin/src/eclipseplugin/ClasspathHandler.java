@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IWorkspace;
@@ -102,21 +103,7 @@ public class ClasspathHandler {
 				handleLibrary(entry);
 			}
 			else if (kind == IClasspathEntry.CPE_CONTAINER) {
-				try {
-					// TODO Question: Is it safe to not ship system libraries? Talk to Vamshi about this in the future
-					IClasspathContainer container = JavaCore.getClasspathContainer(entry.getPath(), project);
-					for (IClasspathEntry subEntry : container.getClasspathEntries()) {
-						if (subEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
-							handleLibrary(subEntry);
-						}
-						else { // subEntry.getEntryKind() == IClasspathEntry.CPE_PROJECT
-							handleProject(subEntry);
-						}
-					}
-				} catch (JavaModelException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				handleContainer(entry);
 			}
 			else if (kind == IClasspathEntry.CPE_VARIABLE) {
 				handleVariable(entry);
@@ -141,6 +128,24 @@ public class ClasspathHandler {
 		}
 	}
 	
+	public void handleContainer(IClasspathEntry entry) {
+		try {
+			// TODO Question: Is it safe to not ship system libraries? Talk to Vamshi about this in the future
+			IClasspathContainer container = JavaCore.getClasspathContainer(entry.getPath(), project);
+			for (IClasspathEntry subEntry : container.getClasspathEntries()) {
+				if (subEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
+					handleLibrary(subEntry);
+				}
+				else { // subEntry.getEntryKind() == IClasspathEntry.CPE_PROJECT
+					handleProject(subEntry);
+				}
+			}
+		} catch (JavaModelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public void handleSource(IClasspathEntry entry) {
 		if (this.root != this) {
 			IProjectDescription desc = null;
@@ -151,13 +156,18 @@ public class ClasspathHandler {
 				desc = this.project.getProject().getDescription();
 				uri = desc.getLocationURI();
 				if (uri == null) {
-					System.err.println("Project not found on local file system");
-					return;
+					srcPath = this.project.getProject().getLocation().toString();
+					if (srcPath == null) {
+						System.err.println("Project not found on local file system");
+						return;
+					}
+				} 
+				else {
+					srcPath = uri.getPath();
 				}
-				srcPath = uri.getPath();
 				System.out.println("Source path: " + srcPath);
 				String endPath = entry.getPath().removeFirstSegments(1).toString();
-				destPath = this.root.subProjDir.toString() + endPath;
+				destPath = this.root.subProjDir.toString() + "/" + this.project.getProject().getName();//endPath;
 				System.out.println("Dest path: " + destPath);
 				ClasspathHandler.copyDirectory(srcPath, destPath);
 			} catch (Exception e) {
@@ -196,8 +206,12 @@ public class ClasspathHandler {
 			System.out.println("Original output location: " + originalOutputLoc);
 			String newOutputLoc = originalOutputLoc.replace(srcPath, destPath);
 			System.out.println("New output location: " + newOutputLoc);
-			IPath outputPath = new org.eclipse.core.runtime.Path(newOutputLoc);
-			javaProj.setOutputLocation(outputPath, null);
+			
+			IFolder binDir = project.getFolder("bin");
+			IPath binPath = binDir.getFullPath();
+			
+			//IPath outputPath = new org.eclipse.core.runtime.Path(newOutputLoc);
+			javaProj.setOutputLocation(binPath, null);
 			} catch (JavaModelException e1) {
 				e1.printStackTrace();
 			}
