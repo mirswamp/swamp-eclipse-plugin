@@ -2,6 +2,7 @@ package eclipseplugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -14,6 +15,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathContainer;
@@ -29,12 +34,16 @@ public class ClasspathHandler {
 	private IClasspathEntry oldEntries[]; // old classpath entries
 	private List<IClasspathEntry> newEntries;
 	private File targetDir;
+	private File subProjDir;
 	private IJavaProject project;
 	private List<ClasspathHandler> dependentProjects;
 	private Set<String> projectsVisited;
 	private static String PROJECT_ROOT;
 	private ClasspathHandler root;
 	private boolean foundCycle;
+	
+	private static String BIN_DIR = ".swampbin";
+	private static String SUB_DIR = "subprojects";
 	
 	public ClasspathHandler(ClasspathHandler root, IJavaProject projectRoot, String path) {
 		project = projectRoot;
@@ -67,6 +76,7 @@ public class ClasspathHandler {
 			projectsVisited = new HashSet<String>();
 			cache = new HashMap<String, IClasspathEntry>();
 			setupTargetDirectory(path);
+			setupSubprojectDirectory(path);
 			this.root = this;
 		}
 		else {
@@ -86,7 +96,7 @@ public class ClasspathHandler {
 			// TODO accommodate access rules, inclusion patterns, extra attributes, etc. - basically just copy over as much other info as possible from the original entry
 			int kind = entry.getEntryKind();
 			if (kind == IClasspathEntry.CPE_SOURCE) {
-				newEntries.add(entry);
+				handleSource(entry);
 			}
 			else if (kind == IClasspathEntry.CPE_LIBRARY) {
 				handleLibrary(entry);
@@ -120,6 +130,109 @@ public class ClasspathHandler {
 		
 	}
 	
+	private static void copyDirectory(String srcPath, String destPath) {
+		File src = new File(srcPath);
+		File dest = new File(destPath);
+		try {
+			FileUtils.copyDirectory(src, dest);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	public void handleSource(IClasspathEntry entry) {
+		if (this.root != this) {
+			IProjectDescription desc = null;
+			URI uri = null;
+			String destPath = null;
+			String srcPath = null;
+			try {
+				desc = this.project.getProject().getDescription();
+				uri = desc.getLocationURI();
+				if (uri == null) {
+					System.err.println("Project not found on local file system");
+					return;
+				}
+				srcPath = uri.getPath();
+				System.out.println("Source path: " + srcPath);
+				String endPath = entry.getPath().removeFirstSegments(1).toString();
+				destPath = this.root.subProjDir.toString() + endPath;
+				System.out.println("Dest path: " + destPath);
+				ClasspathHandler.copyDirectory(srcPath, destPath);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			
+			/* Code adapted from https://wiki.eclipse.org/FAQ_How_do_I_create_a_Java_project%3F */
+			String prjName = "." + this.project.getProject().getName();
+			IWorkspace workspace = ResourcesPlugin.getWorkspace();
+			IWorkspaceRoot root = workspace.getRoot();
+			IProject project = root.getProject(prjName);
+			try {
+				project.create(null);
+				project.open(null);
+			} catch (CoreException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			try {
+				IProjectDescription newDesc = project.getDescription();
+				newDesc.setNatureIds(desc.getNatureIds());
+				IPath destIPath = new org.eclipse.core.runtime.Path(destPath);
+				newDesc.setLocation(destIPath);
+				project.setDescription(newDesc, null);
+				project.open(null);
+			} catch (CoreException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			/* Not sure if this part is necessary */
+			try {
+			IJavaProject javaProj = JavaCore.create(project);
+			String originalOutputLoc = this.project.getJavaProject().getOutputLocation().toString();
+			System.out.println("Original output location: " + originalOutputLoc);
+			String newOutputLoc = originalOutputLoc.replace(srcPath, destPath);
+			System.out.println("New output location: " + newOutputLoc);
+			IPath outputPath = new org.eclipse.core.runtime.Path(newOutputLoc);
+			javaProj.setOutputLocation(outputPath, null);
+			} catch (JavaModelException e1) {
+				e1.printStackTrace();
+			}
+			
+		/*	
+			String prjPath = this.project.getProject().getLocation().removeLastSegments(1).toString();
+			String endPath = entry.getPath().toString();
+			String srcPath = prjPath + endPath;
+			System.out.println("Source path: " + srcPath);
+			File src = new File(srcPath);
+			String destPath = this.root.subProjDir.toString() + endPath;
+			System.out.println("Dest path: " + destPath);
+			File dest = new File(destPath);
+			try {
+				FileUtils.copyDirectory(src, dest);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			IPath path = new org.eclipse.core.runtime.Path(destPath);
+		*/
+			String newSrcPath = this.root.subProjDir.toString() + entry.getPath().toString();
+			System.out.println("New rouce path: " + newSrcPath);
+			IPath srcIPath = new org.eclipse.core.runtime.Path(newSrcPath);
+			IClasspathEntry newEntry = JavaCore.newSourceEntry(srcIPath);
+			
+			// TODO Inclusion and exclusion patterns, use a different newSourceEntry function
+			newEntries.add(newEntry);
+		}
+		else {
+			newEntries.add(entry);
+		}
+	}
+	
 	public void handleVariable(IClasspathEntry entry) {
 		IClasspathEntry resolvedEntry = JavaCore.getResolvedClasspathEntry(entry);
 		if (resolvedEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
@@ -134,8 +247,31 @@ public class ClasspathHandler {
 		return foundCycle;
 	}
 	
+	public void setupSubprojectDirectory(String path) {
+		// TODO combine this with setupTargetDirectory
+		subProjDir = new File(path + "/" + ClasspathHandler.SUB_DIR);
+		System.out.println("Sub project directory: " + subProjDir);
+		if (subProjDir.exists()) {
+			try {
+				FileUtils.deleteDirectory(subProjDir);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+		if (!subProjDir.mkdirs()) {
+			System.err.println("Here is a huge problem!");
+			System.err.println("We were unable to make the directories");
+			// TODO This is a bad error that'll pretty much stop us in our tracks
+		}
+		else {
+			System.out.println("Created subproject directory successfully");
+		}
+	}
+	
 	public void setupTargetDirectory(String path) {
-		targetDir = new File(path + "/.swampbin");
+		targetDir = new File(path + "/" + ClasspathHandler.BIN_DIR);
 		if (targetDir.exists()) {
 			try {
 				FileUtils.deleteDirectory(targetDir);
@@ -151,7 +287,7 @@ public class ClasspathHandler {
 			// TODO This is a bad error that'll pretty much stop us in our tracks
 		}
 		else {
-			System.out.println("Created directory successfully");
+			System.out.println("Created target directory successfully");
 		}
 	}
 	
@@ -330,7 +466,8 @@ public class ClasspathHandler {
 			return;
 		}
 		// TODO we'll have to copy the project into one of our subdirectories
-		newEntries.add(entry);
+		//IClasspathEntry newEntry = copySubProject(entry);
+		//newEntries.add(entry);
 		String projectPath = project.getLocation().toString();
 		System.out.println("Project path: " + projectPath);
 		if (!this.root.projectsVisited.contains(projectPath)) {
@@ -338,9 +475,42 @@ public class ClasspathHandler {
 			if (project != null) {
 				ClasspathHandler cph = new ClasspathHandler(this.root, JavaCore.create(project), entry.getPath().toString());
 				this.root.addDependentProject(cph);
+				newEntries.add(entry);
 			}
 		}
 	}
+	/*
+	private IClasspathEntry copySubProject(IClasspathEntry oldEntry) {
+		IClasspathEntry newEntry;
+		// (1) Get path of the old entry
+		IPath oldPath = oldEntry.getPath().makeAbsolute();
+		String lastSegment = oldPath.lastSegment();
+		System.out.println("Old path: " + oldPath);
+		String strOldPath = oldPath.toString();
+		File srcDir = new File(strOldPath);
+		String strNewPath = subProjDir.getAbsolutePath() + "/" + lastSegment; // TODO handle if multiple projects have the same name 
+		File destDir = new File(strNewPath);
+		// (2) Copy the entire project directory into subdirectory (do the SEPARATOR/DASH replacement)
+		try {
+			FileUtils.copyDirectory(srcDir, destDir);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// (3) Make a new project in the subdirectory
+		IProject project = ClasspathHandler.convertEntryToProject(this.project.getProject(), oldEntry);
+		String name = "." + project.getName();
+		IWorkspace workspace = ResourcesPlugin.getWorkspace();
+		IWorkspaceRoot root = workspace.getRoot();
+		IProject newProject = root.getProject(name);
+		newProject.create(null);
+		newProject.open(null);
+		
+		
+		// (4) Create a classpath entry pointing to that project Javacore.newProjectEntry(IPath)
+		return newEntry;
+	}
+	*/
 	
 	public boolean containsClasspathEntry(String path) {
 		return cache.containsKey(path);
@@ -408,7 +578,6 @@ public class ClasspathHandler {
 		// add to new entries, files
 		// TODO Worry about softlinks
 		// get path from the entry
-		char SEPARATOR = '/';
 		char DASH = '-';
 		IPath path = entry.getPath();
 		IPath sourceAttachmentPath = entry.getSourceAttachmentPath();
@@ -417,10 +586,10 @@ public class ClasspathHandler {
 		}
 		//String lastSegment = path.lastSegment();
 		String strPath = path.toString();
-		if (strPath.charAt(0) == SEPARATOR) {
+		if (strPath.charAt(0) == IPath.SEPARATOR) {
 			strPath = strPath.substring(1);
 		}
-		strPath = strPath.replace(SEPARATOR, DASH);
+		strPath = strPath.replace(IPath.SEPARATOR, DASH);
 		Path src = ClasspathHandler.getPathFromIPath(path);
 		if (!src.toFile().exists()) {
 			// TODO Some serious logging

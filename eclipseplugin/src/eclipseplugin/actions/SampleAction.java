@@ -89,6 +89,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		sd = new SelectionDialog(window.getShell());
 		sd.setSwampApiWrapper(api);
 		cd = new ConfigDialog(window.getShell());
+		try {
 		if (!api.restoreSession(SESSION_STRING)) {
 		// Add authentication dialog here
 			AuthenticationDialog ad = new AuthenticationDialog(window.getShell());
@@ -102,6 +103,15 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		else {
 			// deserialize from file
 			boolean returnCode = FileSerializer.deserialize(serializedConfigFilepath, sd, cd);
+		}
+		} catch (Exception e) {
+			AuthenticationDialog ad = new AuthenticationDialog(window.getShell());
+			ad.create();
+			ad.setSwampApiWrapper(api);
+			if (ad.open() != Window.OK) {
+				return;
+			}
+			api.saveSession(SESSION_STRING);
 		}
 		sd.create();
 		if (sd.open() != Window.OK) {
