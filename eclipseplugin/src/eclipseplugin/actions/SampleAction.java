@@ -16,6 +16,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 
+import eclipseplugin.BuildfileGenerator;
 import eclipseplugin.ClasspathHandler;
 import eclipseplugin.FileSerializer;
 import eclipseplugin.PackageInfo;
@@ -26,6 +27,7 @@ import eclipseplugin.dialogs.SelectionDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
 import edu.wisc.cs.swamp.SwampApiWrapper;
+import edu.wisc.cs.swamp.exceptions.InvalidIdentifierException;
 
 import java.io.File;
 import java.io.IOException;
@@ -107,7 +109,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		}
 		else {
 			// deserialize from file
-			boolean returnCode = FileSerializer.deserialize(serializedConfigFilepath, sd, cd);
+			//boolean returnCode = FileSerializer.deserialize(serializedConfigFilepath, sd, cd);
 		}
 		} catch (Exception e) {
 			AuthenticationDialog ad = new AuthenticationDialog(window.getShell());
@@ -123,6 +125,8 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 			// TODO Handle error
 		}
 		else {
+			String prjUUID = sd.getProjectUUID();
+			cd.setSwampProject(prjUUID);
 			cd.create();
 			System.out.println("Made it to config dialog");
 			if (cd.open() != Window.OK) {
@@ -134,16 +138,19 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				if (autoGenBuild) {
 					// Generating Buildfile
 					IProject proj = cd.getProject();
+					System.out.println(proj.getProject().getName());
 					IJavaProject javaProj = JavaCore.create(proj);
 					IWorkspace workspace = ResourcesPlugin.getWorkspace();
 					IWorkspaceRoot root = workspace.getRoot();
 					String rootPath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
 					classpathHandler = new ClasspathHandler(null, javaProj, rootPath);// cd.getPkgPath()); // TODO replace this w/ workspace path
+					System.out.println(classpathHandler.getProjectName());
 					if (classpathHandler.hasCycles()) {
 						System.err.println("Huge error. Cyclic dependencies!");
 						// TODO Add message to console - out.println("Error: Project has cyclic dependencies");
 					}
-					Set<IJavaProject> projects = classpathHandler.getProjectList();
+					//Set<IJavaProject> projects = classpathHandler.getProjectList();
+					/*
 					for (IJavaProject jp : projects) {
 						System.out.println("Project location: " + jp.getResource().getLocation());
 						System.out.println("+++++++++++++++++++++++++++++++++++++++++++");
@@ -153,7 +160,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 								//if ((e.getEntryKind() == IClasspathEntry.CPE_SOURCE) && (e.getContentKind() == IPackageFragmentRoot.K_SOURCE)) {
 								System.out.println(e);
 								System.out.println("Path: " + e.getPath());
-								/*
+								
 								//System.out.println("Output path: " + e.getOutputLocation());
 								IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(e.getPath());
 								if (file.isLinked()) {
@@ -162,7 +169,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 									URI pathVariableValue = file.getWorkspace().getPathVariableManager().getURIValue(pathVariable);
 									System.out.println("Path variable: " + pathVariable);
 									System.out.println("Path variable URI " + pathVariableValue);
-								}*/
+								}
 								//}
 							}
 							System.out.println("Referenced");
@@ -175,9 +182,11 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 							e.printStackTrace();
 						}
 					}
+					*/
 					//Set<IJavaProject> projects = new HashSet<IJavaProject>();
 					// projects = classpathHandler.getProjects();
 					//projects.add(javaProj);
+					/*
 					BuildFileCreator.setOptions("build.xml", "jUnit", true, false);
 					try {
 						BuildFileCreator.createBuildFiles(projects, window.getShell(), null);
@@ -204,6 +213,16 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 						e.printStackTrace();
 					}
 				}
+				*/
+				BuildfileGenerator.generateBuildFile(classpathHandler);
+				System.out.println("Build file generated (theoretically)");
+				/*
+				if (classpathHandler != null) {
+					classpathHandler.revertClasspath();
+				}
+				return;
+				}
+				*/
 				
 				// Zipping and generating package.conf
 				Date date = new Date();
@@ -219,6 +238,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				// output name should be some combination of pkg name, version, timestamp, extension (.zip)
 				
 				PackageInfo pkg = new PackageInfo(path, filenameNoSpaces, pkgName); // pass in path and output zip file name
+				/*
 				pkg.setPkgShortName(pkgName);
 				pkg.setVersion(cd.getPkgVersion());
 				pkg.setBuildSys(cd.getBuildSys());
@@ -232,17 +252,22 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 
 				String parentDir = pkg.getParentPath();
 				// Upload package
-				String prjUUID = sd.getProjectUUID();
 				System.out.println("Uploading package");
 				System.out.println("Package-conf directory: " + parentDir + "/package.conf");
 				System.out.println("Archive directory: " + parentDir + "/" + filenameNoSpaces);
 				System.out.println("Project UUID: " + prjUUID);
-				String pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filenameNoSpaces, prjUUID); 
+				String pkgUUID = null;
+				try {
+					pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filenameNoSpaces, prjUUID, true);
+				} catch (InvalidIdentifierException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} 
 				if (pkgUUID == null) {
 					// TODO handle error here
 					System.err.println("Error in uploading package.");
 				}
-				
+				*/
 				// Deletion code - uncomment for release
 				/*
 				pkg.deleteFiles();
@@ -260,29 +285,20 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				if (classpathHandler != null) {
 					classpathHandler.revertClasspath();
 				}
-				
+		/*		
 				for (String platformUUID : sd.getPlatformUUIDs()) {
 					for (String toolUUID : sd.getToolUUIDs()) {
 						submitAssessment(api, pkgUUID, toolUUID, prjUUID, platformUUID);
 					}
 				}
-				
+			*/	
 			}
 
 		// Here's where the business logic goes
 		}
+			
+		}
 		
-		// Trying to do automated menu selection
-		Menu menu = window.getShell().getMenu();
-		if (menu == null) {
-			System.out.println("Empty menu");
-		}
-		else {
-			MenuItem[] menuItems = menu.getItems();
-			for (MenuItem m : menuItems) {
-				System.out.println(m);
-			}
-		}
 		
 		
 		/*MessageDialog.openInformation(

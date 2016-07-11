@@ -31,11 +31,13 @@ import org.apache.commons.io.*;
 
 public class ClasspathHandler {
 
-	private Map<String, IClasspathEntry> cache;
+	private Map<String, IClasspathEntry> entryCache;
 	private IClasspathEntry oldEntries[]; // old classpath entries
-	private List<IClasspathEntry> newEntries;
+	private List<IClasspathEntry> libEntries;
+	private List<IClasspathEntry> srcEntries;
 	private File targetDir;
 	private File subProjDir;
+	private String projectPath;
 	private IJavaProject project;
 	private List<ClasspathHandler> dependentProjects;
 	private Set<String> projectsVisited;
@@ -43,6 +45,7 @@ public class ClasspathHandler {
 	private ClasspathHandler root;
 	private boolean foundCycle;
 	private String path;
+	private Map<String, ClasspathHandler> projectCache;
 	
 	private static String BIN_DIR = ".swampbin";
 	private static String SUB_DIR = "subprojects";
@@ -50,10 +53,12 @@ public class ClasspathHandler {
 	public ClasspathHandler(ClasspathHandler root, IJavaProject projectRoot, String path) {
 		project = projectRoot;
 		oldEntries = null;
-		newEntries = new ArrayList<IClasspathEntry>();
+		libEntries = new ArrayList<IClasspathEntry>(); // library entries
+		srcEntries = new ArrayList<IClasspathEntry>(); // source entries
 		dependentProjects = null;
 		projectsVisited = null;
-		cache = null;
+		projectPath = null;
+		entryCache = null;
 		foundCycle = false;
 		
 		PROJECT_ROOT = projectRoot.getElementName();
@@ -86,19 +91,21 @@ public class ClasspathHandler {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			dependentProjects = new ArrayList<ClasspathHandler>();
-			cache = new HashMap<String, IClasspathEntry>();
+			//dependentProjects = new ArrayList<ClasspathHandler>();
+			entryCache = new HashMap<String, IClasspathEntry>();
 			setupTargetDirectory(this.path);
 			//setupSubprojectDirectory(path);
 			this.root = this;
 			IProject newProject = setupProject(projectRoot.getProject(), this.oldEntries);
 			this.project = JavaCore.create(newProject);
-			
+			this.projectCache = new HashMap<String, ClasspathHandler>();
 		}
 		else {
 			this.root = root;
 		}
+		dependentProjects = new ArrayList<ClasspathHandler>();
 		projectsVisited = new HashSet<String>();
+		projectPath = this.root.path + "/" + this.project.getProject().getName();
 
 		for (IClasspathEntry entry : oldEntries) {
 			System.out.println(entry.getPath());
@@ -129,11 +136,23 @@ public class ClasspathHandler {
 			}
 		}
 		ClasspathHandler.listEntries("Resolved entries", this.oldEntries);
-		ClasspathHandler.listEntries("New entries", newEntries);
-		setProjectClasspath(newEntries);
+		ClasspathHandler.listEntries("New entries", libEntries);
+		setProjectClasspath(libEntries);
 		
 	}
 	
+	public List<IClasspathEntry> getLibraryClasspath() {
+		return this.libEntries;
+	}
+	
+	public List<IClasspathEntry> getSourceClasspath() {
+		return this.srcEntries;
+	}
+	
+	public String getProjectPath() {
+		return this.projectPath;
+	}
+
 	private static void copyDirectory(String srcPath, String destPath) {
 		File src = new File(srcPath);
 		File dest = new File(destPath);
@@ -143,6 +162,24 @@ public class ClasspathHandler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	public String getProjectName() {
+		return this.project.getProject().getName();
+	}
+	
+	public String getOutputLocation() {
+		try {
+			return this.root.project.getOutputLocation().makeAbsolute().toString();
+		} catch (JavaModelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public String getSwampBinPath() {
+		return this.root.targetDir.getAbsolutePath();
 	}
 	
 	public void handleContainer(IClasspathEntry entry) {
@@ -178,10 +215,10 @@ public class ClasspathHandler {
 			IPath srcIPath = new org.eclipse.core.runtime.Path(newSrcPath);
 			IClasspathEntry newEntry = JavaCore.newSourceEntry(srcIPath);
 			// TODO Inclusion and exclusion patterns, use a different newSourceEntry function
-			newEntries.add(newEntry);
+			srcEntries.add(newEntry);
 	//	}
 	//	else {
-	//		newEntries.add(entry);
+	//		libEntries.add(entry);
 	//	}
 	}
 	
@@ -370,6 +407,7 @@ public class ClasspathHandler {
 		}
 	}
 	
+	/*
 	public Set<IJavaProject> getProjectList() {
 		Set<IJavaProject> set = new HashSet<IJavaProject>();
 		for (ClasspathHandler c : dependentProjects) {
@@ -377,6 +415,11 @@ public class ClasspathHandler {
 		}
 		set.add(this.project);
 		return set;
+	}
+	*/
+	
+	public List<ClasspathHandler> getDependentProjects() {
+		return this.dependentProjects;
 	}
 	
 	private static void listEntries(String category, IClasspathEntry[] array) {
@@ -515,7 +558,7 @@ public class ClasspathHandler {
 		System.out.println("Project path: " + projectPath);
 		if (!this.projectsVisited.contains(projectPath)) {
 			this.projectsVisited.add(projectPath);
-			prjEntry = this.root.cache.get(projectPath);
+			prjEntry = this.root.entryCache.get(projectPath);
 			if (prjEntry == null) {
 				IProject newProject = null;
 				try {
@@ -526,25 +569,28 @@ public class ClasspathHandler {
 				}
 				if (newProject != null) {
 					ClasspathHandler cph = new ClasspathHandler(this.root, JavaCore.create(newProject), entry.getPath().toString());
-					this.root.addDependentProject(cph);
+					//this.root.addDependentProject(cph);
+					this.addDependentProject(cph);
 					System.out.println("New project path: " + newProject.getFullPath());
 					prjEntry = JavaCore.newProjectEntry(newProject.getFullPath()); // TODO Use constructor with more arguments to handle access rules and the like
-					newEntries.add(prjEntry);
-					this.root.cache.put(projectPath, prjEntry);
+					libEntries.add(prjEntry);
+					this.root.entryCache.put(projectPath, prjEntry);
+					this.root.projectCache.put(projectPath, cph);
 				}
 			}
 			else {
-				newEntries.add(prjEntry);
+				libEntries.add(prjEntry);
+				this.addDependentProject(this.root.projectCache.get(projectPath));
 			}
 		}
 	}
 	
 	public boolean containsClasspathEntry(String path) {
-		return cache.containsKey(path);
+		return entryCache.containsKey(path);
 	}
 	
 	public void addClasspathEntry(String path, IClasspathEntry entry) {
-		cache.put(path, entry);
+		entryCache.put(path, entry);
 	}
 	
 	private void handleLibrary(IClasspathEntry entry) {
@@ -557,7 +603,7 @@ public class ClasspathHandler {
 			IPath path = entry.getPath().makeAbsolute();
 			String strPath = path.toString();
 			if (this.root.containsClasspathEntry(strPath)) {
-				newEntry = this.root.cache.get(strPath);
+				newEntry = this.root.entryCache.get(strPath);
 			}
 			else {
 				newEntry = copyIntoDirectory(entry);
@@ -567,7 +613,7 @@ public class ClasspathHandler {
 				return;
 			}
 		}
-		newEntries.add(newEntry);
+		libEntries.add(newEntry);
 	}
 
 	private boolean isInRootDirectory(IClasspathEntry entry) {
@@ -579,6 +625,16 @@ public class ClasspathHandler {
 	}
 	
 	public void revertClasspath() {
+		for (ClasspathHandler c : this.dependentProjects) {
+			c.revertClasspath();
+		}
+		try {
+			this.project.setRawClasspath(this.oldEntries, null);
+		} catch (JavaModelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		/*
 		for (ClasspathHandler c : dependentProjects) {
 			try {
 				c.project.setRawClasspath(c.oldEntries, null);
@@ -586,7 +642,9 @@ public class ClasspathHandler {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
+		}*/
+		System.out.println("Not deleting file " + this.root.path);
+		/*
 		try {
 			FileUtils.deleteDirectory(new File(this.root.path));
 			//FileUtils.deleteDirectory(targetDir);
@@ -594,6 +652,7 @@ public class ClasspathHandler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		*/
 		/*
 		try {
 			FileUtils.deleteDirectory(subProjDir);
@@ -601,12 +660,14 @@ public class ClasspathHandler {
 			e.printStackTrace();
 		}
 		*/
+		/*
 		try {
 			project.setRawClasspath(oldEntries, null);
 		} catch (JavaModelException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		*/
 	}
 	
 	private IClasspathEntry copyIntoDirectory(IClasspathEntry entry) {
@@ -634,6 +695,7 @@ public class ClasspathHandler {
 		//File f = new File(this.root.targetDir.getAbsolutePath() + "/" + lastSegment);
 		File f = new File(this.root.targetDir.getAbsolutePath() + "/" + strPath);
 		Path dest = f.toPath();
+		/* TODO Uncomment this!
 		try {
 			System.out.println("Written to destination: " + dest);
 			// This copy needs to be forced to disk
@@ -653,6 +715,7 @@ public class ClasspathHandler {
 			e.printStackTrace();
 			return null;
 		}
+		*/
 		IPath newPath = new org.eclipse.core.runtime.Path(dest.toString());
 		return JavaCore.newLibraryEntry(newPath, newPath, null);
 	}

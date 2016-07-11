@@ -46,6 +46,8 @@ public class ConfigDialog extends TitleAreaDialog {
 	private IProject project;
 	private int prjIndex;
 	private boolean createNewPackage;
+	// SWAMP Project
+	private String prjUUID;
 	// SWAMP Package
 	//private PackageThing pkg;
 	private String pkgVersion;
@@ -67,6 +69,10 @@ public class ConfigDialog extends TitleAreaDialog {
  	public String getprjPath() {
 		return project.getLocation().toString();
 	}
+ 	
+ 	public void setSwampProject(String prjUUID) {
+ 		this.prjUUID = prjUUID;
+ 	}
 	
 	public String getPkgName() {
 		return pkgName;
@@ -199,7 +205,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			return false;
 		}
 		String pkgThingUUID = pkgVers.getPackageThing().getUUIDString();
-		List<? extends PackageThing> packages = api.getAllPackages();
+		List<? extends PackageThing> packages = api.getAllPackages(prjUUID);
 		for (int i = 0; i < packages.size(); i++) {
 			if (packages.get(i).getUUIDString().equals(pkgThingUUID)) {
 				pkgIndex = i;
@@ -256,7 +262,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	private String[] getPackageOptions() {
-		List<? extends PackageThing> list = api.getAllPackages();
+		List<? extends PackageThing> list = api.getAllPackages(prjUUID);
 		int numPackages = list.size() + 1;
 		String[] pkgNames = new String[numPackages];
 		pkgNames[0] = "Create new package";
@@ -465,7 +471,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 			project = projects[prjCombo.getSelectionIndex()];
 			// handle Package
-			List<? extends PackageThing> list = api.getAllPackages();
+			List<? extends PackageThing> list = api.getAllPackages(prjUUID);
 			int pkgSelection = pkgCombo.getSelectionIndex();
 			if (pkgSelection == CREATE_NEW_PACKAGE) {
 				createNewPackage = true;
