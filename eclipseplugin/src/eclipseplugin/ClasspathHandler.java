@@ -42,6 +42,7 @@ public class ClasspathHandler {
 	private static String PROJECT_ROOT;
 	private ClasspathHandler root;
 	private boolean foundCycle;
+	private String path;
 	
 	private static String BIN_DIR = ".swampbin";
 	private static String SUB_DIR = "subprojects";
@@ -73,11 +74,26 @@ public class ClasspathHandler {
 				// throw some sort of cyclic dependency exception
 				return;
 			}
+			this.path = path + "/package";
+			// Make package directory
+			File pkg = new File(this.path);
+			if (pkg.exists()) {
+				pkg.delete();
+			}
+			try {
+				FileUtils.forceMkdir(pkg);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			dependentProjects = new ArrayList<ClasspathHandler>();
 			cache = new HashMap<String, IClasspathEntry>();
-			setupTargetDirectory(path);
-			setupSubprojectDirectory(path);
+			setupTargetDirectory(this.path);
+			//setupSubprojectDirectory(path);
 			this.root = this;
+			IProject newProject = setupProject(projectRoot.getProject(), this.oldEntries);
+			this.project = JavaCore.create(newProject);
+			
 		}
 		else {
 			this.root = root;
@@ -148,17 +164,25 @@ public class ClasspathHandler {
 	}
 	
 	public void handleSource(IClasspathEntry entry) {
-		if (this.root != this) {
-			String newSrcPath = this.root.subProjDir.toString() + entry.getPath().toString();
-			System.out.println("New rouce path: " + newSrcPath);
+		String newSrcPath;
+		//if (this.root == this) {
+			String str = entry.getPath().toString();
+			StringBuffer sb = new StringBuffer(str);
+			sb.insert(1, ".");
+			newSrcPath = this.root.path + sb.toString(); 
+		//}
+		//else {
+			//newSrcPath = this.root.path + entry.getPath().toString();
+	//	}
+			System.out.println("New source path: " + newSrcPath);
 			IPath srcIPath = new org.eclipse.core.runtime.Path(newSrcPath);
 			IClasspathEntry newEntry = JavaCore.newSourceEntry(srcIPath);
 			// TODO Inclusion and exclusion patterns, use a different newSourceEntry function
 			newEntries.add(newEntry);
-		}
-		else {
-			newEntries.add(entry);
-		}
+	//	}
+	//	else {
+	//		newEntries.add(entry);
+	//	}
 	}
 	
 	public void handleVariable(IClasspathEntry entry) {
@@ -174,7 +198,7 @@ public class ClasspathHandler {
 	public boolean hasCycles() {
 		return foundCycle;
 	}
-	
+/*	
 	public void setupSubprojectDirectory(String path) {
 		// TODO combine this with setupTargetDirectory
 		subProjDir = new File(path + "/" + ClasspathHandler.SUB_DIR);
@@ -197,7 +221,7 @@ public class ClasspathHandler {
 			System.out.println("Created subproject directory successfully");
 		}
 	}
-	
+*/	
 	public void setupTargetDirectory(String path) {
 		targetDir = new File(path + "/" + ClasspathHandler.BIN_DIR);
 		if (targetDir.exists()) {
@@ -398,7 +422,7 @@ public class ClasspathHandler {
 		dependentProjects.add(cph);
 	}
 	
-	private IProject setupSubProject(IProject project, IClasspathEntry[] classpath) {
+	private IProject setupProject(IProject project, IClasspathEntry[] classpath) {
 		IProjectDescription desc = null;
 		URI uri = null;
 		String destPath = null;
@@ -419,7 +443,8 @@ public class ClasspathHandler {
 			}
 			System.out.println("Source path: " + srcPath);
 			prjName = project.getName();
-			destPath = this.root.subProjDir.toString() + "/" + prjName; 
+			destPath = this.root.path + "/." + prjName;
+			//destPath = this.root.subProjDir.toString() + "/" + prjName; 
 			System.out.println("Dest path: " + destPath);
 			ClasspathHandler.copyDirectory(srcPath, destPath);
 		} catch (Exception e) {
@@ -433,6 +458,9 @@ public class ClasspathHandler {
 		for (IProject prj : root.getProjects()) {
 			System.out.println(prj);
 		}
+		// We prepend a "." to the project so it doesn't conflict with names already in our workspace root
+		// Since BuildFileCreator is goofy and uses the project name from the root rather than its actual location
+		// the project needs to also be named with the "." prepended
 		IProject newProject = root.getProject("." + prjName);
 		try {
 			newProject.delete(true, null);
@@ -455,20 +483,22 @@ public class ClasspathHandler {
 		}
 		
 		/* Not sure if this part is necessary */
+		IJavaProject javaProj = null;
 		try {
-		IJavaProject javaProj = JavaCore.create(project);
+		javaProj = JavaCore.create(newProject);
 		String originalOutputLoc = this.project.getJavaProject().getOutputLocation().toString();
 		System.out.println("Original output location: " + originalOutputLoc);
 		String newOutputLoc = originalOutputLoc.replace(srcPath, destPath);
 		System.out.println("New output location: " + newOutputLoc);
 		
-		IFolder binDir = project.getFolder("bin");
+		IFolder binDir = newProject.getFolder("bin");
 		IPath binPath = binDir.getFullPath();
 		
 		//IPath outputPath = new org.eclipse.core.runtime.Path(newOutputLoc);
 		javaProj.setOutputLocation(binPath, null);
-		javaProj.setRawClasspath(classpath, null);
-		} catch (JavaModelException e1) {
+		javaProj.setRawClasspath(classpath, true, null);
+		} catch (Exception e1) {
+			System.out.println("Started with a project, now we're here");
 			e1.printStackTrace();
 		}
 		return newProject;
@@ -489,7 +519,7 @@ public class ClasspathHandler {
 			if (prjEntry == null) {
 				IProject newProject = null;
 				try {
-					newProject = setupSubProject(project, JavaCore.create(project).getRawClasspath());
+					newProject = setupProject(project, JavaCore.create(project).getRawClasspath());
 				} catch (JavaModelException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -558,16 +588,19 @@ public class ClasspathHandler {
 			}
 		}
 		try {
-			FileUtils.deleteDirectory(targetDir);
+			FileUtils.deleteDirectory(new File(this.root.path));
+			//FileUtils.deleteDirectory(targetDir);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		/*
 		try {
 			FileUtils.deleteDirectory(subProjDir);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		*/
 		try {
 			project.setRawClasspath(oldEntries, null);
 		} catch (JavaModelException e1) {

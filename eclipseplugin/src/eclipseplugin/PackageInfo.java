@@ -35,14 +35,14 @@ public class PackageInfo {
 	private String buildDir;
 	private String buildFile;
 	
-	public PackageInfo(String dirPath, String outputName) {
+	public PackageInfo(String dirPath, String outputName, String pkgName) {
 		
 		String targetDir = "bin";
 		buildDir = ".";
 		zipName = outputName;
 		zipPath = zipPackage(dirPath, outputName, targetDir);
 		
-		pkgName = new org.eclipse.core.runtime.Path(dirPath).lastSegment();
+		this.pkgName = pkgName;
 		
 		MessageDigest md5 = null;
 		MessageDigest sha512 = null;
@@ -53,7 +53,7 @@ public class PackageInfo {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.println("Path to get: " + zipPath);
+		//System.out.println("Path to get: " + zipPath);
 		Path path = Paths.get(zipPath);
 		byte[] zipBytes;
 		try {
@@ -71,7 +71,7 @@ public class PackageInfo {
 		File f = new File(filepath);
 		if (f != null) {
 			if (!f.delete()) {
-				System.out.println("Unable to delete " + filepath);
+				//System.out.println("Unable to delete " + filepath);
 			}
 		}
 	}
@@ -118,14 +118,14 @@ public class PackageInfo {
 	/* Adapted from example code provided at http://www.oracle.com/technetwork/articles/java/compress-1565076.html */
 	private String zipPackage(String dirPath, String outputName, String target) {
 		String finalPath = "";
-		System.out.println("Writing a zip file of " + dirPath + " to file " + outputName);
+		//System.out.println("Writing a zip file of " + dirPath + " to file " + outputName);
 		// this needs to zip the directory specified by Path dir and return the path to the zipped file
 		try {
 			IPath path = new org.eclipse.core.runtime.Path(dirPath);
 			IPath parentPath = path.removeLastSegments(1);
 			parentDir = parentPath.toString();
 			String lastSegment = path.lastSegment();
-			System.out.println("Last segment: " + lastSegment);
+			//System.out.println("Last segment: " + lastSegment);
 			//System.out.println("String dirPath: " + dirPath);
 			//System.out.println("Parent path: " + parentPath);
 			//System.out.println("Child path: " + path);
@@ -145,6 +145,7 @@ public class PackageInfo {
 		File file = new File(pathname);
 		String filename;
 		String files[] = file.list();
+		/*
 		System.out.println("Adding entries from: " + basePath);
 		
 		System.out.println("\n\n\n\n========================");
@@ -152,13 +153,13 @@ public class PackageInfo {
 			System.out.println(string);
 		}
 		System.out.println("========================\n\n\n\n");
-		
+		*/
 		
 		for (int i = 0; i < files.length; i++) {
 			filename = pathname + "/" + files[i];
-			System.out.println("Filename: " + filename);
+			//System.out.println("Filename: " + filename);
 			File f = new File(filename);
-			System.out.println(f);
+			//System.out.println(f);
 			if (f.isDirectory()) {
 				boolean excl = (files[i].equals(target)) ? true : excludeClass;
 				addEntries(filename, basePath + "/" + files[i], out, target, excl);
@@ -168,7 +169,7 @@ public class PackageInfo {
 					addFileToZip(filename, basePath + "/" + files[i], out);
 				}
 				else {
-					System.out.println("Excluded Class: " + files[i]);
+					//System.out.println("Excluded Class: " + files[i]);
 				}
 			}
 		}
@@ -178,7 +179,7 @@ public class PackageInfo {
 		int BUF_SIZE = 2048;
 		byte data[] = new byte[BUF_SIZE];
 		try {
-			System.out.println("Reading input from: " + pathname);
+			//System.out.println("Reading input from: " + pathname);
 			FileInputStream fi = new FileInputStream(pathname);
 			BufferedInputStream in = new BufferedInputStream(fi, 2048);
 			ZipEntry entry = new ZipEntry(relPath);

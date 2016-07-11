@@ -29,6 +29,7 @@ import edu.wisc.cs.swamp.SwampApiWrapper;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -38,12 +39,15 @@ import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import org.eclipse.ant.internal.ui.datatransfer.BuildFileCreator;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 
@@ -89,7 +93,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		
 		sd = new SelectionDialog(window.getShell());
 		sd.setSwampApiWrapper(api);
-		cd = new ConfigDialog(window.getShell());
+		cd = new ConfigDialog(window.getShell(), api);
 		try {
 		if (!api.restoreSession(SESSION_STRING)) {
 		// Add authentication dialog here
@@ -131,7 +135,10 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					// Generating Buildfile
 					IProject proj = cd.getProject();
 					IJavaProject javaProj = JavaCore.create(proj);
-					classpathHandler = new ClasspathHandler(null, javaProj, cd.getPkgPath());
+					IWorkspace workspace = ResourcesPlugin.getWorkspace();
+					IWorkspaceRoot root = workspace.getRoot();
+					String rootPath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
+					classpathHandler = new ClasspathHandler(null, javaProj, rootPath);// cd.getPkgPath()); // TODO replace this w/ workspace path
 					if (classpathHandler.hasCycles()) {
 						System.err.println("Huge error. Cyclic dependencies!");
 						// TODO Add message to console - out.println("Error: Project has cyclic dependencies");
@@ -139,9 +146,29 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					Set<IJavaProject> projects = classpathHandler.getProjectList();
 					for (IJavaProject jp : projects) {
 						System.out.println("Project location: " + jp.getResource().getLocation());
+						System.out.println("+++++++++++++++++++++++++++++++++++++++++++");
 						try {
+							System.out.println("Raw");
 							for (IClasspathEntry e : jp.getRawClasspath()) {
+								//if ((e.getEntryKind() == IClasspathEntry.CPE_SOURCE) && (e.getContentKind() == IPackageFragmentRoot.K_SOURCE)) {
 								System.out.println(e);
+								System.out.println("Path: " + e.getPath());
+								/*
+								//System.out.println("Output path: " + e.getOutputLocation());
+								IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(e.getPath());
+								if (file.isLinked()) {
+									System.out.println("This file is linked! but to where?");
+									String pathVariable = file.getRawLocation().segment(0).toString();
+									URI pathVariableValue = file.getWorkspace().getPathVariableManager().getURIValue(pathVariable);
+									System.out.println("Path variable: " + pathVariable);
+									System.out.println("Path variable URI " + pathVariableValue);
+								}*/
+								//}
+							}
+							System.out.println("Referenced");
+							for (IClasspathEntry e : jp.getReferencedClasspathEntries()) {
+								System.out.println(e);
+								System.out.println("Path: " + e.getPath());
 							}
 						} catch (JavaModelException e) {
 							// TODO Auto-generated catch block
@@ -182,7 +209,8 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				Date date = new Date();
 				String timestamp = date.toString();
 				String pkgName = cd.getPkgName();
-				String path = cd.getPkgPath();
+				//String path = cd.getPkgPath();
+				String path = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + "/package";
 				String filename = timestamp + "-" + pkgName + ".zip";
 				String filenameNoSpaces = filename.replace(" ", "-").replace(":", "").toLowerCase(); // PackageVersionHandler mangles the name for some reason if there are colons or uppercase letters
 				System.out.println("Package Name: " + pkgName);
@@ -190,7 +218,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				System.out.println("Filename: " + filenameNoSpaces);
 				// output name should be some combination of pkg name, version, timestamp, extension (.zip)
 				
-				PackageInfo pkg = new PackageInfo(path, filenameNoSpaces); // pass in path and output zip file name
+				PackageInfo pkg = new PackageInfo(path, filenameNoSpaces, pkgName); // pass in path and output zip file name
 				pkg.setPkgShortName(pkgName);
 				pkg.setVersion(cd.getPkgVersion());
 				pkg.setBuildSys(cd.getBuildSys());
