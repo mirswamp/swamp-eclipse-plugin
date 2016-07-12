@@ -238,7 +238,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				// output name should be some combination of pkg name, version, timestamp, extension (.zip)
 				
 				PackageInfo pkg = new PackageInfo(path, filenameNoSpaces, pkgName); // pass in path and output zip file name
-				/*
+				
 				pkg.setPkgShortName(pkgName);
 				pkg.setVersion(cd.getPkgVersion());
 				pkg.setBuildSys(cd.getBuildSys());
@@ -267,7 +267,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					// TODO handle error here
 					System.err.println("Error in uploading package.");
 				}
-				*/
+				
 				// Deletion code - uncomment for release
 				/*
 				pkg.deleteFiles();
@@ -285,13 +285,12 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				if (classpathHandler != null) {
 					classpathHandler.revertClasspath();
 				}
-		/*		
+				
 				for (String platformUUID : sd.getPlatformUUIDs()) {
 					for (String toolUUID : sd.getToolUUIDs()) {
 						submitAssessment(api, pkgUUID, toolUUID, prjUUID, platformUUID);
 					}
 				}
-			*/	
 			}
 
 		// Here's where the business logic goes

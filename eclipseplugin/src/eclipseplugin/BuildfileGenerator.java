@@ -26,7 +26,7 @@ public class BuildfileGenerator {
 	
 	private static String 	CLASSPATH_NAME 		= "project.classpath";
 	private static String 	SWAMPBIN_NAME 		= "swampbin";
-	private static String 	SWAMPBIN_REL_PATH 	= "package/.swampbin";
+	private static String 	SWAMPBIN_REL_PATH 	= "../.swampbin";//"package/.swampbin";
 	private static String 	BUILDFILE_NAME		= "build.xml";
 	private static int 		INDENT_SPACES 		= 4;
 
@@ -52,8 +52,12 @@ public class BuildfileGenerator {
 			setProperties(doc, root, SWAMPBIN_REL_PATH, "1.7", "1.7"); // TODO Set this based off of config dialog
 			// classpath
 			setLibraryClasspath(doc, root, project.getLibraryClasspath());
+			// init target (as of now just creating output directory)
+			String prjName = project.getProjectName();
+			String outputDir = makeRelative(project.getOutputLocation(), prjName);
+			setInitTarget(doc, root, outputDir);
 			// build target
-			setBuildTarget(doc, root, project.getOutputLocation(), project.getDependentProjects(), project.getSourceClasspath());	
+			setBuildTarget(doc, root, outputDir, project.getDependentProjects(), project.getSourceClasspath(), prjName);	
 			// TODO Fix this output location
 			
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -121,9 +125,37 @@ public class BuildfileGenerator {
 		// TODO Add handling for bootclasspath (?)
 	}
 	
-	private static void setBuildTarget(Document doc, Element root, String outputDir, List<ClasspathHandler> list, List<IClasspathEntry> srcEntries) {
+	// TODO Put this into a utility class
+	public static String makeRelative(String path, String projectName) {
+		System.out.println("Make Relative");
+		System.out.println("Original path: " + path);
+		System.out.println("Project name: " + projectName);
+		String original = path;
+		int index = path.indexOf(projectName);
+		if (index < 0) {
+			return original;
+		}
+		String relPath = path.substring(index+projectName.length(), path.length());
+		if (relPath.charAt(0) == '/') {
+			return relPath.substring(1, relPath.length());
+		}
+		return relPath;
+	}
+	
+	private static void setInitTarget(Document doc, Element root, String relOutputDir) {
+		Element target = doc.createElement("target");
+		target.setAttribute("name", "init");
+		root.appendChild(target);
+		
+		Element mkdir = doc.createElement("mkdir");
+		mkdir.setAttribute("dir", relOutputDir);
+		target.appendChild(mkdir);
+	}
+	
+	private static void setBuildTarget(Document doc, Element root, String relOutputDir, List<ClasspathHandler> list, List<IClasspathEntry> srcEntries, String projectName) {
 		Element target = doc.createElement("target");
 		target.setAttribute("name", "build");
+		target.setAttribute("depends", "init");
 		root.appendChild(target);
 		
 		for (ClasspathHandler c : list) {
@@ -131,14 +163,15 @@ public class BuildfileGenerator {
 			if (!new File(filepath).exists()) {
 				BuildfileGenerator.generateBuildFile(c);
 			}
+			String relPath = "../" + c.getProjectName() + "/" + BUILDFILE_NAME;
 			Element ant = doc.createElement("ant");
-			ant.setAttribute("antfile", filepath); // TODO Make this a relative path (?) ../(projectName)/build.xml
+			ant.setAttribute("antfile", relPath); 
 			ant.setAttribute("target", "build");
 			target.appendChild(ant);
 		}
 		
 		Element javac = doc.createElement("javac");
-		javac.setAttribute("destdir", outputDir);
+		javac.setAttribute("destdir", relOutputDir);
 		javac.setAttribute("source", "${source}");
 		javac.setAttribute("target", "${target}");
 		target.appendChild(javac);
@@ -147,10 +180,12 @@ public class BuildfileGenerator {
 		for (IClasspathEntry entry : srcEntries) {
 			Element src = doc.createElement("src");
 			IPath absPath = entry.getPath().makeAbsolute();
-			IPath relPath = absPath.removeFirstSegments(absPath.segmentCount()-3);
+			//IPath relPath = absPath.removeFirstSegments(absPath.segmentCount()-3);
 			// TODO -3 won't be right if it's package/project/main/src or something
-			System.out.println("Rel path: " + relPath.toString());
-			src.setAttribute("path", relPath.toString());
+			//System.out.println("Rel path: " + relPath.toString());
+			String strRelPath = makeRelative(absPath.toString(), projectName);
+			System.out.println("Made relative: " + strRelPath);
+			src.setAttribute("path", strRelPath);
 			javac.appendChild(src);
 		}
 		

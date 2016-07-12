@@ -488,7 +488,7 @@ public class ConfigDialog extends TitleAreaDialog {
 				needsBuildFile = true;
 				buildSys = "ant";
 				buildTarget = "build";
-				buildDir = ".";
+				buildDir = "." + project.getName();
 				buildFile = "build.xml";
 			}
 			else if (buildSysIndex == NO_BUILD) {

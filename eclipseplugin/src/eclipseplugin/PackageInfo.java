@@ -214,7 +214,8 @@ public class PackageInfo {
 		writer.println("package-archive=" + zipName);
 		writer.println("package-archive-md5=" + md5hash);
 		writer.println("package-archive-sha512=" + sha512hash);
-		writer.println("package-dir=" + pkgName);
+		//writer.println("package-dir=" + pkgName);
+		writer.println("package-dir=" + "package");
 		writer.println("package-language=" + "Java");
 		writer.println("build-sys=" + buildSys);
 		if (!buildDir.equals("")) {

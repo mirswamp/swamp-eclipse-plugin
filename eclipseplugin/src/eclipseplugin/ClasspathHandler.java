@@ -170,7 +170,7 @@ public class ClasspathHandler {
 	
 	public String getOutputLocation() {
 		try {
-			return this.root.project.getOutputLocation().makeAbsolute().toString();
+			return this.root.project.getOutputLocation().toString();
 		} catch (JavaModelException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -531,14 +531,21 @@ public class ClasspathHandler {
 		javaProj = JavaCore.create(newProject);
 		String originalOutputLoc = this.project.getJavaProject().getOutputLocation().toString();
 		System.out.println("Original output location: " + originalOutputLoc);
-		String newOutputLoc = originalOutputLoc.replace(srcPath, destPath);
+		String newOutputLoc = originalOutputLoc.replace(prjName, "." + prjName);
 		System.out.println("New output location: " + newOutputLoc);
+		String relPath = BuildfileGenerator.makeRelative(newOutputLoc, "." + prjName);
+		String absPath = destPath + "/" + relPath;
 		
-		IFolder binDir = newProject.getFolder("bin");
-		IPath binPath = binDir.getFullPath();
+		//IFolder binDir = newProject.getFolder("bin");
+		//IPath binPath = binDir.getFullPath();
+		//System.out.println("Bin path: " + binPath.toString());
+		// TODO Remove this stuff
+		File f = new File(absPath);
+		FileUtils.forceMkdir(f);
+		System.out.println("Forced creation of directory " + absPath);
 		
-		//IPath outputPath = new org.eclipse.core.runtime.Path(newOutputLoc);
-		javaProj.setOutputLocation(binPath, null);
+		IPath outputPath = new org.eclipse.core.runtime.Path(newOutputLoc);
+		javaProj.setOutputLocation(outputPath, null);
 		javaProj.setRawClasspath(classpath, true, null);
 		} catch (Exception e1) {
 			System.out.println("Started with a project, now we're here");
@@ -695,7 +702,6 @@ public class ClasspathHandler {
 		//File f = new File(this.root.targetDir.getAbsolutePath() + "/" + lastSegment);
 		File f = new File(this.root.targetDir.getAbsolutePath() + "/" + strPath);
 		Path dest = f.toPath();
-		/* TODO Uncomment this!
 		try {
 			System.out.println("Written to destination: " + dest);
 			// This copy needs to be forced to disk
@@ -715,7 +721,6 @@ public class ClasspathHandler {
 			e.printStackTrace();
 			return null;
 		}
-		*/
 		IPath newPath = new org.eclipse.core.runtime.Path(dest.toString());
 		return JavaCore.newLibraryEntry(newPath, newPath, null);
 	}
