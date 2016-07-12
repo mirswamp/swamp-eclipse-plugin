@@ -54,7 +54,7 @@ public class BuildfileGenerator {
 			setLibraryClasspath(doc, root, project.getLibraryClasspath());
 			// init target (as of now just creating output directory)
 			String prjName = project.getProjectName();
-			String outputDir = makeRelative(project.getOutputLocation(), prjName);
+			String outputDir = makeRelative(project.getOutputLocation(), prjName); // this needs to be the project name of the root. Also, it needs to be relative to this directory, so ../.<rootprojectname>/bin
 			setInitTarget(doc, root, outputDir);
 			// build target
 			setBuildTarget(doc, root, outputDir, project.getDependentProjects(), project.getSourceClasspath(), prjName);	

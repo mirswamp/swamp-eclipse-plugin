@@ -37,7 +37,7 @@ public class PackageInfo {
 	
 	public PackageInfo(String dirPath, String outputName, String pkgName) {
 		
-		String targetDir = "bin";
+		String targetDir = "bin"; // TODO Stop assuming target directory is bin
 		buildDir = ".";
 		zipName = outputName;
 		zipPath = zipPackage(dirPath, outputName, targetDir);

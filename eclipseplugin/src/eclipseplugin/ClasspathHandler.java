@@ -35,20 +35,19 @@ public class ClasspathHandler {
 	private IClasspathEntry oldEntries[]; // old classpath entries
 	private List<IClasspathEntry> libEntries;
 	private List<IClasspathEntry> srcEntries;
-	private File targetDir;
-	private File subProjDir;
+	private File targetDir; // swamp bin directory
 	private String projectPath;
 	private IJavaProject project;
 	private List<ClasspathHandler> dependentProjects;
-	private Set<String> projectsVisited;
+	private Set<String> projectsVisited; // this is so an individual ClasspathHandler doesn't add the same project entry twice
 	private static String PROJECT_ROOT;
 	private ClasspathHandler root;
 	private boolean foundCycle;
 	private String path;
-	private Map<String, ClasspathHandler> projectCache;
+	private Map<String, ClasspathHandler> projectCache; // this is so we only have to visit referenced projects once regardless of how many times they've been referenced. We always look at root.
 	
 	private static String BIN_DIR = ".swampbin";
-	private static String SUB_DIR = "subprojects";
+	private static String PACKAGE_DIR = "package";
 	
 	public ClasspathHandler(ClasspathHandler root, IJavaProject projectRoot, String path) {
 		project = projectRoot;
@@ -73,38 +72,29 @@ public class ClasspathHandler {
 			return;
 		}
 		if (root == null) {
+			// TODO Refactor cycle detection into its own class
 			if (projectHasCycle(projectRoot)) {
 				System.err.println("There are cyclic dependencies preventing this project from being built");
 				System.err.println("Please remove all cycles before resubmitting.");
 				// throw some sort of cyclic dependency exception
 				return;
 			}
-			this.path = path + "/package";
-			// Make package directory
-			File pkg = new File(this.path);
-			if (pkg.exists()) {
-				pkg.delete();
-			}
-			try {
-				FileUtils.forceMkdir(pkg);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			//dependentProjects = new ArrayList<ClasspathHandler>();
-			entryCache = new HashMap<String, IClasspathEntry>();
-			setupTargetDirectory(this.path);
-			//setupSubprojectDirectory(path);
 			this.root = this;
+			this.path = path + "/" + PACKAGE_DIR;
+			setupDirectory(this.path);
+			targetDir = setupDirectory(this.path + "/" + BIN_DIR);
+
 			IProject newProject = setupProject(projectRoot.getProject(), this.oldEntries);
 			this.project = JavaCore.create(newProject);
 			this.projectCache = new HashMap<String, ClasspathHandler>();
+			entryCache = new HashMap<String, IClasspathEntry>();
 		}
 		else {
 			this.root = root;
 		}
 		dependentProjects = new ArrayList<ClasspathHandler>();
 		projectsVisited = new HashSet<String>();
+		// TODO Is project set appropriately at this point? --> It should be
 		projectPath = this.root.path + "/" + this.project.getProject().getName();
 
 		for (IClasspathEntry entry : oldEntries) {
@@ -139,6 +129,22 @@ public class ClasspathHandler {
 		ClasspathHandler.listEntries("New entries", libEntries);
 		setProjectClasspath(libEntries);
 		
+	}
+	
+	private File setupDirectory(String path) {
+		File file = new File(path);
+		if (file.exists()) {
+			file.delete();
+		}
+		try {
+			FileUtils.forceMkdir(file);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.err.println("Here is a huge problem!");
+			System.err.println("We were unable to make the directories");
+		}
+		return file;
 	}
 	
 	public List<IClasspathEntry> getLibraryClasspath() {
@@ -202,24 +208,24 @@ public class ClasspathHandler {
 	
 	public void handleSource(IClasspathEntry entry) {
 		String newSrcPath;
-		//if (this.root == this) {
-			String str = entry.getPath().toString();
-			StringBuffer sb = new StringBuffer(str);
+		String entryPath = entry.getPath().toString();
+		System.out.println("handleSource\t" + "entryPath\t " + entryPath);
+		System.out.println("handleSource\t" + "project\t" + this.project.getProject().getName());
+		
+		
+		if (this.root == this) {
+			StringBuffer sb = new StringBuffer(entryPath);
 			sb.insert(1, ".");
 			newSrcPath = this.root.path + sb.toString(); 
-		//}
-		//else {
-			//newSrcPath = this.root.path + entry.getPath().toString();
-	//	}
-			System.out.println("New source path: " + newSrcPath);
-			IPath srcIPath = new org.eclipse.core.runtime.Path(newSrcPath);
-			IClasspathEntry newEntry = JavaCore.newSourceEntry(srcIPath);
-			// TODO Inclusion and exclusion patterns, use a different newSourceEntry function
-			srcEntries.add(newEntry);
-	//	}
-	//	else {
-	//		libEntries.add(entry);
-	//	}
+		}
+		else {
+			newSrcPath = this.root.path + entryPath;
+		}
+		System.out.println("New source path: " + newSrcPath);
+		IPath srcIPath = new org.eclipse.core.runtime.Path(newSrcPath);
+		IClasspathEntry newEntry = JavaCore.newSourceEntry(srcIPath);
+		// TODO Inclusion and exclusion patterns, use a different newSourceEntry function
+		srcEntries.add(newEntry);
 	}
 	
 	public void handleVariable(IClasspathEntry entry) {
@@ -235,51 +241,7 @@ public class ClasspathHandler {
 	public boolean hasCycles() {
 		return foundCycle;
 	}
-/*	
-	public void setupSubprojectDirectory(String path) {
-		// TODO combine this with setupTargetDirectory
-		subProjDir = new File(path + "/" + ClasspathHandler.SUB_DIR);
-		System.out.println("Sub project directory: " + subProjDir);
-		if (subProjDir.exists()) {
-			try {
-				FileUtils.deleteDirectory(subProjDir);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		if (!subProjDir.mkdirs()) {
-			System.err.println("Here is a huge problem!");
-			System.err.println("We were unable to make the directories");
-			// TODO This is a bad error that'll pretty much stop us in our tracks
-		}
-		else {
-			System.out.println("Created subproject directory successfully");
-		}
-	}
-*/	
-	public void setupTargetDirectory(String path) {
-		targetDir = new File(path + "/" + ClasspathHandler.BIN_DIR);
-		if (targetDir.exists()) {
-			try {
-				FileUtils.deleteDirectory(targetDir);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
-		
-		if (!targetDir.mkdirs()) {
-			System.err.println("Here is a huge problem!");
-			System.err.println("We were unable to make the directories");
-			// TODO This is a bad error that'll pretty much stop us in our tracks
-		}
-		else {
-			System.out.println("Created target directory successfully");
-		}
-	}
-	
+
 	public static IProject convertEntryToProject(IProject root, IClasspathEntry entry) {
 		// Get the IProject from the IJavaProject
 		IProject[] projArray = null;
@@ -471,6 +433,7 @@ public class ClasspathHandler {
 		String destPath = null;
 		String srcPath = null;
 		String prjName = null;
+		// (1) Copy the project directory to the new location
 		try {
 			desc = project.getDescription();
 			uri = desc.getLocationURI();
@@ -484,23 +447,19 @@ public class ClasspathHandler {
 			else {
 				srcPath = uri.getPath();
 			}
-			System.out.println("Source path: " + srcPath);
 			prjName = project.getName();
 			destPath = this.root.path + "/." + prjName;
-			//destPath = this.root.subProjDir.toString() + "/" + prjName; 
 			System.out.println("Dest path: " + destPath);
 			ClasspathHandler.copyDirectory(srcPath, destPath);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		
+		// (2) Create the new dot project in our workspace
 		/* Code adapted from https://wiki.eclipse.org/FAQ_How_do_I_create_a_Java_project%3F */
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
 		System.out.println("Children of the root");
-		for (IProject prj : root.getProjects()) {
-			System.out.println(prj);
-		}
 		// We prepend a "." to the project so it doesn't conflict with names already in our workspace root
 		// Since BuildFileCreator is goofy and uses the project name from the root rather than its actual location
 		// the project needs to also be named with the "." prepended
@@ -525,24 +484,26 @@ public class ClasspathHandler {
 			e1.printStackTrace();
 		}
 		
+		// (3) Set the proper output directory for the new project
 		/* Not sure if this part is necessary */
 		IJavaProject javaProj = null;
 		try {
 		javaProj = JavaCore.create(newProject);
-		String originalOutputLoc = this.project.getJavaProject().getOutputLocation().toString();
+		//String originalOutputLoc = this.project.getOutputLocation().toString();
+		String originalOutputLoc = JavaCore.create(project).getOutputLocation().toString();
 		System.out.println("Original output location: " + originalOutputLoc);
 		String newOutputLoc = originalOutputLoc.replace(prjName, "." + prjName);
 		System.out.println("New output location: " + newOutputLoc);
-		String relPath = BuildfileGenerator.makeRelative(newOutputLoc, "." + prjName);
-		String absPath = destPath + "/" + relPath;
+		//String relPath = BuildfileGenerator.makeRelative(newOutputLoc, "." + prjName);
+		//String absPath = destPath + "/" + relPath;
 		
 		//IFolder binDir = newProject.getFolder("bin");
 		//IPath binPath = binDir.getFullPath();
 		//System.out.println("Bin path: " + binPath.toString());
 		// TODO Remove this stuff
-		File f = new File(absPath);
-		FileUtils.forceMkdir(f);
-		System.out.println("Forced creation of directory " + absPath);
+		//File f = new File(absPath);
+		//FileUtils.forceMkdir(f);
+		//System.out.println("Forced creation of directory " + absPath);
 		
 		IPath outputPath = new org.eclipse.core.runtime.Path(newOutputLoc);
 		javaProj.setOutputLocation(outputPath, null);
@@ -592,14 +553,6 @@ public class ClasspathHandler {
 		}
 	}
 	
-	public boolean containsClasspathEntry(String path) {
-		return entryCache.containsKey(path);
-	}
-	
-	public void addClasspathEntry(String path, IClasspathEntry entry) {
-		entryCache.put(path, entry);
-	}
-	
 	private void handleLibrary(IClasspathEntry entry) {
 		IClasspathEntry newEntry;
 		if (isInRootDirectory(entry)) {
@@ -609,12 +562,12 @@ public class ClasspathHandler {
 		else {
 			IPath path = entry.getPath().makeAbsolute();
 			String strPath = path.toString();
-			if (this.root.containsClasspathEntry(strPath)) {
+			if (this.root.entryCache.containsKey(strPath)) {
 				newEntry = this.root.entryCache.get(strPath);
 			}
 			else {
 				newEntry = copyIntoDirectory(entry);
-				this.root.addClasspathEntry(strPath, newEntry);
+				this.root.entryCache.put(strPath, newEntry);
 			}
 			if (newEntry == null) {
 				return;
@@ -624,6 +577,7 @@ public class ClasspathHandler {
 	}
 
 	private boolean isInRootDirectory(IClasspathEntry entry) {
+		// TODO Is there a better, more reliable way of checking for this?
 		return (entry.getPath().segment(0) == PROJECT_ROOT);
 	}
 	
