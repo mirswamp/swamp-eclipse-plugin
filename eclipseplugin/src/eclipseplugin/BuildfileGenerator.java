@@ -55,9 +55,8 @@ public class BuildfileGenerator {
 			// init target (as of now just creating output directory)
 			String prjName = project.getProjectName();
 			String outputDir = makeRelative(project.getOutputLocation(), prjName); // this needs to be the project name of the root. Also, it needs to be relative to this directory, so ../.<rootprojectname>/bin
-			setInitTarget(doc, root, outputDir);
 			// build target
-			setBuildTarget(doc, root, outputDir, project.getDependentProjects(), project.getSourceClasspath(), prjName);	
+			setBuildTarget(doc, root, outputDir, project.getDependentProjects(), project.getSourceClasspath(), prjName, project.isRoot());	
 			// TODO Fix this output location
 			
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -127,18 +126,22 @@ public class BuildfileGenerator {
 	
 	// TODO Put this into a utility class
 	public static String makeRelative(String path, String projectName) {
-		System.out.println("Make Relative");
+		//System.out.println("Make Relative");
 		System.out.println("Original path: " + path);
 		System.out.println("Project name: " + projectName);
 		String original = path;
 		int index = path.indexOf(projectName);
+		// TODO Fix up the logic in this!
 		if (index < 0) {
+			System.out.println("Return val: " + original);
 			return original;
 		}
 		String relPath = path.substring(index+projectName.length(), path.length());
 		if (relPath.charAt(0) == '/') {
+			System.out.println("Return val: " + relPath.substring(1, relPath.length()));
 			return relPath.substring(1, relPath.length());
 		}
+		System.out.println("Return val: " + relPath);
 		return relPath;
 	}
 	
@@ -152,10 +155,15 @@ public class BuildfileGenerator {
 		target.appendChild(mkdir);
 	}
 	
-	private static void setBuildTarget(Document doc, Element root, String relOutputDir, List<ClasspathHandler> list, List<IClasspathEntry> srcEntries, String projectName) {
+	private static void setBuildTarget(Document doc, Element root, String relOutputDir, List<ClasspathHandler> list, List<IClasspathEntry> srcEntries, String projectName, boolean isRoot) {
+		
 		Element target = doc.createElement("target");
 		target.setAttribute("name", "build");
-		target.setAttribute("depends", "init");
+		if (isRoot) {
+			setInitTarget(doc, root, relOutputDir);
+			target.setAttribute("depends", "init");
+		}
+		
 		root.appendChild(target);
 		
 		for (ClasspathHandler c : list) {
@@ -166,17 +174,26 @@ public class BuildfileGenerator {
 			String relPath = "../" + c.getProjectName() + "/" + BUILDFILE_NAME;
 			Element ant = doc.createElement("ant");
 			ant.setAttribute("antfile", relPath); 
+			ant.setAttribute("dir", "../" + c.getProjectName());
 			ant.setAttribute("target", "build");
 			target.appendChild(ant);
 		}
 		
 		Element javac = doc.createElement("javac");
+		//System.out.println(x);
+		// TODO Fix up this hacky logic
+		if (relOutputDir.charAt(0) == '/') {
+			relOutputDir = ".." + relOutputDir;
+		}
+		javac.setAttribute("includeantruntime", "false");
+		javac.setAttribute("classpathref", CLASSPATH_NAME);
 		javac.setAttribute("destdir", relOutputDir);
 		javac.setAttribute("source", "${source}");
 		javac.setAttribute("target", "${target}");
 		target.appendChild(javac);
 		
 		// TODO Add handling for inclusion and exclusion patterns
+		// includesfile and excludesfile attributes - http://ant.apache.org/manual/Tasks/javac.html
 		for (IClasspathEntry entry : srcEntries) {
 			Element src = doc.createElement("src");
 			IPath absPath = entry.getPath().makeAbsolute();

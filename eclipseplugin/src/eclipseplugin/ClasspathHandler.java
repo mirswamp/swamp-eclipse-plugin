@@ -213,19 +213,35 @@ public class ClasspathHandler {
 		System.out.println("handleSource\t" + "project\t" + this.project.getProject().getName());
 		
 		
-		if (this.root == this) {
+		//if (this.root == this) {
 			StringBuffer sb = new StringBuffer(entryPath);
 			sb.insert(1, ".");
 			newSrcPath = this.root.path + sb.toString(); 
-		}
-		else {
-			newSrcPath = this.root.path + entryPath;
-		}
+		//}
+		//else {
+		//	newSrcPath = this.root.path + entryPath;
+		//}
 		System.out.println("New source path: " + newSrcPath);
 		IPath srcIPath = new org.eclipse.core.runtime.Path(newSrcPath);
 		IClasspathEntry newEntry = JavaCore.newSourceEntry(srcIPath);
+		
+		IPath outputIPath = entry.getOutputLocation();
+		System.out.println("Original OutputPath: " + outputIPath);
+		try {
+			System.out.println("Default OutputPath: " + this.project.getOutputLocation());
+		} catch (JavaModelException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		// TODO Figure out how to change outputIPath to point to the path in our directory, make that directory
+		// IClasspathEntry newEntry = JavaCore.newSourceEntry(srcIPath, inclusionPatterns, exclusionPatterns, specificOutputLocation)
+		
 		// TODO Inclusion and exclusion patterns, use a different newSourceEntry function
 		srcEntries.add(newEntry);
+	}
+	
+	public boolean isRoot() {
+		return this == this.root;
 	}
 	
 	public void handleVariable(IClasspathEntry entry) {
@@ -604,8 +620,8 @@ public class ClasspathHandler {
 				e.printStackTrace();
 			}
 		}*/
-		System.out.println("Not deleting file " + this.root.path);
-		/*
+		//System.out.println("Not deleting file " + this.root.path);
+		
 		try {
 			FileUtils.deleteDirectory(new File(this.root.path));
 			//FileUtils.deleteDirectory(targetDir);
@@ -613,7 +629,7 @@ public class ClasspathHandler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		*/
+		
 		/*
 		try {
 			FileUtils.deleteDirectory(subProjDir);
