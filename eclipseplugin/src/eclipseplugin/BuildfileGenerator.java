@@ -200,6 +200,9 @@ public class BuildfileGenerator {
 			//IPath relPath = absPath.removeFirstSegments(absPath.segmentCount()-3);
 			// TODO -3 won't be right if it's package/project/main/src or something
 			//System.out.println("Rel path: " + relPath.toString());
+			addInclusionExclusionPatterns(doc, javac, "include", entry.getInclusionPatterns());
+			addInclusionExclusionPatterns(doc, javac, "exclude", entry.getExclusionPatterns());
+	
 			String strRelPath = makeRelative(absPath.toString(), projectName);
 			System.out.println("Made relative: " + strRelPath);
 			src.setAttribute("path", strRelPath);
@@ -210,4 +213,16 @@ public class BuildfileGenerator {
 		classpath.setAttribute("refid", CLASSPATH_NAME);
 		
 	}
+	
+	private static void addInclusionExclusionPatterns(Document doc, Element parent, String taskName, IPath[] patterns) {
+		if ((patterns == null) || (patterns.length == 0)) {
+			return;
+		}
+		for (IPath pattern : patterns) {
+			Element include = doc.createElement(taskName);
+			include.setAttribute("name", pattern.toString());
+			parent.appendChild(include);
+		}
+	}
+	
 }

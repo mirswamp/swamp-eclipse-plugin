@@ -149,71 +149,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 						System.err.println("Huge error. Cyclic dependencies!");
 						// TODO Add message to console - out.println("Error: Project has cyclic dependencies");
 					}
-					//Set<IJavaProject> projects = classpathHandler.getProjectList();
-					/*
-					for (IJavaProject jp : projects) {
-						System.out.println("Project location: " + jp.getResource().getLocation());
-						System.out.println("+++++++++++++++++++++++++++++++++++++++++++");
-						try {
-							System.out.println("Raw");
-							for (IClasspathEntry e : jp.getRawClasspath()) {
-								//if ((e.getEntryKind() == IClasspathEntry.CPE_SOURCE) && (e.getContentKind() == IPackageFragmentRoot.K_SOURCE)) {
-								System.out.println(e);
-								System.out.println("Path: " + e.getPath());
-								
-								//System.out.println("Output path: " + e.getOutputLocation());
-								IFile file = ResourcesPlugin.getWorkspace().getRoot().getFile(e.getPath());
-								if (file.isLinked()) {
-									System.out.println("This file is linked! but to where?");
-									String pathVariable = file.getRawLocation().segment(0).toString();
-									URI pathVariableValue = file.getWorkspace().getPathVariableManager().getURIValue(pathVariable);
-									System.out.println("Path variable: " + pathVariable);
-									System.out.println("Path variable URI " + pathVariableValue);
-								}
-								//}
-							}
-							System.out.println("Referenced");
-							for (IClasspathEntry e : jp.getReferencedClasspathEntries()) {
-								System.out.println(e);
-								System.out.println("Path: " + e.getPath());
-							}
-						} catch (JavaModelException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-					*/
-					//Set<IJavaProject> projects = new HashSet<IJavaProject>();
-					// projects = classpathHandler.getProjects();
-					//projects.add(javaProj);
-					/*
-					BuildFileCreator.setOptions("build.xml", "jUnit", true, false);
-					try {
-						BuildFileCreator.createBuildFiles(projects, window.getShell(), null);
-					} catch (JavaModelException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (TransformerConfigurationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (ParserConfigurationException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (TransformerException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (CoreException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-				}
-				*/
+	
 				BuildfileGenerator.generateBuildFile(classpathHandler);
 				System.out.println("Build file generated (theoretically)");
 				/*

@@ -223,9 +223,10 @@ public class ClasspathHandler {
 		//}
 		System.out.println("New source path: " + newSrcPath);
 		IPath srcIPath = new org.eclipse.core.runtime.Path(newSrcPath);
-		IClasspathEntry newEntry = JavaCore.newSourceEntry(srcIPath);
-		
 		IPath outputIPath = entry.getOutputLocation();
+		//IClasspathEntry newEntry = JavaCore.newSourceEntry(srcIPath);
+		IClasspathEntry newEntry = JavaCore.newSourceEntry(srcIPath, entry.getInclusionPatterns(), entry.getExclusionPatterns(), outputIPath );	
+		
 		System.out.println("Original OutputPath: " + outputIPath);
 		try {
 			System.out.println("Default OutputPath: " + this.project.getOutputLocation());

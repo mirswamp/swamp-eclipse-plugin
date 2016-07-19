@@ -294,6 +294,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		pkgCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgOptions);
 		pkgCombo.addSelectionListener(new ComboSelectionListener(pkgCombo, Type.PACKAGE));
 		
+		DialogUtil.initializeLabelWidget("New Package Name: ", SWT.NONE, container);
+		pkgNameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
+		
 		if (pkgIndex > -1) {
 			// We've read this from file
 			pkgCombo.select(pkgIndex);
@@ -305,9 +308,6 @@ public class ConfigDialog extends TitleAreaDialog {
 				handlePackageSelection(0);
 			}
 		}
-		
-		DialogUtil.initializeLabelWidget("New Package Name: ", SWT.NONE, container);
-		pkgNameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		
 		DialogUtil.initializeLabelWidget("Package Version: ", SWT.NONE, container);
 		prjVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));	
