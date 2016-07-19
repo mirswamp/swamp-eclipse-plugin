@@ -115,6 +115,10 @@ public class PackageInfo {
 		return parentDir;
 	}
 	
+	public String getArchiveFilename() {
+		return zipName;
+	}
+	
 	/* Adapted from example code provided at http://www.oracle.com/technetwork/articles/java/compress-1565076.html */
 	private String zipPackage(String dirPath, String outputName, String target) {
 		String finalPath = "";

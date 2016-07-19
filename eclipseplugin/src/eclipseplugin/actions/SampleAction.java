@@ -47,6 +47,10 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
@@ -63,11 +67,127 @@ import org.eclipse.jdt.core.JavaModelException;
  */
 public class SampleAction implements IWorkbenchWindowActionDelegate {
 	private IWorkbenchWindow window;
+	private SwampApiWrapper api;
 	/**
 	 * The constructor.
 	 */
 	private static String SESSION_STRING = ".SESSION";
 	public SampleAction() {
+	}
+	
+	private void runBackgroundJob(SelectionDialog sd, ConfigDialog cd, String configFilepath, String prjUUID) {
+		Job job = new Job("SWAMP Assessment Submission") {
+			
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				ClasspathHandler classpathHandler = null;
+				if (cd.needsGeneratedBuildFile()) {
+					classpathHandler = generateBuildFiles(cd.getProject());
+					if (classpathHandler == null) {
+						// TODO Handle this error better
+						return Status.CANCEL_STATUS;
+					}
+				}
+				
+				PackageInfo pkg = packageProject(cd.getPkgName(), cd.getPkgVersion(), cd.getBuildSys(), cd.getBuildDir(), cd.getBuildFile(), cd.getBuildTarget());
+				boolean retCode = FileSerializer.serialize(configFilepath, sd, cd); 
+				String pkgUUID = uploadPackage(pkg.getParentPath(), prjUUID, pkg.getArchiveFilename());
+				
+				if (classpathHandler != null) {
+					classpathHandler.revertClasspath(ResourcesPlugin.getWorkspace().getRoot(), new HashSet<ClasspathHandler>());
+				}
+				
+				// Deletion code - uncomment for release
+				/*
+				pkg.deleteFiles();
+				if (autoGenBuild) {
+					System.out.println("Auto-generated build file at " + path + "/build.xml");
+					File f = new File(path + "/build.xml");
+					if (f != null) {
+						if (!f.delete()) {
+							System.err.println("Unable to delete auto-generated build file");
+						}
+					}
+				}
+				*/
+				
+				for (String platformUUID : sd.getPlatformUUIDs()) {
+					for (String toolUUID : sd.getToolUUIDs()) {
+						submitAssessment(pkgUUID, toolUUID, prjUUID, platformUUID);
+					}
+				}
+				
+				return Status.OK_STATUS;
+			}
+		};
+		job.setUser(true);
+		job.schedule();
+	}
+	
+	private ClasspathHandler generateBuildFiles(IProject proj) {
+		ClasspathHandler classpathHandler = null;
+		// Generating Buildfile
+		IJavaProject javaProj = JavaCore.create(proj);
+		IWorkspace workspace = ResourcesPlugin.getWorkspace();
+		IWorkspaceRoot root = workspace.getRoot();
+		String rootPath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
+		classpathHandler = new ClasspathHandler(null, javaProj, rootPath);// cd.getPkgPath()); // TODO replace this w/ workspace path
+		System.out.println(classpathHandler.getProjectName());
+		if (classpathHandler.hasCycles()) {
+			System.err.println("Huge error. Cyclic dependencies!");
+			classpathHandler = null;
+			// TODO Add message to console - out.println("Error: Project has cyclic dependencies");
+		}
+		BuildfileGenerator.generateBuildFile(classpathHandler);
+		System.out.println("Build file generated");
+		return classpathHandler;
+	}
+	
+	private PackageInfo packageProject(String packageName, String packageVersion, String buildSystem, String buildDir, String buildFile, String buildTarget) {
+		// Zipping and generating package.conf
+		Date date = new Date();
+		String timestamp = date.toString();
+		//String path = cd.getPkgPath();
+		String path = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + "/package";
+		String filename = timestamp + "-" + packageName + ".zip";
+		String filenameNoSpaces = filename.replace(" ", "-").replace(":", "").toLowerCase(); // PackageVersionHandler mangles the name for some reason if there are colons or uppercase letters
+		System.out.println("Package Name: " + packageName);
+		System.out.println("Path: " + path);
+		System.out.println("Filename: " + filenameNoSpaces);
+		// output name should be some combination of pkg name, version, timestamp, extension (.zip)
+		
+		PackageInfo pkg = new PackageInfo(path, filenameNoSpaces, packageName); // pass in path and output zip file name
+		
+		pkg.setPkgShortName(packageName);
+		pkg.setVersion(packageVersion);
+		pkg.setBuildSys(buildSystem);
+		pkg.setBuildDir(buildDir);
+		pkg.setBuildFile(buildFile);
+		pkg.setBuildTarget(buildTarget);
+		
+		pkg.writePkgConfFile();
+
+		return pkg;
+	}
+
+	private String uploadPackage(String parentDir, String prjUUID, String filename) {
+		// Upload package
+		System.out.println("Uploading package");
+		System.out.println("Package-conf directory: " + parentDir + "/package.conf");
+		System.out.println("Archive directory: " + parentDir + "/" + filename);
+		System.out.println("Project UUID: " + prjUUID);
+		String pkgUUID = null;
+		try {
+			pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filename, prjUUID, true);
+		} catch (InvalidIdentifierException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		if (pkgUUID == null) {
+			// TODO handle error here
+			System.err.println("Error in uploading package.");
+		}	
+		return pkgUUID;
 	}
 
 	/**
@@ -77,7 +197,6 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		SwampApiWrapper api;
 		SelectionDialog sd;
 		ConfigDialog cd;
 		String serializedConfigFilepath;
@@ -109,6 +228,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		}
 		else {
 			// deserialize from file
+			// TODO Bring this back in the merge
 			//boolean returnCode = FileSerializer.deserialize(serializedConfigFilepath, sd, cd);
 		}
 		} catch (Exception e) {
@@ -133,116 +253,18 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				// TODO Handle error
 			}
 			else {
-				boolean autoGenBuild = cd.needsGeneratedBuildFile();
-				ClasspathHandler classpathHandler = null;
-				if (autoGenBuild) {
-					// Generating Buildfile
-					IProject proj = cd.getProject();
-					System.out.println(proj.getProject().getName());
-					IJavaProject javaProj = JavaCore.create(proj);
-					IWorkspace workspace = ResourcesPlugin.getWorkspace();
-					IWorkspaceRoot root = workspace.getRoot();
-					String rootPath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
-					classpathHandler = new ClasspathHandler(null, javaProj, rootPath);// cd.getPkgPath()); // TODO replace this w/ workspace path
-					System.out.println(classpathHandler.getProjectName());
-					if (classpathHandler.hasCycles()) {
-						System.err.println("Huge error. Cyclic dependencies!");
-						// TODO Add message to console - out.println("Error: Project has cyclic dependencies");
-					}
-	
-				BuildfileGenerator.generateBuildFile(classpathHandler);
-				System.out.println("Build file generated (theoretically)");
-				/*
-				if (classpathHandler != null) {
-					classpathHandler.revertClasspath();
-				}
-				return;
-				}
-				*/
-				
-				// Zipping and generating package.conf
-				Date date = new Date();
-				String timestamp = date.toString();
-				String pkgName = cd.getPkgName();
-				//String path = cd.getPkgPath();
-				String path = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + "/package";
-				String filename = timestamp + "-" + pkgName + ".zip";
-				String filenameNoSpaces = filename.replace(" ", "-").replace(":", "").toLowerCase(); // PackageVersionHandler mangles the name for some reason if there are colons or uppercase letters
-				System.out.println("Package Name: " + pkgName);
-				System.out.println("Path: " + path);
-				System.out.println("Filename: " + filenameNoSpaces);
-				// output name should be some combination of pkg name, version, timestamp, extension (.zip)
-				
-				PackageInfo pkg = new PackageInfo(path, filenameNoSpaces, pkgName); // pass in path and output zip file name
-				
-				pkg.setPkgShortName(pkgName);
-				pkg.setVersion(cd.getPkgVersion());
-				pkg.setBuildSys(cd.getBuildSys());
-				pkg.setBuildDir(cd.getBuildDir());
-				pkg.setBuildFile(cd.getBuildFile());
-				pkg.setBuildTarget(cd.getBuildTarget());
-				
-				boolean retCode = FileSerializer.serialize(serializedConfigFilepath, sd, cd); 
-				
-				pkg.writePkgConfFile();
-
-				String parentDir = pkg.getParentPath();
-				// Upload package
-				System.out.println("Uploading package");
-				System.out.println("Package-conf directory: " + parentDir + "/package.conf");
-				System.out.println("Archive directory: " + parentDir + "/" + filenameNoSpaces);
-				System.out.println("Project UUID: " + prjUUID);
-				String pkgUUID = null;
-				try {
-					pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filenameNoSpaces, prjUUID, true);
-				} catch (InvalidIdentifierException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} 
-				if (pkgUUID == null) {
-					// TODO handle error here
-					System.err.println("Error in uploading package.");
-				}
-				
-				// Deletion code - uncomment for release
-				/*
-				pkg.deleteFiles();
-				if (autoGenBuild) {
-					System.out.println("Auto-generated build file at " + path + "/build.xml");
-					File f = new File(path + "/build.xml");
-					if (f != null) {
-						if (!f.delete()) {
-							System.err.println("Unable to delete auto-generated build file");
-						}
-					}
-				}
-				*/
-				
-				if (classpathHandler != null) {
-					classpathHandler.revertClasspath(ResourcesPlugin.getWorkspace().getRoot(), new HashSet<ClasspathHandler>());
-				}
-				
-				for (String platformUUID : sd.getPlatformUUIDs()) {
-					for (String toolUUID : sd.getToolUUIDs()) {
-						submitAssessment(api, pkgUUID, toolUUID, prjUUID, platformUUID);
-					}
-				}
+				runBackgroundJob(sd, cd, serializedConfigFilepath, prjUUID);
 			}
 
-		// Here's where the business logic goes
 		}
 			
-		}
-		
-		
-		
 		/*MessageDialog.openInformation(
 			window.getShell(),
 			"Success",
 			"Here's the information about your submission");*/
 	}
 	
-	private void submitAssessment(SwampApiWrapper api, String pkgUUID, String toolUUID, String prjUUID, String pltUUID) {
+	private void submitAssessment(String pkgUUID, String toolUUID, String prjUUID, String pltUUID) {
 		// Submit assessment
 		System.out.println("Package UUID: " + pkgUUID);
 		System.out.println("Tool UUID: " + toolUUID);

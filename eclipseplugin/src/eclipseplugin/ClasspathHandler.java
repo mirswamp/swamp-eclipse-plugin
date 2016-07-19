@@ -386,17 +386,6 @@ public class ClasspathHandler {
 		}
 	}
 	
-	/*
-	public Set<IJavaProject> getProjectList() {
-		Set<IJavaProject> set = new HashSet<IJavaProject>();
-		for (ClasspathHandler c : dependentProjects) {
-			set.add(c.project);
-		}
-		set.add(this.project);
-		return set;
-	}
-	*/
-	
 	public List<ClasspathHandler> getDependentProjects() {
 		return this.dependentProjects;
 	}
@@ -476,7 +465,6 @@ public class ClasspathHandler {
 		/* Code adapted from https://wiki.eclipse.org/FAQ_How_do_I_create_a_Java_project%3F */
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
-		System.out.println("Children of the root");
 		// We prepend a "." to the project so it doesn't conflict with names already in our workspace root
 		// Since BuildFileCreator is goofy and uses the project name from the root rather than its actual location
 		// the project needs to also be named with the "." prepended
