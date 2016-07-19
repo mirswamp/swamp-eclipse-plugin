@@ -602,50 +602,56 @@ public class ClasspathHandler {
 		return p.toFile().toPath();
 	}
 	
-	public void revertClasspath() {
+	public void revertClasspath(IWorkspaceRoot root, Set<ClasspathHandler> visited) {
+		if (visited.contains(this)) {
+			return;
+		}
+		visited.add(this);
 		for (ClasspathHandler c : this.dependentProjects) {
-			c.revertClasspath();
+			c.revertClasspath(root, visited);
 		}
 		try {
 			this.project.setRawClasspath(this.oldEntries, null);
 		} catch (JavaModelException e) {
 			// TODO Auto-generated catch block
+			System.err.println("Java Model Status error");
+			listEntries("Old entries for project " + this.getProjectName(), this.oldEntries);
 			e.printStackTrace();
 		}
-		/*
-		for (ClasspathHandler c : dependentProjects) {
-			try {
-				c.project.setRawClasspath(c.oldEntries, null);
-			} catch (JavaModelException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}*/
-		//System.out.println("Not deleting file " + this.root.path);
 		
+		IProject project = root.getProject(this.getProjectName());
+		if (project == null) {
+			System.err.println("Project " + this.getProjectName() + " is null for some unexpected reason.");
+			return;
+		}
+
+		// delete project from workspace
 		try {
-			FileUtils.deleteDirectory(new File(this.root.path));
-			//FileUtils.deleteDirectory(targetDir);
-		} catch (IOException e) {
+			project.delete(true, true, null);
+		} catch (CoreException e1) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Unable to delete project" + this.getProjectName() + " properly.");
+			e1.printStackTrace();
 		}
 		
-		/*
+		// delete actual project
 		try {
-			FileUtils.deleteDirectory(subProjDir);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		*/
-		/*
-		try {
-			project.setRawClasspath(oldEntries, null);
-		} catch (JavaModelException e1) {
+			FileUtils.forceDelete(new File(this.getProjectPath()));
+		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		*/
+		
+		// delete package directory
+		if (this.isRoot()) {
+			try {
+				FileUtils.deleteDirectory(new File(this.root.path));
+				//FileUtils.deleteDirectory(targetDir);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	private IClasspathEntry copyIntoDirectory(IClasspathEntry entry) {

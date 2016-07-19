@@ -219,7 +219,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				*/
 				
 				if (classpathHandler != null) {
-					classpathHandler.revertClasspath();
+					classpathHandler.revertClasspath(ResourcesPlugin.getWorkspace().getRoot(), new HashSet<ClasspathHandler>());
 				}
 				
 				for (String platformUUID : sd.getPlatformUUIDs()) {
