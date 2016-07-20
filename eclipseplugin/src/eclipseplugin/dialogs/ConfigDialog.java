@@ -46,11 +46,14 @@ public class ConfigDialog extends TitleAreaDialog {
 	private IProject project;
 	private int prjIndex;
 	private boolean createNewPackage;
+	// SWAMP Project
+	private String prjUUID;
 	// SWAMP Package
 	//private PackageThing pkg;
 	private String pkgVersion;
 	private int pkgIndex;
 	private String pkgName;
+	private String pkgPath;
 	// Build
 	private String buildSys;
 	private int buildSysIndex;
@@ -66,6 +69,10 @@ public class ConfigDialog extends TitleAreaDialog {
  	public String getprjPath() {
 		return project.getLocation().toString();
 	}
+ 	
+ 	public void setSwampProject(String prjUUID) {
+ 		this.prjUUID = prjUUID;
+ 	}
 	
 	public String getPkgName() {
 		return pkgName;
@@ -177,8 +184,18 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	public String getPkgPath() {
+		return pkgPath;
+	}
+	
+	public void setPkgPath(String path) {
+		pkgPath = path;
+	}
+	
+	
 	public boolean initializePackage(String pkgUUID) {
-		PackageVersion pkgVers = api.getPackage(pkgUUID);
+		//PackageVersion pkgVers = api.getPackage(pkgUUID);
+		PackageVersion pkgVers = null;
 		if (pkgVers == null) {
 			return false;
 		}
@@ -188,7 +205,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			return false;
 		}
 		String pkgThingUUID = pkgVers.getPackageThing().getUUIDString();
-		List<? extends PackageThing> packages = api.getAllPackages();
+		List<? extends PackageThing> packages = api.getAllPackages(prjUUID);
 		for (int i = 0; i < packages.size(); i++) {
 			if (packages.get(i).getUUIDString().equals(pkgThingUUID)) {
 				pkgIndex = i;
@@ -245,7 +262,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	private String[] getPackageOptions() {
-		List<? extends PackageThing> list = api.getAllPackages();
+		List<? extends PackageThing> list = api.getAllPackages(prjUUID);
 		int numPackages = list.size() + 1;
 		String[] pkgNames = new String[numPackages];
 		pkgNames[0] = "Create new package";
@@ -277,6 +294,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		pkgCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgOptions);
 		pkgCombo.addSelectionListener(new ComboSelectionListener(pkgCombo, Type.PACKAGE));
 		
+		DialogUtil.initializeLabelWidget("New Package Name: ", SWT.NONE, container);
+		pkgNameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
+		
 		if (pkgIndex > -1) {
 			// We've read this from file
 			pkgCombo.select(pkgIndex);
@@ -288,9 +308,6 @@ public class ConfigDialog extends TitleAreaDialog {
 				handlePackageSelection(0);
 			}
 		}
-		
-		DialogUtil.initializeLabelWidget("New Package Name: ", SWT.NONE, container);
-		pkgNameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		
 		DialogUtil.initializeLabelWidget("Package Version: ", SWT.NONE, container);
 		prjVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));	
@@ -454,7 +471,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 			project = projects[prjCombo.getSelectionIndex()];
 			// handle Package
-			List<? extends PackageThing> list = api.getAllPackages();
+			List<? extends PackageThing> list = api.getAllPackages(prjUUID);
 			int pkgSelection = pkgCombo.getSelectionIndex();
 			if (pkgSelection == CREATE_NEW_PACKAGE) {
 				createNewPackage = true;
@@ -471,7 +488,7 @@ public class ConfigDialog extends TitleAreaDialog {
 				needsBuildFile = true;
 				buildSys = "ant";
 				buildTarget = "build";
-				buildDir = ".";
+				buildDir = "." + project.getName();
 				buildFile = "build.xml";
 			}
 			else if (buildSysIndex == NO_BUILD) {
