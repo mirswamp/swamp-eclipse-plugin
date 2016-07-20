@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.core.resources.IFolder;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IWorkspace;
@@ -234,10 +233,6 @@ public class ClasspathHandler {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		// TODO Figure out how to change outputIPath to point to the path in our directory, make that directory
-		// IClasspathEntry newEntry = JavaCore.newSourceEntry(srcIPath, inclusionPatterns, exclusionPatterns, specificOutputLocation)
-		
-		// TODO Inclusion and exclusion patterns, use a different newSourceEntry function
 		srcEntries.add(newEntry);
 	}
 	

@@ -193,9 +193,11 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	
-	public boolean initializePackage(String pkgUUID) {
-		//PackageVersion pkgVers = api.getPackage(pkgUUID);
-		PackageVersion pkgVers = null;
+	public boolean initializePackage(String pkgUUID, String prjUUID) {
+		if (pkgUUID == null || prjUUID == null) {
+			return false;
+		}
+		PackageVersion pkgVers = api.getPackage(pkgUUID, prjUUID);
 		if (pkgVers == null) {
 			return false;
 		}
@@ -204,11 +206,13 @@ public class ConfigDialog extends TitleAreaDialog {
 			System.out.println("PackageVersion without a PackageThing");
 			return false;
 		}
-		String pkgThingUUID = pkgVers.getPackageThing().getUUIDString();
+		String pkgThingUUID = pkgThing.getUUIDString();
+		System.out.println("PackageThing UUID: " + pkgThingUUID);
 		List<? extends PackageThing> packages = api.getAllPackages(prjUUID);
 		for (int i = 0; i < packages.size(); i++) {
 			if (packages.get(i).getUUIDString().equals(pkgThingUUID)) {
-				pkgIndex = i;
+				System.out.println(i);
+				pkgIndex = i + 1; // Add one for create project
 				return true;
 			}
 		}

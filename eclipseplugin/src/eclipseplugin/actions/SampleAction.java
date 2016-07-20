@@ -11,13 +11,10 @@ package eclipseplugin.actions;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.window.Window;
-import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.console.ConsolePlugin;
 import org.eclipse.ui.console.IConsole;
 import org.eclipse.ui.console.IConsoleConstants;
@@ -34,40 +31,24 @@ import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.ConfigDialog;
 import eclipseplugin.dialogs.SelectionDialog;
 
-import org.eclipse.jface.dialogs.MessageDialog;
-
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.PackageVersion;
-import edu.uiuc.ncsa.swamp.session.handlers.HandlerFactory;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 import edu.wisc.cs.swamp.exceptions.InvalidIdentifierException;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Set;
 
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.TransformerException;
-
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -119,10 +100,11 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 					}
 				}
 				out.println("Status: Packaging Project");
-				PackageInfo pkg = packageProject(cd.getPkgName(), cd.getPkgVersion(), cd.getBuildSys(), cd.getBuildDir(), cd.getBuildFile(), cd.getBuildTarget());
-				boolean retCode = FileSerializer.serialize(configFilepath, sd, cd);
+				PackageInfo pkgInfo = packageProject(cd.getPkgName(), cd.getPkgVersion(), cd.getBuildSys(), cd.getBuildDir(), cd.getBuildFile(), cd.getBuildTarget());
+				
 				out.println("Status: Uploading package to SWAMP");
-				String pkgUUID = uploadPackage(pkg.getParentPath(), prjUUID, pkg.getArchiveFilename());
+				String pkgVersUUID = uploadPackage(pkgInfo.getParentPath(), prjUUID, pkgInfo.getArchiveFilename(), cd.createNewPackage());
+				boolean retCode = FileSerializer.serialize(configFilepath, sd, cd, pkgVersUUID, prjUUID);
 				
 				if (classpathHandler != null) {
 					classpathHandler.revertClasspath(ResourcesPlugin.getWorkspace().getRoot(), new HashSet<ClasspathHandler>());
@@ -144,7 +126,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				out.println("Status: Submitting assessments");
 				for (String platformUUID : sd.getPlatformUUIDs()) {
 					for (String toolUUID : sd.getToolUUIDs()) {
-						submitAssessment(pkgUUID, toolUUID, prjUUID, platformUUID);
+						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
 					}
 				}
 				
@@ -161,13 +143,13 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		IJavaProject javaProj = JavaCore.create(proj);
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
-		String rootPath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
+		String rootPath = root.getLocation().toString();
 		classpathHandler = new ClasspathHandler(null, javaProj, rootPath);// cd.getPkgPath()); // TODO replace this w/ workspace path
 		System.out.println(classpathHandler.getProjectName());
 		if (classpathHandler.hasCycles()) {
 			System.err.println("Huge error. Cyclic dependencies!");
 			classpathHandler = null;
-			// TODO Add message to console - out.println("Error: Project has cyclic dependencies");
+			out.println("Error: Project has cyclic dependencies");
 		}
 		BuildfileGenerator.generateBuildFile(classpathHandler);
 		System.out.println("Build file generated");
@@ -201,24 +183,24 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		return pkg;
 	}
 
-	private String uploadPackage(String parentDir, String prjUUID, String filename) {
+	private String uploadPackage(String parentDir, String prjUUID, String filename, boolean newPackage) {
 		// Upload package
 		System.out.println("Uploading package");
 		System.out.println("Package-conf directory: " + parentDir + "/package.conf");
 		System.out.println("Archive directory: " + parentDir + "/" + filename);
 		System.out.println("Project UUID: " + prjUUID);
-		String pkgUUID = null;
+		String pkgVersUUID = null;
 		try {
-			pkgUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filename, prjUUID, true);
+			pkgVersUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filename, prjUUID, newPackage);
 		} catch (InvalidIdentifierException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
-		if (pkgUUID == null) {
+		if (pkgVersUUID == null) {
 			// TODO handle error here
 			System.err.println("Error in uploading package.");
 		}	
-		return pkgUUID;
+		return pkgVersUUID;
 	}
 
 	/**
@@ -296,14 +278,14 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		System.out.println("Project UUID: " + prjUUID);
 		System.out.println("Platform UUID: " + pltUUID);
 		
-		api.printAllPackages(true);
+		api.printAllPackages(prjUUID, true);
 		
 		String toolName = api.getTool(toolUUID).getName();
-		PackageVersion pkg = api.getPackage(pkgUUID);
+		PackageVersion pkg = api.getPackage(pkgUUID, prjUUID);
 		assert(pkg != null);
 		PackageThing pkgThing = pkg.getPackageThing();
 		assert (pkgThing != null);
-		String pkgName = api.getPackage(pkgUUID).getPackageThing().getName();
+		String pkgName = pkgThing.getName();
 		String platformName = api.getPlatform(pltUUID).getName();
 
 		String assessUUID = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);

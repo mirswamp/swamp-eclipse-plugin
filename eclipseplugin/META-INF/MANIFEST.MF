@@ -7,7 +7,8 @@ Bundle-Activator: eclipseplugin.Activator
 Bundle-Vendor: swamp.cs.wisc.edu
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
- org.eclipse.core.resources;bundle-version="3.11.0"
+ org.eclipse.core.resources;bundle-version="3.11.0",
+ org.eclipse.ui.console
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: .,

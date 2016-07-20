@@ -17,7 +17,7 @@ import edu.uiuc.ncsa.swamp.api.PackageVersion;
 public class FileSerializer {
 	
 	private static String DELIMITER = ",";
-	public static boolean serialize(String filepath, SelectionDialog sd, ConfigDialog cd, String pkgUUID) {
+	public static boolean serialize(String filepath, SelectionDialog sd, ConfigDialog cd, String pkgUUID, String prjUUID) {
 		File file = new File(filepath);
 		if (file.exists()) {
 			file.delete();
@@ -75,6 +75,9 @@ public class FileSerializer {
 			// SWAMP Package
 			writer.write(pkgUUID);
 			writer.write("\n");
+			// SWAMP Project
+			writer.write(prjUUID);
+			writer.write("\n");
 			// Package Version
 			writer.write(cd.getPkgVersion());
 			writer.write("\n");
@@ -90,7 +93,6 @@ public class FileSerializer {
 			// Build target
 			writer.write(cd.getBuildTarget());
 			writer.write("\n");
-			
 			writer.close();
 		} catch (Exception e) {
 			System.err.println("Unable to deserialize file");
@@ -149,13 +151,22 @@ public class FileSerializer {
 			}
 			
 			// SWAMP Package UUID
+			String pkgUUID = null;
+			String prjUUID = null;
 			str = reader.readLine();
 			if (str != null && !str.equals("\n")) {
-				cd.initializePackage(str);
+				pkgUUID = str;
+			}
+			str = reader.readLine();
+			if (str != null && !str.equals("\n")) {
+				prjUUID = str;
+			}
+			if (!cd.initializePackage(pkgUUID, prjUUID)) {
+				reader.close();
+				System.out.println("We were unable to find the last SWAMP Package");
+				return false;
 			}
 
-			// initialize these - only do the following if we can find the project
-			
 			// Package Version
 			str = reader.readLine();
 			if (str != null && !str.equals("\n")) {

@@ -56,7 +56,6 @@ public class BuildfileGenerator {
 			String prjName = project.getProjectName();
 			// build target
 			setBuildTarget(doc, root, project.getOutputLocation(), project.getDependentProjects(), project.getSourceClasspath(), prjName, project.isRoot());	
-			// TODO Fix this output location
 			
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			transformerFactory.setAttribute("indent-number", INDENT_SPACES);
