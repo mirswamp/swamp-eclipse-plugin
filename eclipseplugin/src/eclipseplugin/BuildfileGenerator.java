@@ -54,9 +54,8 @@ public class BuildfileGenerator {
 			setLibraryClasspath(doc, root, project.getLibraryClasspath());
 			// init target (as of now just creating output directory)
 			String prjName = project.getProjectName();
-			String outputDir = makeRelative(project.getOutputLocation(), prjName); // this needs to be the project name of the root. Also, it needs to be relative to this directory, so ../.<rootprojectname>/bin
 			// build target
-			setBuildTarget(doc, root, outputDir, project.getDependentProjects(), project.getSourceClasspath(), prjName, project.isRoot());	
+			setBuildTarget(doc, root, project.getOutputLocation(), project.getDependentProjects(), project.getSourceClasspath(), prjName, project.isRoot());	
 			// TODO Fix this output location
 			
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
@@ -124,28 +123,7 @@ public class BuildfileGenerator {
 		// TODO Add handling for bootclasspath (?)
 	}
 	
-	// TODO Put this into a utility class
-	public static String makeRelative(String path, String projectName) {
-		//System.out.println("Make Relative");
-		System.out.println("Original path: " + path);
-		System.out.println("Project name: " + projectName);
-		String original = path;
-		int index = path.indexOf(projectName);
-		// TODO Fix up the logic in this!
-		if (index < 0) {
-			System.out.println("Return val: " + original);
-			return original;
-		}
-		String relPath = path.substring(index+projectName.length(), path.length());
-		if (relPath.charAt(0) == '/') {
-			System.out.println("Return val: " + relPath.substring(1, relPath.length()));
-			return relPath.substring(1, relPath.length());
-		}
-		System.out.println("Return val: " + relPath);
-		return relPath;
-	}
-	
-	private static void setInitTarget(Document doc, Element root, String relOutputDir) {
+	private static Element setInitTarget(Document doc, Element root, String relOutputDir) {
 		Element target = doc.createElement("target");
 		target.setAttribute("name", "init");
 		root.appendChild(target);
@@ -153,16 +131,40 @@ public class BuildfileGenerator {
 		Element mkdir = doc.createElement("mkdir");
 		mkdir.setAttribute("dir", relOutputDir);
 		target.appendChild(mkdir);
+		return target;
 	}
 	
-	private static void setBuildTarget(Document doc, Element root, String relOutputDir, List<ClasspathHandler> list, List<IClasspathEntry> srcEntries, String projectName, boolean isRoot) {
+	private static String relativizeDirectory(String dir, String projectName) {
+		System.out.println("\n\nRelativizeDirectory");
+		System.out.println("Original path: " + dir);
+		System.out.println("Project name: " + projectName);
+
+		int index = dir.indexOf(projectName);
+		if (index > -1) {
+			System.out.println("Relative path: " + dir.substring(index+1));
+			return dir.substring(index + projectName.length() + 1);
+		}
+		index = dir.indexOf("package/");
+		if (index > -1) {
+			// this is an absolute path
+			System.out.println(".." + dir.substring(index + "package".length()));
+			return ".." + dir.substring(index + "package".length());
+		}
+
+		System.out.println("Relative path: " + ".." + dir);
+		return ".." + dir;
+	}
+	
+	private static void setBuildTarget(Document doc, Element root, String prjOutputDirectory, List<ClasspathHandler> list, List<IClasspathEntry> srcEntries, String projectName, boolean isRoot) {
 		
+		prjOutputDirectory = relativizeDirectory(prjOutputDirectory, projectName);
+		System.out.println("Relative output directory: " + prjOutputDirectory);
 		Element target = doc.createElement("target");
 		target.setAttribute("name", "build");
-		if (isRoot) {
-			setInitTarget(doc, root, relOutputDir);
+		//if (isRoot) {
+			Element init = setInitTarget(doc, root, prjOutputDirectory);
 			target.setAttribute("depends", "init");
-		}
+		//}
 		
 		root.appendChild(target);
 		
@@ -179,38 +181,39 @@ public class BuildfileGenerator {
 			target.appendChild(ant);
 		}
 		
-		Element javac = doc.createElement("javac");
-		//System.out.println(x);
-		// TODO Fix up this hacky logic
-		if (relOutputDir.charAt(0) == '/') {
-			relOutputDir = ".." + relOutputDir;
-		}
-		javac.setAttribute("includeantruntime", "false");
-		javac.setAttribute("classpathref", CLASSPATH_NAME);
-		javac.setAttribute("destdir", relOutputDir);
-		javac.setAttribute("source", "${source}");
-		javac.setAttribute("target", "${target}");
-		target.appendChild(javac);
-		
-		// TODO Add handling for inclusion and exclusion patterns
 		// includesfile and excludesfile attributes - http://ant.apache.org/manual/Tasks/javac.html
 		for (IClasspathEntry entry : srcEntries) {
+			Element javac = doc.createElement("javac");
+			javac.setAttribute("includeantruntime", "false");
+			javac.setAttribute("classpathref", CLASSPATH_NAME);
+			// Source entries may have a specific output location associated with them, otherwise, we use the project's default location
+			IPath destPath = entry.getOutputLocation();
+			String destDir = null;
+			if (destPath != null) {
+				destDir = relativizeDirectory(destPath.toString(), projectName);
+			}
+			else {
+				destDir = prjOutputDirectory;
+			}
+			Element mkdir = doc.createElement("mkdir");
+			mkdir.setAttribute("dir", destDir);
+			init.appendChild(mkdir);
+			javac.setAttribute("destdir", destDir);
+			javac.setAttribute("source", "${source}");
+			javac.setAttribute("target", "${target}");
+			
 			Element src = doc.createElement("src");
 			IPath absPath = entry.getPath().makeAbsolute();
-			//IPath relPath = absPath.removeFirstSegments(absPath.segmentCount()-3);
-			// TODO -3 won't be right if it's package/project/main/src or something
-			//System.out.println("Rel path: " + relPath.toString());
+
 			addInclusionExclusionPatterns(doc, javac, "include", entry.getInclusionPatterns());
 			addInclusionExclusionPatterns(doc, javac, "exclude", entry.getExclusionPatterns());
 	
-			String strRelPath = makeRelative(absPath.toString(), projectName);
+			String strRelPath = relativizeDirectory(absPath.toString(), projectName);
 			System.out.println("Made relative: " + strRelPath);
 			src.setAttribute("path", strRelPath);
 			javac.appendChild(src);
+			target.appendChild(javac);
 		}
-		
-		Element classpath = doc.createElement("classpath");
-		classpath.setAttribute("refid", CLASSPATH_NAME);
 		
 	}
 	
