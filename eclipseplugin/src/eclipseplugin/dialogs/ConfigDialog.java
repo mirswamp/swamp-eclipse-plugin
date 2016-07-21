@@ -23,7 +23,9 @@ import edu.uiuc.ncsa.swamp.api.PackageVersion;
 import edu.uiuc.ncsa.swamp.api.Platform;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class ConfigDialog extends TitleAreaDialog {
@@ -54,6 +56,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	private int pkgIndex;
 	private String pkgName;
 	private String pkgPath;
+	private String pkgThingUUID;
 	// Build
 	private String buildSys;
 	private int buildSysIndex;
@@ -69,6 +72,10 @@ public class ConfigDialog extends TitleAreaDialog {
  	public String getprjPath() {
 		return project.getLocation().toString();
 	}
+ 	
+ 	public String getPkgThingUUID() {
+ 		return pkgThingUUID;
+ 	}
  	
  	public void setSwampProject(String prjUUID) {
  		this.prjUUID = prjUUID;
@@ -151,6 +158,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		buildDir = null;
 		buildFile = null;
 		project = null;
+		pkgThingUUID = null;
 		//pkg = null;
 		createNewPackage = false;
 		pkgName = null;
@@ -193,25 +201,29 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	
-	public boolean initializePackage(String pkgUUID, String prjUUID) {
-		if (pkgUUID == null || prjUUID == null) {
+	public boolean initializePackageWithID(String pkgThingUUID, String prjUUID) {
+		if (pkgThingUUID == null || prjUUID == null) {
 			return false;
 		}
-		PackageVersion pkgVers = api.getPackage(pkgUUID, prjUUID);
-		if (pkgVers == null) {
-			return false;
-		}
-		PackageThing pkgThing = pkgVers.getPackageThing();
-		if (pkgThing == null) {
-			System.out.println("PackageVersion without a PackageThing");
-			return false;
-		}
-		String pkgThingUUID = pkgThing.getUUIDString();
 		System.out.println("PackageThing UUID: " + pkgThingUUID);
 		List<? extends PackageThing> packages = api.getAllPackages(prjUUID);
 		for (int i = 0; i < packages.size(); i++) {
 			if (packages.get(i).getUUIDString().equals(pkgThingUUID)) {
 				System.out.println(i);
+				pkgIndex = i + 1; // Add one for create project
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean initializePackageWithName(String name, String prjUUID) {
+		if (name == null || prjUUID == null) {
+			return false;
+		}
+		List<? extends PackageThing> packages = api.getAllPackages(prjUUID);
+		for (int i = 0; i < packages.size(); i++) {
+			if (packages.get(i).getName().equals(name)) {
 				pkgIndex = i + 1; // Add one for create project
 				return true;
 			}
@@ -323,9 +335,10 @@ public class ConfigDialog extends TitleAreaDialog {
 			// We've read this from file
 			prjCombo.select(prjIndex);
 			handleProjectSelection(prjIndex);
+			/*
 			if (pkgVersion != null) {
 				prjVersionText.setText(pkgVersion);
-			}
+			}*/
 		}
 		else {
 			if (prjCombo.getItemCount() == 1) {
@@ -333,6 +346,10 @@ public class ConfigDialog extends TitleAreaDialog {
 				handleProjectSelection(0);
 			}
 		}
+		Timestamp timestamp = new Timestamp(new Date().getTime());
+		String timeString = timestamp.toString();
+		timeString = timeString.substring(0, timeString.length()-4);
+		prjVersionText.setText(timeString);
 	
 		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container);
 		buildSysCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), buildOptions);		
@@ -480,11 +497,13 @@ public class ConfigDialog extends TitleAreaDialog {
 			if (pkgSelection == CREATE_NEW_PACKAGE) {
 				createNewPackage = true;
 				pkgName = pkgNameText.getText();
+				pkgThingUUID = null;
 			}
 			else {
 				// pkg = list.get(pkgCombo.getSelectionIndex()+1);
-				PackageThing pkg = list.get(pkgCombo.getSelectionIndex()+1);
+				PackageThing pkg = list.get(pkgCombo.getSelectionIndex()-1);
 				pkgName = pkg.getName();
+				pkgThingUUID = pkg.getIdentifierString();
 			}
 			
 			buildSysIndex = buildSysCombo.getSelectionIndex();

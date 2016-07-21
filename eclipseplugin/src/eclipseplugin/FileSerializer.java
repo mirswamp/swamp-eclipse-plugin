@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Date;
 
 import org.eclipse.core.resources.IProject;
 
@@ -17,7 +18,7 @@ import edu.uiuc.ncsa.swamp.api.PackageVersion;
 public class FileSerializer {
 	
 	private static String DELIMITER = ",";
-	public static boolean serialize(String filepath, SelectionDialog sd, ConfigDialog cd, String pkgUUID, String prjUUID) {
+	public static boolean serialize(String filepath, SelectionDialog sd, ConfigDialog cd, String prjUUID) {
 		File file = new File(filepath);
 		if (file.exists()) {
 			file.delete();
@@ -72,15 +73,25 @@ public class FileSerializer {
 			// Project (IProject) filepath
 			writer.write(project.getLocation().toString());
 			writer.write("\n");
-			// SWAMP Package
-			writer.write(pkgUUID);
-			writer.write("\n");
 			// SWAMP Project
 			writer.write(prjUUID);
 			writer.write("\n");
+			// SWAMP Package
+			String pkgUUID = cd.getPkgThingUUID();
+			if (pkgUUID != null) {
+				writer.write("\t" + pkgUUID);
+				writer.write("\n");
+			}
+			else {
+				String pkgName = cd.getPkgName();
+				writer.write(pkgName);
+				writer.write("\n");
+			}
+			/*
 			// Package Version
 			writer.write(cd.getPkgVersion());
 			writer.write("\n");
+			*/
 			// Build system index
 			writer.write(Integer.toString(cd.getBuildSysIndex()));
 			writer.write("\n");
@@ -153,25 +164,45 @@ public class FileSerializer {
 			// SWAMP Package UUID
 			String pkgUUID = null;
 			String prjUUID = null;
-			str = reader.readLine();
-			if (str != null && !str.equals("\n")) {
-				pkgUUID = str;
-			}
+			
 			str = reader.readLine();
 			if (str != null && !str.equals("\n")) {
 				prjUUID = str;
 			}
-			if (!cd.initializePackage(pkgUUID, prjUUID)) {
-				reader.close();
-				System.out.println("We were unable to find the last SWAMP Package");
-				return false;
+			
+			str = reader.readLine();
+			if (str != null && !str.equals("\n")) {
+				char c = str.charAt(0);
+				if (c == '\t') {
+					pkgUUID = str.substring(1, str.length());
+					if (!cd.initializePackageWithID(pkgUUID, prjUUID)) {
+						reader.close();
+						System.out.println("We were unable to find the last SWAMP Package");
+						return false;
+					}
+				}
+				else {
+					String name = str;
+					if (!cd.initializePackageWithName(name, prjUUID)) {
+						reader.close();
+						System.out.println("We were unable to find the last SWAMP Package");
+						return false;
+					}
+				}
 			}
 
 			// Package Version
-			str = reader.readLine();
+			//str = reader.readLine();
+			/*
 			if (str != null && !str.equals("\n")) {
 				cd.setPkgVersion(str);
 			}
+			*/
+			// initialize version with date/time stamp
+			//String timestamp = new Date().toString();
+			//System.out.println("Timestamp: " + timestamp);
+			//cd.setPkgVersion(timestamp);
+			
 			int buildSysIndex = -1;
 			String buildFile = null;
 			String buildDir = null;

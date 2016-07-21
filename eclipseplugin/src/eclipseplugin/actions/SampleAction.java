@@ -26,6 +26,7 @@ import org.eclipse.ui.console.MessageConsoleStream;
 import eclipseplugin.BuildfileGenerator;
 import eclipseplugin.ClasspathHandler;
 import eclipseplugin.FileSerializer;
+import eclipseplugin.MutexRule;
 import eclipseplugin.PackageInfo;
 import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.ConfigDialog;
@@ -46,6 +47,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobManager;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -63,6 +65,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 	private MessageConsoleStream out;
 	private SwampApiWrapper api;
 
+	private static String SWAMP_FAMILY = "SWAMP_FAMILY";
 	private static String SESSION_STRING = ".SESSION";
 	public SampleAction() {
 	}
@@ -85,8 +88,13 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		return console.newMessageStream();
 	}
 
-	private void runBackgroundJob(SelectionDialog sd, ConfigDialog cd, String configFilepath, String prjUUID) {
+	private void runBackgroundJob(SelectionDialog sd, ConfigDialog cd, String prjUUID) {
 		Job job = new Job("SWAMP Assessment Submission") {
+			
+			@Override
+			public boolean belongsTo(Object family) {
+				return family == SWAMP_FAMILY;
+			}
 			
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
@@ -104,7 +112,6 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				
 				out.println("Status: Uploading package to SWAMP");
 				String pkgVersUUID = uploadPackage(pkgInfo.getParentPath(), prjUUID, pkgInfo.getArchiveFilename(), cd.createNewPackage());
-				boolean retCode = FileSerializer.serialize(configFilepath, sd, cd, pkgVersUUID, prjUUID);
 				
 				if (classpathHandler != null) {
 					classpathHandler.revertClasspath(ResourcesPlugin.getWorkspace().getRoot(), new HashSet<ClasspathHandler>());
@@ -133,6 +140,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				return Status.OK_STATUS;
 			}
 		};
+		//job.setRule(new MutexRule());
 		job.setUser(true);
 		job.schedule();
 	}
@@ -146,10 +154,12 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		String rootPath = root.getLocation().toString();
 		classpathHandler = new ClasspathHandler(null, javaProj, rootPath);// cd.getPkgPath()); // TODO replace this w/ workspace path
 		System.out.println(classpathHandler.getProjectName());
+		
 		if (classpathHandler.hasCycles()) {
+			out.println("Error: There are cyclic dependencies in this project. Please remove all cycles before resubmitting.");
 			System.err.println("Huge error. Cyclic dependencies!");
 			classpathHandler = null;
-			out.println("Error: Project has cyclic dependencies");
+			return null;
 		}
 		BuildfileGenerator.generateBuildFile(classpathHandler);
 		System.out.println("Build file generated");
@@ -238,11 +248,6 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				}
 				api.saveSession(SESSION_STRING);
 			}
-			else {
-				// deserialize from file
-				// TODO Bring this back in the merge
-				boolean returnCode = FileSerializer.deserialize(serializedConfigFilepath, sd, cd);
-			}
 		} catch (Exception e) {
 			AuthenticationDialog ad = new AuthenticationDialog(window.getShell(), this.api, this.out);
 			ad.create();
@@ -251,6 +256,7 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 			}
 			api.saveSession(SESSION_STRING);
 		}
+		boolean returnCode = FileSerializer.deserialize(serializedConfigFilepath, sd, cd);
 		sd.create();
 		if (sd.open() != Window.OK) {
 			// TODO Handle error
@@ -264,7 +270,8 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 				// TODO Handle error
 			}
 			else {
-				runBackgroundJob(sd, cd, serializedConfigFilepath, prjUUID);
+				boolean retCode = FileSerializer.serialize(serializedConfigFilepath, sd, cd, prjUUID);
+				runBackgroundJob(sd, cd, prjUUID);
 			}
 			out.println("Status: Plugin completed executing");
 		}
