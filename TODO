@@ -1,15 +1,26 @@
 TODO:
+
+Immediate:
+-Queueing background jobs
+-1 button to resubmit previous assessments
+-Add an option on the project to submit it to the SWAMP
+-Minor UX improvements from SWAMP API improvements (only showing tools/platforms for a given language, checking tool-platform pair compatibility before submitting)
+-Handling nested projects
+
+Testing:
 -Test automatic export
 -Test assessment submission in general
 -Add handling for when assessment results come in (?)
 
+Future:
 -(?) Stop copying over Java run-time (rt.jar) - this is very expensive
-
--Programmatically determine the type of Eclipse project and as much build as possible
+-(?) Programmatically determine the type of Eclipse project and as much build as possible
     -e.g. if it's a Maven project in Eclipse, set that as the build system and populate the build info
-
 -Refactor dialogs/selection dialogs (interface/inheritance)
+-(?) Stop copying over dependencies that the SWAMP can get over the network (e.g. Maven central dependencies)
+-(?) Keep a persistent .swampbin and check the timestamp on the different libraries to figure out whether they need to be re-copied over. This would result in HUGE savings
 
+===================================================================================================
 DONE:
 -Add sensible default behaviors (e.g. if there's only one project, that should be the project selected)
 -Add Combo for SWAMP package to Config Dialog - this way we won't always submit a new package
