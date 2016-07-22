@@ -1,6 +1,7 @@
 package eclipseplugin.dialogs;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -23,6 +24,7 @@ import edu.uiuc.ncsa.swamp.api.PackageVersion;
 import edu.uiuc.ncsa.swamp.api.Platform;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 
+import java.io.File;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
@@ -63,8 +65,8 @@ public class ConfigDialog extends TitleAreaDialog {
 	private String buildTarget;
 	private String buildDir;
 	private String buildFile;
-	private String buildOptions[] = { "Auto-generate build file", "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", "no-build", "other" };
 	
+	private static String buildOptions[] = { "Auto-generate build file", "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", "no-build", "other" };
 	private static int NO_BUILD = 11;
 	private static int AUTO_GENERATE_BUILD = 0;
 	private static int CREATE_NEW_PACKAGE = 0;
@@ -391,6 +393,88 @@ public class ConfigDialog extends TitleAreaDialog {
 		return area;
 	}
 	
+	
+	private void setPredictedBuildSys(IProject project) {
+		String GRADLE_NATURE = "org.eclipse.buildship.core.gradleprojectnature";
+		String MAVEN_NATURE = "org.eclipse.m2e.core.maven2Nature";
+		String ANT_BUILD = "build.xml"; // this could be ant or ant+Ivy
+		String MAVEN_BUILD = "pom.xml";
+		String MAKE_UPPERCASE = "Makefile";
+		String MAKE_LOWERCASE = "makefile";
+		IProjectDescription description = null;
+		try {
+			description = project.getDescription();
+		} catch (CoreException e) {
+			return;
+		}
+		if (description != null) {
+			String[] natures = description.getNatureIds();
+			// (1) nature approach
+			for (int i = 0; i < natures.length; i++) {
+				String nature = natures[i];
+				System.out.println("Nature " + i + ": " + nature);
+				if (nature.equals(GRADLE_NATURE)) {
+					setBuildSystem("ant");
+					return;
+				}
+				if (nature.equals(MAVEN_NATURE)) {
+					setBuildSystem("Maven");
+					return;
+				}
+			}
+		}
+		// (2) File approach
+		IPath path = project.getLocation().makeAbsolute();
+		System.out.println("Filepath: " + path);
+		String pathName = path.toString();
+		File file = new File(pathName);
+		String files[] = file.list();
+		
+		for (int i = 0; i < files.length; i++) {
+			String filename = files[i];
+			System.out.println("Filename: " + filename);
+			File f = new File(pathName + "/" + filename);
+			if (f.isDirectory()) {
+				continue;
+			}
+			if (filename.equals(ANT_BUILD)) {
+				setBuildSystem("ant");
+				// TODO set buildDir here
+				buildFile = ANT_BUILD;
+				return;
+			}
+			if (filename.equals(MAVEN_BUILD)) {
+				setBuildSystem("Maven");
+				// TODO set buildDir here
+				buildFile = MAVEN_BUILD;
+				return;
+			}
+			if (filename.equals(MAKE_UPPERCASE)) {
+				setBuildSystem("make");
+				// TODO set buildDir here
+				buildFile = MAKE_UPPERCASE;
+				return;
+			}
+			if (filename.equals(MAKE_LOWERCASE)) {
+				setBuildSystem("make");
+				// TODO set buildDir here
+				buildFile = MAKE_LOWERCASE;
+			}
+		}
+		
+	}
+	
+	
+	private void setBuildSystem(String build) {
+		for (int i = 0; i < ConfigDialog.buildOptions.length; i++) {
+			if (ConfigDialog.buildOptions[i].equals(build)) {
+				buildSysIndex = i;
+				handleBuildSelection(i);
+				return;
+			}
+		}
+	}
+	
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		
@@ -423,10 +507,12 @@ public class ConfigDialog extends TitleAreaDialog {
 		IProject projects[] = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		IProject project = projects[selection];
 		IPath p = project.getLocation();
-		if (p == null)
+		if (p == null) {
 			return;
+		}
 		prjFilePathText.setText(p.toString());
 		prjFilePathText.setEnabled(false);
+		setPredictedBuildSys(project);
 	}
 	
 	public void handlePackageSelection(int selection) {
@@ -521,7 +607,7 @@ public class ConfigDialog extends TitleAreaDialog {
 				buildFile = "";
 			}
 			else {
-				buildDir = buildDirText.getText();
+				buildDir = buildDirText.getText(); 
 				buildFile = buildFileText.getText();
 				buildTarget = buildTargetText.getText();
 			}
