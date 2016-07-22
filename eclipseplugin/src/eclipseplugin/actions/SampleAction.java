@@ -35,6 +35,7 @@ import eclipseplugin.dialogs.SelectionDialog;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.PackageVersion;
 import edu.wisc.cs.swamp.SwampApiWrapper;
+import edu.wisc.cs.swamp.exceptions.IncompatibleException;
 import edu.wisc.cs.swamp.exceptions.InvalidIdentifierException;
 
 import java.util.Date;
@@ -295,7 +296,20 @@ public class SampleAction implements IWorkbenchWindowActionDelegate {
 		String pkgName = pkgThing.getName();
 		String platformName = api.getPlatform(pltUUID).getName();
 
-		String assessUUID = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
+		String assessUUID = null;
+		try {
+			assessUUID = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
+		} catch (IncompatibleException e) {
+			// This means that the platform and tool were incompatible
+			// This should never happen given that we check the platform-tool pairs before this
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidIdentifierException e) {
+			// This means that some UUID was invalid
+			// This really should never happen
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		if (assessUUID == null) {
 			out.println("Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");
 			// TODO handle error here
