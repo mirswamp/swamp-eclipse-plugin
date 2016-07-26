@@ -10,6 +10,10 @@ package eclipseplugin.dialogs;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.widgets.*;
+
+import eclipseplugin.SubmissionInfo;
+import eclipseplugin.exceptions.*;
+
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.SWT;
@@ -21,7 +25,6 @@ import java.util.List;
 
 import edu.uiuc.ncsa.swamp.api.Project;
 import edu.uiuc.ncsa.swamp.api.Tool;
-import edu.wisc.cs.swamp.SwampApiWrapper;
 import edu.uiuc.ncsa.swamp.api.Platform; 
 
 public class SelectionDialog extends TitleAreaDialog {
@@ -29,101 +32,25 @@ public class SelectionDialog extends TitleAreaDialog {
 	private Combo projCombo;
 	private org.eclipse.swt.widgets.List platformList;
 	private org.eclipse.swt.widgets.List toolList;
-	private List<? extends Project> projects;
-	private List<? extends Tool> tools;
-	private List<? extends Platform> platforms;
-	private int prjIndex;
-	private int platformIndices[];
-	private int toolIndices[];
-	private SwampApiWrapper api;
+	private SubmissionInfo submissionInfo;
 
 	private enum Type {
 		PROJECT, PLATFORM, TOOL
 	}
 	
-	public SelectionDialog(Shell parentShell, SwampApiWrapper swampApi) {
+	public SelectionDialog(Shell parentShell, SubmissionInfo si) {
 		super(parentShell);
-		api = swampApi;
-		resetState();
+		submissionInfo = si;
 	}
 	
 	private String[] getSelectionElements(Type type) {
-		ArrayList<String> stringList = new ArrayList<String>();
 		if (type == Type.PROJECT) {
-			projects = api.getAllProjects();
-			for (Project p : projects) {
-				stringList.add(p.getFullName());
-			}
+			 return submissionInfo.getProjectList();
 		}
-		else if (type == Type.PLATFORM) {
-			platforms = api.getAllPlatforms();
-			for (Platform p : platforms) {
-				stringList.add(p.getName());
-			}
+		if (type == Type.PLATFORM) {
+			 return submissionInfo.getPlatformList();
 		}
-		else {
-			tools = api.getAllTools();
-			for (Tool t : tools) {
-				stringList.add(t.getName());
-			}
-		}
-		return getElementList(stringList);
-	}
-	
-	private String[] getElementList(ArrayList<String> list) {
-		String[] ary = null;
-		if (list != null) {
-			ary = new String[list.size()];
-			list.toArray(ary);
-		}
-		return ary;
-	}
-	
-	public int getProjectIndex() {
-		return prjIndex;
-	}
-	
-	public void setProjectIndex(int index) {
-		prjIndex = index;
-	}
-	
-	public int[] getPlatformIndices() {
-		return platformIndices;
-	}
-	
-	public void setPlatformIndices(int[] array) {
-		platformIndices = array;
-	}
-	
-	public int[] getToolIndices() {
-		return toolIndices;
-	}
-	
-	public void setToolIndices(int[] array) {
-		toolIndices = array;
-	}
-	
-	public String getProjectUUID() {
-		if (prjIndex < 0) { 
-			return null;
-		}
-		return projects.get(prjIndex).getUUIDString();
-	}
-	
-	public List<String> getPlatformUUIDs() {
-		List<String> uuidList = new ArrayList<String>();
-		for (int i : platformIndices) {
-			uuidList.add(platforms.get(i).getUUIDString());
-		}
-		return uuidList;
-	}
-	
-	public List<String> getToolUUIDs() {
-		List<String> uuidList = new ArrayList<String>();
-		for (int i : toolIndices) {
-			uuidList.add(tools.get(i).getUUIDString());
-		}
-		return uuidList;
+		return submissionInfo.getToolList();
 	}
 	
 	@Override
@@ -145,31 +72,24 @@ public class SelectionDialog extends TitleAreaDialog {
 			this.setMessage("No tool selected.");
 			return;
 		}
-		prjIndex = comboSelection;
-		platformIndices = platformAry;
-		toolIndices = toolAry;
+		// TODO Test stronger checks in SubmissionInfo to check platform, tool compatibility
+		submissionInfo.setPlatforms(platformAry);
+		submissionInfo.setTools(toolAry);
+		
+		if (!submissionInfo.validPlatformToolPairsExist()) {
+			this.setMessage("There are no compatible platform-tool pairs for your selections.");
+			return;
+		}
+		
+		submissionInfo.setProject(comboSelection);
 		super.okPressed();
-	}
-	
-	public void resetState() {
-		prjIndex = -1;
-		platformIndices = null;
-		toolIndices = null;
 	}
 	
 	private void resetWidgets() {
 		projCombo.deselectAll();
-		if (projCombo.getItemCount() == 1) {
-			projCombo.select(0);
-		}
 		platformList.deselectAll();
-		if (platformList.getItemCount() == 1) {
-			platformList.select(0);
-		}
 		toolList.deselectAll();
-		if (toolList.getItemCount() == 1) {
-			toolList.select(0);
-		}
+		setDefaults();
 	}
 	
 	@Override
@@ -191,41 +111,54 @@ public class SelectionDialog extends TitleAreaDialog {
 		comboGridData.horizontalAlignment = GridData.FILL;
 
 		projCombo = addCombo(container, "Project: ", Type.PROJECT, new GridData(SWT.FILL, SWT.NONE, true, false));
+		projCombo.addSelectionListener(new ProjectSelectionListener());
 		platformList = addList(container, "Platform: ", Type.PLATFORM, new GridData(GridData.FILL_BOTH));
 		toolList = addList(container, "Tool: ", Type.TOOL, new GridData(GridData.FILL_BOTH));
 		
-		if (prjIndex > -1) {
-			projCombo.select(prjIndex);
-		}
-		else {
-			if (projCombo.getItemCount() == 1) {
-				projCombo.select(0);
+		if (submissionInfo.isSelectionInitialized()) {
+			int prjIndex = submissionInfo.getProjectIndex();
+			if (prjIndex > -1) {
+				projCombo.select(prjIndex);
 			}
-		}
-		if (platformIndices != null) {
-			for (int i : platformIndices) {
-				platformList.select(i);
+			int[] platformIndices = submissionInfo.getPlatformIndices();
+			if (platformIndices != null) {
+				platformList.select(platformIndices);
 			}
-		}
-		else {
-			if (platformList.getItemCount() == 1) {
-				platformList.select(0);
-			}
-		}
-		if (toolIndices != null) {
-			for (int i : toolIndices) {
-				toolList.select(i);
+			int[] toolIndices = submissionInfo.getToolIndices();
+			if (toolIndices != null) {
+				toolList.select(toolIndices);
 			}
 		}
 		else {
-			if (toolList.getItemCount() == 1) {
-				toolList.select(0);
-			}
+			setDefaults();
 		}
-		
-
+			
 		return area;
 		
+	}
+	
+	private void setDefaults() {
+		setProjectDefault();
+		setPlatformDefault();
+		setToolDefault();
+	}
+	
+	private void setProjectDefault() {
+		if (projCombo.getItemCount() == 1) {
+			projCombo.select(0);
+		}
+	}
+	
+	private void setPlatformDefault() {
+		if (platformList.getItemCount() == 1) {
+			platformList.select(0);
+		}
+	}
+	
+	private void setToolDefault() {
+		if (toolList.getItemCount() == 1) {
+			toolList.select(0);
+		}
 	}
 	
 	@Override
@@ -253,6 +186,12 @@ public class SelectionDialog extends TitleAreaDialog {
 		return c;
 	}
 	
+	private void refreshTools() {
+		String[] toolOptions = getSelectionElements(Type.TOOL);
+		toolList.setItems(toolOptions);
+		setToolDefault();
+	}
+	
 	private class ClearButtonSelectionListener implements SelectionListener {
 		
 		public ClearButtonSelectionListener() {
@@ -260,7 +199,6 @@ public class SelectionDialog extends TitleAreaDialog {
 		
 		@Override
 		public void widgetSelected(SelectionEvent e) {
-			resetState();
 			resetWidgets();
 
 		}
@@ -268,6 +206,22 @@ public class SelectionDialog extends TitleAreaDialog {
 		@Override
 		public void widgetDefaultSelected(SelectionEvent e) {
 		}
+	}
+	
+	private class ProjectSelectionListener implements SelectionListener {
+		
+		@Override
+		public void widgetSelected(SelectionEvent e) {
+			int index = projCombo.getSelectionIndex();
+			submissionInfo.setProject(index);
+			refreshTools();
+		}
+		
+		@Override
+		public void widgetDefaultSelected(SelectionEvent e) {
+			
+		}
+		
 	}
 	
 }

@@ -17,12 +17,13 @@
          </menu>
          <action
                label="Launch SWAMP"
+               style="pulldown"
                icon="icons/swamp-logo-height-20.png"
-               class="eclipseplugin.actions.SampleAction"
+               class="eclipseplugin.actions.LaunchAction"
                tooltip="Upload and assess projects in the SWAMP"
                menubarPath="SWAMPMenu/sampleGroup"
                toolbarPath="sampleGroup"
-               id="eclipseplugin.actions.SampleAction">
+               id="eclipseplugin.actions.LaunchAction">
          </action>
       </actionSet>
    </extension>
