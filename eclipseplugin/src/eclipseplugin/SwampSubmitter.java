@@ -46,7 +46,7 @@ public class SwampSubmitter {
 	private String configFilepath;
 
 	private static String SWAMP_FAMILY = "SWAMP_FAMILY";
-	private static String SESSION_STRING = ".SESSION";
+	private static String SESSION_STRING = "swampsession";
 	
 	public SwampSubmitter(IWorkbenchWindow window) {
 		this.window = window;
@@ -209,6 +209,9 @@ public class SwampSubmitter {
 	
 	// TODO Throw an exception if we can't get here
 	private boolean initializeSwampApi() {
+		if (api != null) {
+			return true;
+		}
 		try {
 			api = new SwampApiWrapper(SwampApiWrapper.HostType.DEVELOPMENT);
 		} catch (Exception e) {
@@ -312,6 +315,28 @@ public class SwampSubmitter {
 		SubmissionInfo si = new SubmissionInfo(this.api);
 		boolean returnCode = FileSerializer.deserializeSubmissionInfo(configFilepath, si);
 		launchConfiguration(si);
+	}
+	
+	public boolean loggedIntoSwamp() {
+		if (!initializeSwampApi()) {
+			return false;
+		}
+		try {
+			if (!api.restoreSession(SESSION_STRING)) {
+				return false;
+			}
+		} catch (SessionExpiredException e) {
+			return false;
+		}
+		return true;
+	}
+	
+	public void logIntoSwamp() {
+		// TODO Fill this in
+	}
+	
+	public void logOutOfSwamp() {
+		// TODO Fill this in
 	}
 	
 	private void submitAssessment(String pkgUUID, String toolUUID, String prjUUID, String pltUUID) {

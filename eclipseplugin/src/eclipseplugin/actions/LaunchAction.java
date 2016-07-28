@@ -116,12 +116,28 @@ public class LaunchAction implements IWorkbenchWindowPulldownDelegate {
 	@Override
 	public Menu getMenu(Control parent) {
 		Menu menu = new Menu(parent);
-		MenuItem item1 = new MenuItem(menu, SWT.PUSH, 0);
-		item1.setText("&Configure Assessment Submission");
-		item1.addListener(SWT.Selection, e -> submitter.launch());//System.out.println("Selected Config. Time to launch config.")); // lambda expression
-		MenuItem item2 = new MenuItem(menu, SWT.PUSH, 1);
-		item2.setText("&Resubmit Previous Assessment");
-		item2.addListener(SWT.Selection, e -> submitter.launchBackgroundAssessment());//System.out.println("Selected resubmit. Just resubmit in background."));
+		int index = 0;
+		MenuItem configLaunch = makeMenuItem(menu, "&Configure Assessment Submission", index++);
+		configLaunch.addListener(SWT.Selection, e -> submitter.launch());
+		MenuItem resubmit = makeMenuItem(menu, "&Resubmit Previous Assessment", index++);
+		resubmit.addListener(SWT.Selection, e -> submitter.launchBackgroundAssessment());
+		MenuItem logIn = makeMenuItem(menu, "Log &In", index++);
+		MenuItem logOut = makeMenuItem(menu, "Log &Out", index++);
+		boolean loggedIn = submitter.loggedIntoSwamp();
+		if (loggedIn) {
+			logIn.addListener(SWT.Selection, e -> submitter.logIntoSwamp());
+			logOut.setEnabled(false);
+		}
+		else {
+			logOut.addListener(SWT.Selection, e -> submitter.logOutOfSwamp());
+			logIn.setEnabled(false);
+		}
 		return menu;
+	}
+	
+	private MenuItem makeMenuItem(Menu menu, String label, int index) {
+		MenuItem menuItem = new MenuItem(menu, SWT.PUSH, index);
+		menuItem.setText(label);
+		return menuItem;
 	}
 }

@@ -6,6 +6,7 @@ Immediate:
 -Having serialized config files for each individual project (?)
 -Minor UX improvements from SWAMP API improvements (only showing tools/platforms for a given language, checking tool-platform pair compatibility before submitting)
 -Handling nested projects
+-Add login/logout functionality when functionality has been added to SwampApiWrapper
 
 Testing:
 -Test automatic export
