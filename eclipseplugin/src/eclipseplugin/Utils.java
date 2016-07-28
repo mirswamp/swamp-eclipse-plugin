@@ -10,6 +10,7 @@ public class Utils {
 		Timestamp timestamp = new Timestamp(new Date().getTime());
 		String timeString = timestamp.toString();
 		timeString = timeString.substring(0, timeString.length()-4);
+		timeString = timeString.replace(" ","-");
 		return timeString;
 	}
 	
