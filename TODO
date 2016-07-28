@@ -2,8 +2,6 @@ TODO:
 
 Immediate:
 -Queueing background jobs
--Add an option on the project to submit it to the SWAMP
--Having serialized config files for each individual project (?)
 -Minor UX improvements from SWAMP API improvements (only showing tools/platforms for a given language, checking tool-platform pair compatibility before submitting)
 -Handling nested projects
 -Add login/logout functionality when functionality has been added to SwampApiWrapper
@@ -28,4 +26,5 @@ DONE:
 -Get cookies working properly (Vamshi's working on this)
 -1 button to resubmit previous assessments
 -Stop copying over Java run-time (rt.jar) - this is very expensive
-
+-Add an option on the project to submit it to the SWAMP
+-Having serialized config files for each individual project (?)
