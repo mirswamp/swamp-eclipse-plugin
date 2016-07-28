@@ -183,9 +183,15 @@ public class ClasspathHandler {
 	}
 	
 	public void handleContainer(IClasspathEntry entry) {
+		// TODO Question: Is it safe to not ship system libraries? Talk to Vamshi about this in the future
 		try {
-			// TODO Question: Is it safe to not ship system libraries? Talk to Vamshi about this in the future
 			IClasspathContainer container = JavaCore.getClasspathContainer(entry.getPath(), project);
+			int kind = container.getKind();
+			if ((kind == IClasspathContainer.K_APPLICATION || kind == IClasspathContainer.K_DEFAULT_SYSTEM)) {
+				System.out.println("System library container");
+				System.out.println(entry.getPath());
+				return;
+			}
 			for (IClasspathEntry subEntry : container.getClasspathEntries()) {
 				if (subEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
 					handleLibrary(subEntry);

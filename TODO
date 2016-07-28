@@ -15,7 +15,6 @@ Testing:
 Future:
 -Add an about option to the dropdown menu, that says who I am and what the SWAMP is
 -(?) Capture files at the time submitted rather than when they're going to be processed, particularly if there's a queue
--(?) Stop copying over Java run-time (rt.jar) - this is very expensive
 -(?) Programmatically determine the type of Eclipse project and as much build as possible
     -e.g. if it's a Maven project in Eclipse, set that as the build system and populate the build info
 -(?) Stop copying over dependencies that the SWAMP can get over the network (e.g. Maven central dependencies)
@@ -27,3 +26,5 @@ DONE:
 -Add Combo for SWAMP package to Config Dialog - this way we won't always submit a new package
 -Get cookies working properly (Vamshi's working on this)
 -1 button to resubmit previous assessments
+-Stop copying over Java run-time (rt.jar) - this is very expensive
+
