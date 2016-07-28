@@ -286,6 +286,19 @@ public class SubmissionInfo {
 	
 	public void setSelectedPackageID(String pkgUUID) {
 		selectedPackageThingID = pkgUUID;
+		if (packages == null) {
+			packages = api.getPackagesList(selectedProjectID);
+		}
+		for (int i = 0; i < packages.size(); i++) {
+			PackageThing pt = packages.get(i);
+			if (pt.getIdentifierString().equals(pkgUUID)) {
+				pkgIndex = i+1;
+				packageName = pt.getName();
+				return;
+			}
+		}
+		// Need to get a package thing here, should be able to do it in O(1) rather than O(N)
+		// TODO Talk to Vamshi about this
 	}
 	
 	public boolean setPackageIDFromName(String pkgName) {
@@ -297,6 +310,7 @@ public class SubmissionInfo {
 			if (pt.getName().equals(pkgName)) {
 				pkgIndex = i+1; // +1 for create new package
 				selectedPackageThingID = pt.getUUIDString();
+				packageName = pt.getName();
 				return true;
 			}
 		}
