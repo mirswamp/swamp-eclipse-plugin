@@ -10,6 +10,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
@@ -45,12 +46,13 @@ public class SwampSubmitter {
 	private IWorkbenchWindow window;
 	private String configFilepath;
 
-	private static String SWAMP_FAMILY = "SWAMP_FAMILY";
-	private static String SESSION_STRING = "swampsession";
+	private static String SWAMP_FAMILY 		= "SWAMP_FAMILY";
+	private static String SESSION_STRING 	= "swampsession";
+	private static String CONFIG_FILENAME 	= ".swampconfig";
 	
 	public SwampSubmitter(IWorkbenchWindow window) {
 		this.window = window;
-		configFilepath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + "/.swampconfig";
+		//configFilepath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + CONFIG_FILENAME;
 	}
 	
 	private MessageConsoleStream initializeConsole(String consoleName) {
@@ -234,7 +236,7 @@ public class SwampSubmitter {
 		out.println("Status: Launched SWAMP plugin - running on " + versionStr + ".");
 	}
 	
-	public void launchBackgroundAssessment() {
+	public void launchBackgroundAssessment(String configPath) {
 		initializeSwampApi();
 		out = initializeConsole("SWAMP Plugin");
 		try {
@@ -250,9 +252,16 @@ public class SwampSubmitter {
 				return;
 			}
 		}
+		if (configPath == null || configPath.equals("")) {
+			configFilepath = null;
+		}
+		else {
+			configFilepath = configPath + File.separator + CONFIG_FILENAME;
+		}
 		SubmissionInfo si = new SubmissionInfo(this.api);
-		if (!new File(configFilepath).exists()) {
+		if ((configFilepath == null) || (!new File(configFilepath).exists())) {
 			out.println("Error: No previous assessment found.");
+			System.out.println("No previous assessment found at " + configFilepath);
 			launchConfiguration(si);
 		}
 		else {
@@ -287,6 +296,7 @@ public class SwampSubmitter {
 				// TODO Handle error
 			}
 			else {
+				configFilepath = si.getProjectPath() + Path.SEPARATOR + CONFIG_FILENAME;
 				FileSerializer.serializeSubmissionInfo(configFilepath, si);
 				runBackgroundJob(si, false);
 			}
@@ -294,7 +304,7 @@ public class SwampSubmitter {
 		}
 	}
 	
-	public void launch() {
+	public void launch(String configPath) {
 		initializeSwampApi();
 		
 		out = initializeConsole("SWAMP Plugin");
@@ -313,7 +323,15 @@ public class SwampSubmitter {
 		}
 		// TODO we can fail here, i.e. by not connecting and we're not handling it as of now
 		SubmissionInfo si = new SubmissionInfo(this.api);
-		boolean returnCode = FileSerializer.deserializeSubmissionInfo(configFilepath, si);
+		if (configPath == null || configPath.equals("")) {
+			configFilepath = null;
+		}
+		else {
+			configFilepath = configPath + File.separator + CONFIG_FILENAME;
+		}
+		if ((configFilepath != null) && (new File(configFilepath).exists())) {
+			boolean returnCode = FileSerializer.deserializeSubmissionInfo(configFilepath, si);
+		}
 		launchConfiguration(si);
 	}
 	

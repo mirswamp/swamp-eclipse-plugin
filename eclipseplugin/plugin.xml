@@ -2,6 +2,7 @@
 <?eclipse version="3.4"?>
 <plugin>
 
+<!-- TODO: Action sets are deprecated - replace this with commands at some time -->
    <extension
          point="org.eclipse.ui.actionSets">
       <actionSet
@@ -91,8 +92,4 @@
   <extension
         point="org.eclipse.ui.bindings">
   </extension>
-  			
-   
-   
-
 </plugin>     

@@ -10,53 +10,20 @@ package eclipseplugin.actions;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.IWorkbenchWindowPulldownDelegate;
-import org.eclipse.ui.PartInitException;
-import org.eclipse.ui.console.ConsolePlugin;
-import org.eclipse.ui.console.IConsole;
-import org.eclipse.ui.console.IConsoleConstants;
-import org.eclipse.ui.console.IConsoleManager;
-import org.eclipse.ui.console.IConsoleView;
-import org.eclipse.ui.console.MessageConsole;
-import org.eclipse.ui.console.MessageConsoleStream;
-
-import eclipseplugin.BuildfileGenerator;
-import eclipseplugin.ClasspathHandler;
-import eclipseplugin.FileSerializer;
-import eclipseplugin.MutexRule;
-import eclipseplugin.PackageInfo;
 import eclipseplugin.SwampSubmitter;
-import eclipseplugin.dialogs.AuthenticationDialog;
-import eclipseplugin.dialogs.ConfigDialog;
-import eclipseplugin.dialogs.SelectionDialog;
-
-import edu.uiuc.ncsa.swamp.api.PackageThing;
-import edu.uiuc.ncsa.swamp.api.PackageVersion;
-import edu.wisc.cs.swamp.SwampApiWrapper;
-import edu.wisc.cs.swamp.exceptions.InvalidIdentifierException;
-
-import java.util.Date;
-import java.util.HashSet;
-
+import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobManager;
-import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.core.resources.IResource;
 
 /**
  * Our sample action implements workbench action delegate.
@@ -82,7 +49,7 @@ public class LaunchAction implements IWorkbenchWindowPulldownDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		submitter.launchBackgroundAssessment();
+		submitter.launchBackgroundAssessment(getActiveProjectLocation());
 	}
 
 	/**
@@ -115,12 +82,13 @@ public class LaunchAction implements IWorkbenchWindowPulldownDelegate {
 
 	@Override
 	public Menu getMenu(Control parent) {
+		System.out.println("Active project location: " + getActiveProjectLocation());
 		Menu menu = new Menu(parent);
 		int index = 0;
 		MenuItem configLaunch = makeMenuItem(menu, "&Configure Assessment Submission", index++);
-		configLaunch.addListener(SWT.Selection, e -> submitter.launch());
+		configLaunch.addListener(SWT.Selection, e -> submitter.launch(getActiveProjectLocation()));
 		MenuItem resubmit = makeMenuItem(menu, "&Resubmit Previous Assessment", index++);
-		resubmit.addListener(SWT.Selection, e -> submitter.launchBackgroundAssessment());
+		resubmit.addListener(SWT.Selection, e -> submitter.launchBackgroundAssessment(getActiveProjectLocation()));
 		MenuItem logIn = makeMenuItem(menu, "Log &In", index++);
 		MenuItem logOut = makeMenuItem(menu, "Log &Out", index++);
 		boolean loggedIn = submitter.loggedIntoSwamp();
@@ -140,4 +108,35 @@ public class LaunchAction implements IWorkbenchWindowPulldownDelegate {
 		menuItem.setText(label);
 		return menuItem;
 	}
+	
+	public String getActiveProjectLocation() {
+		IWorkbenchPage workbenchPage = window.getActivePage();
+		if (workbenchPage == null) {
+			// TODO Add some MessageDialog to say we were unable to get the project - are you sure you have an editor open?
+			return null;
+		}
+		IEditorPart editorPart = workbenchPage.getActiveEditor();
+		if (editorPart == null) {
+			// TODO Add some MessageDialog to say we were unable to get the project - are you sure you have an editor open?
+			return null;
+		}
+		
+		/* Code adapted from Eclipse wiki (https://wiki.eclipse.org/FAQ_How_do_I_access_the_active_project%3F) */
+		IEditorInput input = editorPart.getEditorInput();
+		if (!(input instanceof IFileEditorInput)) {
+			return null;
+		}
+		IResource resource = (IResource)((IFileEditorInput)input).getFile();
+		if (resource == null) {
+			return null;
+		}
+		IProject project = resource.getProject();
+		if (project == null) {
+			return null;
+		}
+		return project.getLocation().toOSString();
+	}
+	
+	
+	
 }

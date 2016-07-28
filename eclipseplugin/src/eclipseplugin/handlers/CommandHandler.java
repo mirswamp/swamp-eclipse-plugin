@@ -48,7 +48,9 @@ public class CommandHandler extends AbstractHandler {
 		
 		// TODO (1) Make this project-specific
 		SwampSubmitter ss = new SwampSubmitter(window);
-		ss.launchBackgroundAssessment();
+		String configDir = project.getProject().getLocation().toOSString();
+		
+		ss.launchBackgroundAssessment(configDir);
 		
 		return null;
 	}
