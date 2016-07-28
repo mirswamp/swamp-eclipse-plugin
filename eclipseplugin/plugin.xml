@@ -27,5 +27,72 @@
          </action>
       </actionSet>
    </extension>
+  <!-- 
+  org.eclipse.ui.popupMenus is deprecated, we'll do it using commands instead
+   <extension 
+   		point="org.eclipse.ui.popupMenus">
+   	  	<objectContribution
+   	  		id="org.eclipse.ui.articles.action.contribution.popup.object"
+   	  		objectClass="org.eclipse.core.resources.IFile">
+   	  		<filter
+   	  			name="projectNature"
+   	  			value="org.eclipse.jdt.core.javanature">
+   	  		</filter>
+   	  		<action
+   	  			id="eclipseplugin.actions.RightClickAction"
+   	  			label="Upload and assess project"
+   	  			icon="icons/swamp-logo-height-20.png"
+   	  			menubarPath="additions"
+   	  			class="eclipseplugin.actions.LaunchAction">
+   	  		</action>
+   	  	</objectContribution>
+   </extension>
+  -->
+  
+  <extension
+  	point="org.eclipse.ui.commands">
+  	<command
+  		categoryId="eclipseplugin.commands.category"
+  		id="eclipseplugin.commands.launchCommand"
+  		name="Launch Command">
+  	</command>
+  </extension>
+  
+  <extension
+  	point="org.eclipse.ui.handlers">
+  	<handler
+  		class="eclipseplugin.handlers.CommandHandler"
+  		commandId="eclipseplugin.commands.launchCommand">
+  	</handler>
+  </extension>
+  		 
+  <extension
+  	point="org.eclipse.ui.menus">
+  	<menuContribution
+  		locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
+  		<command
+  			commandId="eclipseplugin.commands.launchCommand"
+  			id="eclipseplugin.menus.launchCommand"
+  			label="Assess Project on SWAMP"
+  			mnemonic="A">
+  			<visibleWhen
+  				checkEnabled="false">
+               	<with variable="activeMenuSelection">
+               		<iterate ifEmpty="false">
+               			<adapt type="org.eclipse.core.resources.IProject">
+               				<test property="org.eclipse.core.resources.open" value="true" />
+               			</adapt>
+               		</iterate>
+            	</with>
+  			</visibleWhen>
+  		</command>
+  	</menuContribution>
+  </extension>
+  <extension
+        point="org.eclipse.ui.bindings">
+  </extension>
+  			
+   
+   
 
 </plugin>     

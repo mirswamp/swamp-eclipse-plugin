@@ -465,4 +465,13 @@ public class SubmissionInfo {
 	public void setPackageName(String packageName) {
 		this.packageName = packageName;
 	}
+
+	public void printPackageTypes() {
+		List<String> packageTypes = api.getPackageTypesList();
+		System.out.println("\n\n\nPackageTypes\n=================================================");
+		for (String s : packageTypes) {
+			System.out.println(s);
+		}
+		
+	}
 }

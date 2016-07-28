@@ -94,6 +94,10 @@ public class SelectionDialog extends TitleAreaDialog {
 	
 	@Override
 	protected Control createDialogArea(Composite parent) {
+		// TODO Remove this
+		submissionInfo.printPackageTypes();
+		
+		
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
 		

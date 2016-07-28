@@ -25,6 +25,5 @@
 	<classpathentry exported="true" kind="lib" path="lib/swamp-api-client-1.0-SNAPSHOT.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-logging-1.1.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-io-2.5.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/eclipse2ant_1.3.5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
