@@ -47,7 +47,6 @@ public class SwampSubmitter {
 	private String configFilepath;
 
 	private static String SWAMP_FAMILY 		= "SWAMP_FAMILY";
-	private static String SESSION_STRING 	= "swampsession";
 	private static String CONFIG_FILENAME 	= ".swampconfig";
 	
 	public SwampSubmitter(IWorkbenchWindow window) {
@@ -240,7 +239,7 @@ public class SwampSubmitter {
 		initializeSwampApi();
 		out = initializeConsole("SWAMP Plugin");
 		try {
-			if (!api.restoreSession(SESSION_STRING)) {
+			if (!api.restoreSession()) {
 				// launch authentication dialog
 				if (!authenticateUser()) {
 					return;
@@ -275,7 +274,7 @@ public class SwampSubmitter {
 		if (ad.open() != Window.OK) {
 			return false;
 		}
-		api.saveSession(SESSION_STRING);
+		api.saveSession();
 		return true;
 	}
 	
@@ -310,7 +309,7 @@ public class SwampSubmitter {
 		out = initializeConsole("SWAMP Plugin");
 		
 		try {
-			if (!api.restoreSession(SESSION_STRING)) {
+			if (!api.restoreSession()) {
 				// Add authentication dialog here
 				if (!authenticateUser()) {
 					return;
@@ -340,7 +339,7 @@ public class SwampSubmitter {
 			return false;
 		}
 		try {
-			if (!api.restoreSession(SESSION_STRING)) {
+			if (!api.restoreSession()) {
 				return false;
 			}
 		} catch (SessionExpiredException e) {
@@ -354,7 +353,7 @@ public class SwampSubmitter {
 	}
 	
 	public void logOutOfSwamp() {
-		// TODO Fill this in
+		api.logout();
 	}
 	
 	private void submitAssessment(String pkgUUID, String toolUUID, String prjUUID, String pltUUID) {
