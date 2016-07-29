@@ -49,7 +49,7 @@ public class Utils {
 		return list;
 	}
 	
-	private String[] convertStringListToArray(List<String> list) {
+	public static String[] convertStringListToArray(List<String> list) {
 		String[] ary = null;
 		if (list != null) {
 			ary = new String[list.size()];

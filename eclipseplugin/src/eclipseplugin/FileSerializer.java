@@ -35,11 +35,18 @@ public class FileSerializer {
 		try {
 			filereader = new FileReader(file);
 			reader = new BufferedReader(filereader);
-			
+
+			deserializeConfigInfo(reader, si);
+			si.setConfigInitialized(true);
+			deserializeSelectionInfo(reader, si);
+			si.setSelectionInitialized(true);
+
+			/*
 			deserializeSelectionInfo(reader, si);
 			si.setSelectionInitialized(true);
 			deserializeConfigInfo(reader, si);
 			si.setConfigInitialized(true);
+			*/
 			reader.close();
 		}
 		catch (Exception e) {
@@ -62,8 +69,14 @@ public class FileSerializer {
 		try {
 			filewriter = new FileWriter(file);
 			writer = new BufferedWriter(filewriter);
+			
+			serializeConfigInfo(writer, si);
+			serializeSelectionInfo(writer, si);
+			
+			/*
 			serializeSelectionInfo(writer, si);
 			serializeConfigInfo(writer, si);
+			*/
 			writer.close();
 		}
 		catch (Exception e) {
@@ -73,6 +86,8 @@ public class FileSerializer {
 	}
 	
 	private static void deserializeSelectionInfo(BufferedReader reader, SubmissionInfo si) throws IOException {
+		String str = null;
+		/*
 		// Project UUID
 		String str = reader.readLine();
 		if (str == null || str.equals("\n")) {
@@ -80,6 +95,8 @@ public class FileSerializer {
 			//return false;
 		}
 		si.setSelectedProjectID(str);
+		*/
+		
 		// List of Platform UUIDs
 		str = reader.readLine();
 		if (str == null || str.equals("\n")) {
@@ -87,6 +104,7 @@ public class FileSerializer {
 		}
 		List<String> platformList =  Utils.convertDelimitedStringToList(str, DELIMITER);
 		si.setSelectedPlatformIDs(platformList);
+
 		// List of Tool UUIDs
 		str = reader.readLine();
 		if (str == null || str.equals("\n")) {
@@ -98,15 +116,31 @@ public class FileSerializer {
 	}
 
 	private static void deserializeConfigInfo(BufferedReader reader, SubmissionInfo si) throws IOException {
+		String str = null;
+
+		// Project UUID
+		str = reader.readLine();
+		if (str == null || str.equals("\n")) {
+			// TODO Throw an exception here
+			//return false;
+		}
+		si.setSelectedProjectID(str);
+		
+		// Package Type
+		str = reader.readLine();
+		if (str != null && !str.equals("\n")) {
+			si.setPackageType(str);
+		}
+		
 		// Eclipse Project Name
 		String prjName = null, prjPath = null;
-		String str = reader.readLine();
+		str = reader.readLine();
 		if (str != null && !str.equals("\n")) {
 			prjName = str;
 		}
 		// Eclipse Project Path
 		str = reader.readLine();
-		if (str != null & !str.equals("\n")) {
+		if (str != null && !str.equals("\n")) {
 			prjPath = str;
 		}
 		if (!si.initializeProject(prjName, prjPath)) {
@@ -175,9 +209,11 @@ public class FileSerializer {
 	}
 	
 	public static void serializeSelectionInfo(BufferedWriter writer, SubmissionInfo si) throws IOException {
+		/*
 		// Project UUID
 		writer.write(si.getSelectedProjectID());
 		writer.write("\n");
+		*/
 				
 		// Platform UUIDs
 		List<String> platformIDList = si.getSelectedPlatformIDs();
@@ -193,6 +229,16 @@ public class FileSerializer {
 	}
 	
 	private static void serializeConfigInfo(BufferedWriter writer, SubmissionInfo si) throws IOException {
+		// Project UUID
+		String projectUUID = si.getSelectedProjectID();
+		writer.write(projectUUID);
+		writer.write("\n");
+		
+		// Package Type
+		String packageType = si.getPackageType();
+		writer.write(packageType);
+		writer.write("\n");
+		
 		// Project name
 		String projectName = si.getProjectName();
 		writer.write(projectName);

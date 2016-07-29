@@ -31,7 +31,9 @@ import org.osgi.framework.Version;
 
 import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.ConfigDialog;
+import eclipseplugin.dialogs.PlatformDialog;
 import eclipseplugin.dialogs.SelectionDialog;
+import eclipseplugin.dialogs.ToolDialog;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.PackageVersion;
 import edu.wisc.cs.swamp.SwampApiWrapper;
@@ -49,6 +51,7 @@ public class SwampSubmitter {
 	private static String SWAMP_FAMILY 		= "SWAMP_FAMILY";
 	private static String SESSION_STRING 	= "swampsession";
 	private static String CONFIG_FILENAME 	= ".swampconfig";
+	private static String PLUGIN_EXIT_MANUAL = "Status: Plugin exited manually.";
 	
 	public SwampSubmitter(IWorkbenchWindow window) {
 		this.window = window;
@@ -280,30 +283,37 @@ public class SwampSubmitter {
 	}
 	
 	private void launchConfiguration(SubmissionInfo si) {
-		SelectionDialog sd;
 		ConfigDialog cd;
+		ToolDialog td;
+		PlatformDialog pd;
 		
-		sd = new SelectionDialog(window.getShell(), si); 
 		cd = new ConfigDialog(window.getShell(), si);
-		sd.create();
-		if (sd.open() != Window.OK) {
-			// TODO Handle error - I don't think this is actually an error
-		}
-		else {
-			cd.create();
-			System.out.println("Made it to config dialog");
-			if (cd.open() != Window.OK) {
-				// TODO Handle error
+		cd.create();
+		if (cd.open() == Window.OK) {
+			td = new ToolDialog(window.getShell(), si);
+			td.create();
+			if (td.open() == Window.OK) {
+				pd = new PlatformDialog(window.getShell(), si);
+				pd.create();
+				if (pd.open() == Window.OK) {
+					configFilepath = si.getProjectPath() + Path.SEPARATOR + CONFIG_FILENAME;
+					FileSerializer.serializeSubmissionInfo(configFilepath, si);
+					runBackgroundJob(si, false);
+				}
+				else {
+					out.println(PLUGIN_EXIT_MANUAL);
+				}
 			}
 			else {
-				configFilepath = si.getProjectPath() + Path.SEPARATOR + CONFIG_FILENAME;
-				FileSerializer.serializeSubmissionInfo(configFilepath, si);
-				runBackgroundJob(si, false);
+				out.println(PLUGIN_EXIT_MANUAL);;
 			}
-			out.println("Status: Plugin completed executing");
 		}
+		else {
+			out.println(PLUGIN_EXIT_MANUAL);
+		}
+		out.println("Status: Plugin completed executing");
 	}
-	
+		
 	public void launch(String configPath) {
 		initializeSwampApi();
 		

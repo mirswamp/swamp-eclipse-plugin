@@ -38,8 +38,9 @@ public class ConfigDialog extends TitleAreaDialog {
 	private Text buildTargetText;
 	private Text prjFilePathText;
 	private Text prjVersionText;
-	private Combo prjCombo;
+	private Combo eclipsePrjCombo;
 	private Combo pkgCombo;
+	private Combo pkgTypeCombo;
 	private Text pkgNameText;
 	private Combo buildSysCombo;
 	
@@ -47,8 +48,9 @@ public class ConfigDialog extends TitleAreaDialog {
 	
 	private static int CREATE_NEW_PACKAGE = 0;
 	
+	
 	private enum Type {
-		PROJECT, BUILD, PACKAGE
+		PACKAGE_TYPE, ECLIPSE_PROJECT, BUILD, PACKAGE, SWAMP_PROJECT
 	}
 	
 	public ConfigDialog(Shell parentShell, SubmissionInfo si) {
@@ -67,23 +69,33 @@ public class ConfigDialog extends TitleAreaDialog {
 		prjFilePathText.setEnabled(true);
 		prjVersionText.setText("");
 		prjVersionText.setEnabled(true);
-		prjCombo.deselectAll();
+		eclipsePrjCombo.deselectAll();
 		pkgCombo.deselectAll();
+		pkgTypeCombo.deselectAll();
 		buildSysCombo.deselectAll();
 		setDefaults();	
 	}
 	
 	private void setDefaults() {
-		setProjectDefault();
+		setEclipseProjectDefault();
+		setSwampProjectDefault();
 		setPackageDefault();
 		setBuildSysDefault();
+		setPackageTypeDefault();
 	}
 
-	private void setProjectDefault() {
-		if (prjCombo.getItemCount() == 1) {
-			prjCombo.select(0);
+	private void setEclipseProjectDefault() {
+		if (eclipsePrjCombo.getItemCount() == 1) {
+			eclipsePrjCombo.select(0);
 			submissionInfo.setSelectedProjectIndex(0);
 			handleProjectSelection();
+		}
+	}
+	
+	private void setSwampProjectDefault() {
+		if (swampPrjCombo.getItemCount() == 1) {
+			swampPrjCombo.select(0);
+			submissionInfo.setSelectedProjectIndex(0);
 		}
 	}
 	
@@ -100,6 +112,13 @@ public class ConfigDialog extends TitleAreaDialog {
 			buildSysCombo.select(0);
 			submissionInfo.setSelectedBuildSysIndex(0);
 			handleBuildSelection();
+		}
+	}
+	
+	private void setPackageTypeDefault() {
+		if (pkgTypeCombo.getItemCount() == 1) {
+			pkgTypeCombo.select(0);
+			submissionInfo.setSelectedPackageTypeIndex(0);
 		}
 	}
 	
@@ -136,8 +155,12 @@ public class ConfigDialog extends TitleAreaDialog {
 		if (type == Type.BUILD) {
 			return submissionInfo.getBuildSystemList();
 		}
-		// SWAMP Package
-		return submissionInfo.getSwampPackageList();
+		if (type == Type.PACKAGE) {
+			// SWAMP Package
+			return submissionInfo.getSwampPackageList();
+		}
+		// Package Type
+		return submissionInfo.getPackageTypeList();
 	}
 	
 	@Override
@@ -152,10 +175,20 @@ public class ConfigDialog extends TitleAreaDialog {
 		GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 		
+		DialogUtil.initializeLabelWidget("SWAMP Project: ", SWT.NONE, container);
+		String prjOptions[] = getSelectionElements(Type.PROJECT);
+		eclipsePrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), prjOptions);
+		eclipsePrjCombo.addSelectionListener(new ComboSelectionListener(eclipsePrjCombo, Type.PROJECT));
+		
 		DialogUtil.initializeLabelWidget("Eclipse Project: ", SWT.NONE, container);
 		String prjOptions[] = getSelectionElements(Type.PROJECT);
-		prjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), prjOptions);
-		prjCombo.addSelectionListener(new ComboSelectionListener(prjCombo, Type.PROJECT));
+		eclipsePrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), prjOptions);
+		eclipsePrjCombo.addSelectionListener(new ComboSelectionListener(eclipsePrjCombo, Type.PROJECT));
+		
+		DialogUtil.initializeLabelWidget("Eclipse Project: ", SWT.NONE, container);
+		String prjOptions[] = getSelectionElements(Type.PROJECT);
+		eclipsePrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), prjOptions);
+		eclipsePrjCombo.addSelectionListener(new ComboSelectionListener(eclipsePrjCombo, Type.PROJECT));
 		
 		DialogUtil.initializeLabelWidget("SWAMP Package: ", SWT.NONE, container);
 		String pkgOptions[] = getSelectionElements(Type.PACKAGE);
@@ -189,6 +222,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		buildTargetText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		
 		if (submissionInfo.isConfigInitialized()) {
+			setupPackageType();
 			setupProject();
 			setupPackage();
 			setupBuild();
@@ -200,8 +234,13 @@ public class ConfigDialog extends TitleAreaDialog {
 		return area;
 	}
 	
+	private void setupPackageType() {
+		pkgTypeCombo.select(submissionInfo.getSelectedPackageTypeIndex());
+		handlePackageTypeSelection();
+	}
+	
 	private void setupProject() {
-		prjCombo.select(submissionInfo.getSelectedProjectIndex());
+		eclipsePrjCombo.select(submissionInfo.getSelectedProjectIndex());
 		handleProjectSelection();
 	}
 	
@@ -227,7 +266,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	private boolean isValid() {
-		int prjIndex = prjCombo.getSelectionIndex();
+		int prjIndex = eclipsePrjCombo.getSelectionIndex();
 		if (prjIndex < 0) {
 			this.setMessage("Please select an Eclipse project");
 			return false;

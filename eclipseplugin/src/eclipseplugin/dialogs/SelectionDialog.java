@@ -21,36 +21,82 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import edu.uiuc.ncsa.swamp.api.Project;
 import edu.uiuc.ncsa.swamp.api.Tool;
+import edu.wisc.cs.swamp.SwampApiWrapper;
 import edu.uiuc.ncsa.swamp.api.Platform; 
 
 public class SelectionDialog extends TitleAreaDialog {
 	
-	private Combo projCombo;
 	private org.eclipse.swt.widgets.List platformList;
 	private org.eclipse.swt.widgets.List toolList;
+	private List<Platform> platforms;
+	private List<Tool> tools;
+	private SwampApiWrapper api;
 	private SubmissionInfo submissionInfo;
+	private String packageType;
+	private String prjUUID;
 
 	private enum Type {
-		PROJECT, PLATFORM, TOOL
+		PLATFORM, TOOL
 	}
 	
-	public SelectionDialog(Shell parentShell, SubmissionInfo si) {
+	public SelectionDialog(Shell parentShell, SubmissionInfo si, SwampApiWrapper api) {
 		super(parentShell);
 		submissionInfo = si;
+		packageType = si.getPackageType();
+		prjUUID = si.getSelectedProjectID();
+		tools = api.getTools(packageType, prjUUID);
+		platforms = getSupportedPlatforms(tools);
+	}
+	
+	private List<Platform> getSupportedPlatforms(List<Tool> tools) {
+		Set<Platform> supportedPlatformSet = new HashSet<Platform>();
+		List<Platform> supportedList = null;
+		for (Tool tool : tools) {
+			supportedList = api.getSupportedPlatforms(tool.getUUIDString(), prjUUID);
+			for (Platform p : supportedList) {
+				supportedPlatformSet.add(p);
+			}
+		}
+		supportedList = new ArrayList<Platform>(supportedPlatformSet.size());
+		for (Platform p : supportedPlatformSet) {
+			supportedList.add(p);
+		}
+		return supportedList;
 	}
 	
 	private String[] getSelectionElements(Type type) {
-		if (type == Type.PROJECT) {
-			 return submissionInfo.getProjectList();
-		}
 		if (type == Type.PLATFORM) {
-			 return submissionInfo.getPlatformList();
+			getPlatformList();
 		}
-		return submissionInfo.getToolList();
+		return getToolList();
+	}
+	
+	private String[] getToolList() {
+		assert(tools!= null);
+		int size = tools.size();
+		String[] array = new String[size];
+		for (int i = 0; i < size; i++) {
+			array[i] = tools.get(i).getName();
+		}
+		return array;
+	}
+	
+	private String[] getPlatformList() {
+		assert(platforms != null);
+		int size = platforms.size();
+		String[] array = new String[size];
+		for (int i = 0; i < size; i++) {
+			array[i] = platforms.get(i).getName();
+		}
+		return array;
 	}
 	
 	@Override
@@ -86,7 +132,7 @@ public class SelectionDialog extends TitleAreaDialog {
 	}
 	
 	private void resetWidgets() {
-		projCombo.deselectAll();
+		//projCombo.deselectAll();
 		platformList.deselectAll();
 		toolList.deselectAll();
 		setDefaults();
@@ -114,24 +160,15 @@ public class SelectionDialog extends TitleAreaDialog {
 		comboGridData.grabExcessHorizontalSpace = true;
 		comboGridData.horizontalAlignment = GridData.FILL;
 
-		projCombo = addCombo(container, "Project: ", Type.PROJECT, new GridData(SWT.FILL, SWT.NONE, true, false));
-		projCombo.addSelectionListener(new ProjectSelectionListener());
 		platformList = addList(container, "Platform: ", Type.PLATFORM, new GridData(GridData.FILL_BOTH));
+		platformList.setEnabled(false);
 		toolList = addList(container, "Tool: ", Type.TOOL, new GridData(GridData.FILL_BOTH));
 		
 		if (submissionInfo.isSelectionInitialized()) {
-			int prjIndex = submissionInfo.getProjectIndex();
-			if (prjIndex > -1) {
-				projCombo.select(prjIndex);
-			}
-			int[] platformIndices = submissionInfo.getPlatformIndices();
-			if (platformIndices != null) {
-				platformList.select(platformIndices);
-			}
-			int[] toolIndices = submissionInfo.getToolIndices();
-			if (toolIndices != null) {
-				toolList.select(toolIndices);
-			}
+			List<String> platformUUIDs = submissionInfo.getSelectedPlatformIDs();
+			setSelectedPlatforms(platformUUIDs);
+			List<String> toolUUIDs = submissionInfo.getSelectedToolIDs();
+			setSelectedTools(toolUUIDs);
 		}
 		else {
 			setDefaults();
@@ -141,16 +178,28 @@ public class SelectionDialog extends TitleAreaDialog {
 		
 	}
 	
-	private void setDefaults() {
-		setProjectDefault();
-		setPlatformDefault();
-		setToolDefault();
+	private void setSelectedPlatforms(List<String> platformIDs) {
+		Map<String, Platform> platformMap = new HashMap<String, Platform>;
+		for (int i = 0; i < platforms.size(); i++) 
+			
+		for (int i = 0; i < platforms.size(); i++) {
+			if ();
+		}
 	}
 	
-	private void setProjectDefault() {
-		if (projCombo.getItemCount() == 1) {
-			projCombo.select(0);
+	private void setSelectedTools(List<String> toolIDs) {
+		Set<String> toolIDSet = new HashSet<String>();
+		for (String toolID : toolIDs) {
+			toolIDSet.add(toolID);
 		}
+		for (int i = 0; i < tools.size(); i++) {
+			
+		}
+	 }
+	
+	private void setDefaults() {
+		setPlatformDefault();
+		setToolDefault();
 	}
 	
 	private void setPlatformDefault() {
