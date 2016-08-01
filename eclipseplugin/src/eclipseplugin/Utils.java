@@ -14,6 +14,10 @@ public class Utils {
 		return timeString;
 	}
 	
+	public static String getBracketedTimestamp() {
+		return "[" + getCurrentTimestamp() + "] ";
+	}
+	
 	public static String convertListToDelimitedString(List<String> list, String delimiter) {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < list.size(); i++) {
