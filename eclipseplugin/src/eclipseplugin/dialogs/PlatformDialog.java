@@ -41,7 +41,7 @@ public class PlatformDialog extends TitleAreaDialog {
 		this.setTitle("Platform Selection");
 		
 		/* Note: From GridData JavaDoc, "Do not reuse GridData objects. Every control in a composite
-		 * that is managed by a GridLayout must have a unique GridData object.
+		 * that is managed by a GridLayout must have a unique GridData object."
 		 */
 		
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -82,7 +82,7 @@ public class PlatformDialog extends TitleAreaDialog {
 		int numPlatforms = platforms.size();
 		String[] platformArray = new String[numPlatforms];
 		for (int i = 0; i < numPlatforms; i++) {
-			platformArray[i] = platforms.get(i).getUUIDString();
+			platformArray[i] = platforms.get(i).getName();
 		}
 		Arrays.sort(platformArray);
 		return platformArray;

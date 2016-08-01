@@ -115,6 +115,9 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	private void setPackageDefault() {
+		if (prjUUID == null) {
+			return;
+		}
 		if (pkgCombo.getItemCount() == 1) {
 			pkgCombo.select(0);
 			handlePackageSelection(0);
@@ -189,7 +192,8 @@ public class ConfigDialog extends TitleAreaDialog {
 	
 	private String[] getSwampPackageList() {
 		if (prjUUID == null) {
-			return null;
+			String[] array = {""};
+			return array;
 		}
 		swampPackages = api.getPackagesList(prjUUID);
 		int numPackages = swampPackages.size() + 1;
@@ -499,6 +503,10 @@ public class ConfigDialog extends TitleAreaDialog {
 			
 			// swamp package version (String)
 			submissionInfo.setPackageVersion(pkgVersionText.getText());
+			
+			// package type
+			index = pkgTypeCombo.getSelectionIndex();
+			submissionInfo.setPackageType(pkgTypeCombo.getItem(index));
 			
 			// eclipse project (actual IProject)
 			index = eclipsePrjCombo.getSelectionIndex();

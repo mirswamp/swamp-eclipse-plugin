@@ -147,6 +147,7 @@ public class SubmissionInfo {
 		}
 		for (int i = 0; i < packages.size(); i++) {
 			PackageThing pt = packages.get(i);
+			System.out.println(pt.getName());
 			if (pt.getName().equals(pkgName)) {
 				selectedPackageThingID = pt.getUUIDString();
 				packageName = pt.getName();

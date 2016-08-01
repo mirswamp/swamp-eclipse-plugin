@@ -373,8 +373,6 @@ public class SwampSubmitter {
 		System.out.println("Project UUID: " + prjUUID);
 		System.out.println("Platform UUID: " + pltUUID);
 		
-		api.printAllPackages(prjUUID, true);
-		
 		String toolName;
 		try {
 			toolName = api.getTool(toolUUID, prjUUID).getName();
