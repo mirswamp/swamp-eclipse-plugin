@@ -44,12 +44,13 @@ public class ClasspathHandler {
 	private ClasspathHandler root;
 	private String path;
 	private boolean hasCycles;
+	private boolean includeSystemLibraries;
 	private Map<String, ClasspathHandler> projectCache; // this is so we only have to visit referenced projects once regardless of how many times they've been referenced. We always look at root.
 	
 	private static String BIN_DIR = ".swampbin";
 	private static String PACKAGE_DIR = "package";
 	
-	public ClasspathHandler(ClasspathHandler root, IJavaProject projectRoot, String path) {
+	public ClasspathHandler(ClasspathHandler root, IJavaProject projectRoot, String path, boolean includeSysLibs) {
 		project = projectRoot;
 		oldEntries = null;
 		libEntries = new ArrayList<IClasspathEntry>(); // library entries
@@ -58,6 +59,7 @@ public class ClasspathHandler {
 		projectsVisited = null;
 		projectPath = null;
 		entryCache = null;
+		includeSystemLibraries = includeSysLibs;
 		
 		PROJECT_ROOT = projectRoot.getElementName();
 		System.out.println("PROJECT ROOT: " + PROJECT_ROOT);
@@ -187,7 +189,7 @@ public class ClasspathHandler {
 		try {
 			IClasspathContainer container = JavaCore.getClasspathContainer(entry.getPath(), project);
 			int kind = container.getKind();
-			if ((kind == IClasspathContainer.K_APPLICATION || kind == IClasspathContainer.K_DEFAULT_SYSTEM)) {
+			if ((!this.includeSystemLibraries) && (kind == IClasspathContainer.K_APPLICATION || kind == IClasspathContainer.K_DEFAULT_SYSTEM)) {
 				System.out.println("System library container");
 				System.out.println(entry.getPath());
 				return;
@@ -424,7 +426,7 @@ public class ClasspathHandler {
 					e.printStackTrace();
 				}
 				if (newProject != null) {
-					ClasspathHandler cph = new ClasspathHandler(this.root, JavaCore.create(newProject), entry.getPath().toString());
+					ClasspathHandler cph = new ClasspathHandler(this.root, JavaCore.create(newProject), entry.getPath().toString(), this.includeSystemLibraries);
 					//this.root.addDependentProject(cph);
 					this.addDependentProject(cph);
 					System.out.println("New project path: " + newProject.getFullPath());

@@ -39,8 +39,8 @@ public class DialogUtil {
 		return list;
 	}
 	
-	public static Button initializeButtonWidget(Composite container, String text, GridData griddata) {
-		Button button = new Button(container, SWT.PUSH);
+	public static Button initializeButtonWidget(Composite container, String text, GridData griddata, int style) {
+		Button button = new Button(container, style);
 		button.setText(text);
 		button.setLayoutData(griddata);
 		return button;

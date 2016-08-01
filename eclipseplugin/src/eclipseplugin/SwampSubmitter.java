@@ -98,7 +98,7 @@ public class SwampSubmitter {
 				ClasspathHandler classpathHandler = null;
 				if (si.needsBuildFile()) {
 					out.println("Status: Generating build file");
-					classpathHandler = generateBuildFiles(si.getProject());
+					classpathHandler = generateBuildFiles(si.getProject(), si.packageSystemLibraries());
 					if (classpathHandler == null) {
 						// TODO Handle this error better
 						return Status.CANCEL_STATUS;
@@ -143,14 +143,14 @@ public class SwampSubmitter {
 		job.schedule();
 	}
 	
-	private ClasspathHandler generateBuildFiles(IProject proj) {
+	private ClasspathHandler generateBuildFiles(IProject proj, boolean includeSysLibs) {
 		ClasspathHandler classpathHandler = null;
 		// Generating Buildfile
 		IJavaProject javaProj = JavaCore.create(proj);
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
 		String rootPath = root.getLocation().toString();
-		classpathHandler = new ClasspathHandler(null, javaProj, rootPath);// cd.getPkgPath()); // TODO replace this w/ workspace path
+		classpathHandler = new ClasspathHandler(null, javaProj, rootPath, includeSysLibs);// cd.getPkgPath()); // TODO replace this w/ workspace path
 		System.out.println(classpathHandler.getProjectName());
 		
 		if (classpathHandler.hasCycles()) {

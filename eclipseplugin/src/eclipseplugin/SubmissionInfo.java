@@ -18,6 +18,7 @@ public class SubmissionInfo {
 	
 	private boolean newPackage;
 	private boolean createBuildFile;
+	private boolean packageSystemLibs;
 
 	private String packageType;
 	private IProject[] eclipseProjects;
@@ -175,13 +176,18 @@ public class SubmissionInfo {
 		this.project = p;
 	}
 	
-	public void setBuildInfo(String buildSys, boolean needsBuildFile, String dir, String file, String target) {
+	public boolean packageSystemLibraries() {
+		return packageSystemLibs;
+	}
+	
+	public void setBuildInfo(String buildSys, boolean needsBuildFile, String dir, String file, String target, boolean packageRTLibs) {
 		if (needsBuildFile) {
 			createBuildFile = true;
 			buildSystem = "ant";
 			buildTarget = "build";
 			buildDirectory = "." + project.getName();
 			buildFile = "build.xml";
+			packageSystemLibs = packageRTLibs;
 		}
 		else if (buildSys.equals(NO_BUILD_STRING)) {
 			buildSystem = "no-build";

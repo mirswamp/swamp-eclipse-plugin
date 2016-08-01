@@ -47,6 +47,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	private Combo pkgCombo;
 	private Combo pkgTypeCombo;
 	private Combo buildSysCombo;
+	private Button packageRTButton;
 	
 	/* Instatnce variables representing state */
 	private List<Project> swampProjects;
@@ -260,6 +261,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		buildSysCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), buildSysOptions);		
 		buildSysCombo.addSelectionListener(new ComboSelectionListener(buildSysCombo, Type.BUILD));
 		
+		DialogUtil.initializeLabelWidget("", SWT.NONE, container);
+		packageRTButton = DialogUtil.initializeButtonWidget(container, "Package System Libraries?", new GridData(SWT.FILL, SWT.NONE, true, false), SWT.CHECK);
+		packageRTButton.setEnabled(false);
+		
 		DialogUtil.initializeLabelWidget("Build Directory: ", SWT.NONE, container);
 		buildDirText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		buildDirText.setText(".");
@@ -287,9 +292,11 @@ public class ConfigDialog extends TitleAreaDialog {
 	private void setupPackageType() {
 		// get the appropriate pkgType String, not the index
 		String pkgType = submissionInfo.getPackageType();
-		for (int i = 0; i < pkgCombo.getItemCount(); i++) {
-			if (pkgCombo.getItem(i).equals(pkgType)) {
-				pkgCombo.select(i);
+		System.out.println("Package Type: |" + pkgType + "|");
+		for (int i = 0; i < pkgTypeCombo.getItemCount(); i++) {
+			System.out.println("Package type in combo: |" + pkgTypeCombo.getItem(i) + "|");
+			if (pkgTypeCombo.getItem(i).equals(pkgType)) {
+				pkgTypeCombo.select(i);
 				return;
 			}
 		}
@@ -357,8 +364,8 @@ public class ConfigDialog extends TitleAreaDialog {
 		String pkgThingUUID = submissionInfo.getSelectedPackageID();
 		for (int i = 0; i < swampPackages.size(); i++) {
 			if (swampPackages.get(i).getUUIDString().equals(pkgThingUUID)) {
-				pkgCombo.select(i+1);
-				handlePackageSelection(i+1);
+				pkgCombo.select(i);
+				handlePackageSelection(i);
 				return;
 			}
 		}
@@ -379,7 +386,14 @@ public class ConfigDialog extends TitleAreaDialog {
 	private void setupBuild() {
 		// get the build system, not an index
 		// set it
-		String buildSys = submissionInfo.getBuildSystem();
+		String buildSys = null;
+		if (submissionInfo.needsBuildFile()) {
+			buildSys = AUTO_GENERATE_BUILD_STRING; 
+			packageRTButton.setSelection(submissionInfo.packageSystemLibraries());
+		}
+		else {
+			buildSys = submissionInfo.getBuildSystem();
+		}
 		for (int i = 0; i < buildSysCombo.getItemCount(); i++) {
 			if (buildSys.equals(buildSysCombo.getItem(i))) {
 				buildSysCombo.select(i);
@@ -401,11 +415,16 @@ public class ConfigDialog extends TitleAreaDialog {
 			buildDirText.setEnabled(false);
 			buildFileText.setText("");
 			buildFileText.setEnabled(false);
+			if (buildSys.equals(AUTO_GENERATE_BUILD_STRING)) {
+				packageRTButton.setEnabled(true);
+			}
 		}
 		else {
 			buildTargetText.setEnabled(true);
 			buildDirText.setEnabled(true);
 			buildFileText.setEnabled(true);
+			packageRTButton.setSelection(false);
+			packageRTButton.setEnabled(false);
 		}
 	}
 	
@@ -515,7 +534,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			// build system (build system info -- including for create_new...)
 			index = buildSysCombo.getSelectionIndex();
 			String buildSysStr = buildSysCombo.getItem(index);
-			submissionInfo.setBuildInfo(buildSysStr, buildSysStr.equals(AUTO_GENERATE_BUILD_STRING), buildDirText.getText(), buildFileText.getText(), buildTargetText.getText());
+			submissionInfo.setBuildInfo(buildSysStr, buildSysStr.equals(AUTO_GENERATE_BUILD_STRING), buildDirText.getText(), buildFileText.getText(), buildTargetText.getText(), packageRTButton.getSelection());
 			super.okPressed();
 		}
 	}

@@ -186,7 +186,11 @@ public class FileSerializer {
 		// Build Target
 		String buildTarget = reader.readLine();
 		
-		si.setBuildInfo(buildSys, needsBuildFile, buildDir, buildFile, buildTarget);
+		// Package system libraries
+		String pkgSysLibsStr = reader.readLine();
+		boolean pkgSysLibs = Boolean.parseBoolean(pkgSysLibsStr);
+		
+		si.setBuildInfo(buildSys, needsBuildFile, buildDir, buildFile, buildTarget, pkgSysLibs);
 		return true;
 	}
 	
@@ -267,6 +271,11 @@ public class FileSerializer {
 		// Build Target
 		String buildTarget = si.getBuildTarget();
 		writer.write(buildTarget);
+		writer.write("\n");
+		
+		// Package system libraries?
+		boolean pkgSysLibs = si.packageSystemLibraries();
+		writer.write(Boolean.toString(pkgSysLibs));
 		writer.write("\n");
 	}
 	
