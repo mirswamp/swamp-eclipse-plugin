@@ -6,15 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
-
-import org.eclipse.core.resources.IProject;
-
-import eclipseplugin.dialogs.ConfigDialog;
-import eclipseplugin.dialogs.SelectionDialog;
-import edu.uiuc.ncsa.swamp.api.PackageThing;
-import edu.uiuc.ncsa.swamp.api.PackageVersion;
 
 public class FileSerializer {
 	
@@ -39,7 +31,6 @@ public class FileSerializer {
 			deserializeConfigInfo(reader, si);
 			si.setConfigInitialized(true);
 			deserializeSelectionInfo(reader, si);
-			si.setSelectionInitialized(true);
 
 			/*
 			deserializeSelectionInfo(reader, si);
@@ -112,7 +103,6 @@ public class FileSerializer {
 		}
 		List<String> toolList =  Utils.convertDelimitedStringToList(str, DELIMITER);
 		si.setSelectedToolIDs(toolList);
-		si.setSelectionInitialized(true);
 	}
 
 	private static void deserializeConfigInfo(BufferedReader reader, SubmissionInfo si) throws IOException {
@@ -167,45 +157,31 @@ public class FileSerializer {
 				if (!si.setPackageIDFromName(name)) {
 					reader.close();
 					System.out.println("We were unable to find the last SWAMP Package");
+					return;
 					// return or throw exception here
 				}
 			}
 		}
 
 		// Build system 
-		str = reader.readLine();
-		if (str != null && !str.equals("\n")) {
-			si.setBuildSystem(str);
-		}
+		String buildSys = reader.readLine();
 		
 		str =  reader.readLine();
+		boolean needsBuildFile = false;
 		if (str != null && !str.equals("\n")) {
-			if (str.equals(NEEDS_BUILD_FILE)) {
-				si.setNeedsBuildFile(true);
-			}
-			else if (str.equals(HAS_BUILD_FILE)) {
-				si.setNeedsBuildFile(false);
-			}
-			else {
-				// TODO Handle ERROR
-			}
+			needsBuildFile = str.equals(NEEDS_BUILD_FILE);
 		}
 		
 		// Build File
-		str = reader.readLine();
-		if (str != null && !str.equals("\n")) {
-			si.setBuildFile(str);
-		}
+		String buildFile = reader.readLine();
+		
 		// Build Dir
-		str = reader.readLine();
-		if (str != null && !str.equals("\n")) {
-			si.setBuildDirectory(str);
-		}
+		String buildDir = reader.readLine();
+		
 		// Build Target
-		str = reader.readLine();
-		if (str != null && !str.equals("\n")) {
-			si.setBuildTarget(str);
-		}
+		String buildTarget = reader.readLine();
+		
+		si.setBuildInfo(buildSys, needsBuildFile, buildDir, buildFile, buildTarget);
 	}
 	
 	public static void serializeSelectionInfo(BufferedWriter writer, SubmissionInfo si) throws IOException {

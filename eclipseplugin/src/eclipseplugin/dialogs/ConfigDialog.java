@@ -19,10 +19,13 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import eclipseplugin.SubmissionInfo;
+import static eclipseplugin.SubmissionInfo.AUTO_GENERATE_BUILD_STRING;
+import static eclipseplugin.SubmissionInfo.NO_BUILD_STRING;
 import eclipseplugin.Utils;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.PackageVersion;
 import edu.uiuc.ncsa.swamp.api.Platform;
+import edu.uiuc.ncsa.swamp.api.Project;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 
 import java.sql.Timestamp;
@@ -37,17 +40,26 @@ public class ConfigDialog extends TitleAreaDialog {
 	private Text buildFileText;
 	private Text buildTargetText;
 	private Text prjFilePathText;
-	private Text prjVersionText;
+	private Text pkgVersionText;
+	private Text pkgNameText;
+	private Combo swampPrjCombo;
 	private Combo eclipsePrjCombo;
 	private Combo pkgCombo;
 	private Combo pkgTypeCombo;
-	private Text pkgNameText;
 	private Combo buildSysCombo;
 	
+	/* Instatnce variables representing state */
+	private List<Project> swampProjects;
+	private IProject[] eclipseProjects;
+	private List<PackageThing> swampPackages;
+
+	private String prjUUID;
+	private String pkgType;
+	
 	private SubmissionInfo submissionInfo;
+	private SwampApiWrapper api;
 	
 	private static int CREATE_NEW_PACKAGE = 0;
-	
 	
 	private enum Type {
 		PACKAGE_TYPE, ECLIPSE_PROJECT, BUILD, PACKAGE, SWAMP_PROJECT
@@ -56,6 +68,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	public ConfigDialog(Shell parentShell, SubmissionInfo si) {
 		super(parentShell);
 		submissionInfo = si;
+		api = submissionInfo.getApi();
 	}
 	
 	private void resetWidgets() {
@@ -66,19 +79,22 @@ public class ConfigDialog extends TitleAreaDialog {
 		buildTargetText.setText("");
 		buildTargetText.setEnabled(true);
 		prjFilePathText.setText("");
-		prjFilePathText.setEnabled(true);
-		prjVersionText.setText("");
-		prjVersionText.setEnabled(true);
+		prjFilePathText.setEnabled(false);
+		pkgVersionText.setText("");
+		pkgVersionText.setEnabled(false);  
+		pkgNameText.setText("");
+		pkgNameText.setEnabled(false);
+		swampPrjCombo.deselectAll();
 		eclipsePrjCombo.deselectAll();
-		pkgCombo.deselectAll();
+		pkgCombo.setItems("");
 		pkgTypeCombo.deselectAll();
 		buildSysCombo.deselectAll();
 		setDefaults();	
 	}
 	
 	private void setDefaults() {
-		setEclipseProjectDefault();
 		setSwampProjectDefault();
+		setEclipseProjectDefault();
 		setPackageDefault();
 		setBuildSysDefault();
 		setPackageTypeDefault();
@@ -87,80 +103,107 @@ public class ConfigDialog extends TitleAreaDialog {
 	private void setEclipseProjectDefault() {
 		if (eclipsePrjCombo.getItemCount() == 1) {
 			eclipsePrjCombo.select(0);
-			submissionInfo.setSelectedProjectIndex(0);
-			handleProjectSelection();
+			handleEclipseProjectSelection(0);
 		}
 	}
 	
 	private void setSwampProjectDefault() {
 		if (swampPrjCombo.getItemCount() == 1) {
 			swampPrjCombo.select(0);
-			submissionInfo.setSelectedProjectIndex(0);
+			handleSwampProjectSelection(0);
 		}
 	}
 	
 	private void setPackageDefault() {
 		if (pkgCombo.getItemCount() == 1) {
 			pkgCombo.select(0);
-			submissionInfo.setSelectedPackageIndex(0);
-			handlePackageSelection();
+			handlePackageSelection(0);
 		}
 	}
 	
 	private void setBuildSysDefault() {
 		if (buildSysCombo.getItemCount() == 1) {
 			buildSysCombo.select(0);
-			submissionInfo.setSelectedBuildSysIndex(0);
-			handleBuildSelection();
+			handleBuildSelection(0);
 		}
 	}
 	
 	private void setPackageTypeDefault() {
 		if (pkgTypeCombo.getItemCount() == 1) {
 			pkgTypeCombo.select(0);
-			submissionInfo.setSelectedPackageTypeIndex(0);
 		}
-	}
-	
-	private void handleBuildSelection() {
-		if (submissionInfo.noBuild() || submissionInfo.generateBuild()) {
-			buildTargetText.setText("");
-			buildTargetText.setEnabled(false);
-			buildDirText.setText("");
-			buildDirText.setEnabled(false);
-			buildFileText.setText("");
-			buildFileText.setEnabled(false);
-		}
-		else {
-			buildTargetText.setEnabled(true);
-			buildDirText.setEnabled(true);
-			buildFileText.setEnabled(true);
-		}
-	}
-	
-	private void handlePackageSelection() {
-		pkgNameText.setText("");
-		pkgNameText.setEnabled(submissionInfo.isNewPackage());
-	}
-	
-	private void handleProjectSelection() {
-		prjFilePathText.setText(submissionInfo.getProjectPath());
-		prjFilePathText.setEnabled(false);	
 	}
 	
 	private String[] getSelectionElements(Type type) {
-		if (type == Type.PROJECT) { // Eclipse project
-			return submissionInfo.getEclipseProjectList();
+		if (type == Type.ECLIPSE_PROJECT) { // Eclipse project
+			return getEclipseProjectList();
+		}
+		if (type == Type.SWAMP_PROJECT) {
+			return getSwampProjectList();
+			
 		}
 		if (type == Type.BUILD) {
-			return submissionInfo.getBuildSystemList();
+			return getBuildSystemList();
 		}
 		if (type == Type.PACKAGE) {
 			// SWAMP Package
-			return submissionInfo.getSwampPackageList();
+			return getSwampPackageList();
 		}
 		// Package Type
-		return submissionInfo.getPackageTypeList();
+		return getPackageTypeList();
+	}
+	
+	private String[] getEclipseProjectList() {
+		if (eclipseProjects == null) {
+			eclipseProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
+		}
+		int length = eclipseProjects.length;
+		String[] array = new String[length];
+		for (int i = 0; i < length; i++) {
+			IProject prj = eclipseProjects[i];
+			String name = prj.getName();
+			System.out.println(name);
+			try {
+				prj.open(null);
+			} catch (CoreException e) {
+				System.err.println("Unable to open project " + name);
+			}
+			array[i] = name;
+		}
+		return array;
+	}
+	
+	private String[] getSwampProjectList() {
+		swampProjects = api.getProjectsList();
+		int size = swampProjects.size();
+		String[] array = new String[size];
+		for (int i = 0; i < size; i++) {
+			array[i] = swampProjects.get(i).getFullName();
+		}
+		return array;
+	}
+	
+	private String[] getBuildSystemList() {
+		return submissionInfo.getBuildSystemList();
+	}
+	
+	private String[] getSwampPackageList() {
+		if (prjUUID == null) {
+			return null;
+		}
+		swampPackages = api.getPackagesList(prjUUID);
+		int numPackages = swampPackages.size() + 1;
+		String[] pkgNames = new String[numPackages];
+		pkgNames[0] = "Create new package";
+		for (int i = 1; i < numPackages; i++) {
+			pkgNames[i] = swampPackages.get(i-1).getName();
+		}
+		return pkgNames; 
+	}
+	
+	private String[] getPackageTypeList() {
+		List<String> pkgTypes = api.getPackageTypesList();
+		return Utils.convertStringListToArray(pkgTypes);
 	}
 	
 	@Override
@@ -176,36 +219,38 @@ public class ConfigDialog extends TitleAreaDialog {
 		container.setLayout(layout);
 		
 		DialogUtil.initializeLabelWidget("SWAMP Project: ", SWT.NONE, container);
-		String prjOptions[] = getSelectionElements(Type.PROJECT);
-		eclipsePrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), prjOptions);
-		eclipsePrjCombo.addSelectionListener(new ComboSelectionListener(eclipsePrjCombo, Type.PROJECT));
-		
-		DialogUtil.initializeLabelWidget("Eclipse Project: ", SWT.NONE, container);
-		String prjOptions[] = getSelectionElements(Type.PROJECT);
-		eclipsePrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), prjOptions);
-		eclipsePrjCombo.addSelectionListener(new ComboSelectionListener(eclipsePrjCombo, Type.PROJECT));
-		
-		DialogUtil.initializeLabelWidget("Eclipse Project: ", SWT.NONE, container);
-		String prjOptions[] = getSelectionElements(Type.PROJECT);
-		eclipsePrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), prjOptions);
-		eclipsePrjCombo.addSelectionListener(new ComboSelectionListener(eclipsePrjCombo, Type.PROJECT));
+		String swampPrjOptions[] = getSelectionElements(Type.SWAMP_PROJECT);
+		swampPrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), swampPrjOptions);
+		swampPrjCombo.addSelectionListener(new ComboSelectionListener(swampPrjCombo, Type.SWAMP_PROJECT));
 		
 		DialogUtil.initializeLabelWidget("SWAMP Package: ", SWT.NONE, container);
 		String pkgOptions[] = getSelectionElements(Type.PACKAGE);
 		pkgCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgOptions);
 		pkgCombo.addSelectionListener(new ComboSelectionListener(pkgCombo, Type.PACKAGE));
+		pkgCombo.setEnabled(false);
 		
 		DialogUtil.initializeLabelWidget("New Package Name: ", SWT.NONE, container);
 		pkgNameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
+		pkgNameText.setEnabled(false);
 		
 		DialogUtil.initializeLabelWidget("Package Version: ", SWT.NONE, container);
-		prjVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));	
-		prjVersionText.setText(submissionInfo.getPackageVersion());
+		pkgVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));	
+		pkgVersionText.setText(submissionInfo.getPackageVersion());
+		pkgVersionText.setEnabled(false);
+		
+		DialogUtil.initializeLabelWidget("Package Type: ", SWT.NONE, container);
+		String pkgTypes[] = getSelectionElements(Type.PACKAGE_TYPE);
+		pkgTypeCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgTypes);
+		pkgTypeCombo.setEnabled(false);
+		
+		DialogUtil.initializeLabelWidget("Eclipse Project: ", SWT.NONE, container);
+		String eclipsePrjOptions[] = getSelectionElements(Type.ECLIPSE_PROJECT);
+		eclipsePrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), eclipsePrjOptions);
+		eclipsePrjCombo.addSelectionListener(new ComboSelectionListener(eclipsePrjCombo, Type.ECLIPSE_PROJECT));
 
 		DialogUtil.initializeLabelWidget("Filepath: ", SWT.NONE, container);
 		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		
-	
 		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container);
 		String[] buildSysOptions = getSelectionElements(Type.BUILD);
 		buildSysCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), buildSysOptions);		
@@ -222,9 +267,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		buildTargetText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		
 		if (submissionInfo.isConfigInitialized()) {
+			setupSwampProject();
+			setupSwampPackage();
 			setupPackageType();
-			setupProject();
-			setupPackage();
+			setupEclipseProject();
 			setupBuild();
 		}
 		else {
@@ -235,23 +281,128 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	private void setupPackageType() {
-		pkgTypeCombo.select(submissionInfo.getSelectedPackageTypeIndex());
-		handlePackageTypeSelection();
+		// get the appropriate pkgType String, not the index
+		String pkgType = submissionInfo.getPackageType();
+		for (int i = 0; i < pkgCombo.getItemCount(); i++) {
+			if (pkgCombo.getItem(i).equals(pkgType)) {
+				pkgCombo.select(i);
+				return;
+			}
+		}
 	}
 	
-	private void setupProject() {
-		eclipsePrjCombo.select(submissionInfo.getSelectedProjectIndex());
-		handleProjectSelection();
+	private void setupEclipseProject() {
+		IProject project = submissionInfo.getProject();
+		for (int i = 0; i < eclipseProjects.length; i++) {
+			if (project.equals(eclipseProjects[i])) {
+				eclipsePrjCombo.select(i);
+				handleEclipseProjectSelection(i);
+			}
+		}
+		handleEclipseProjectSelection(-1);
 	}
 	
-	private void setupPackage() {
-		pkgCombo.select(submissionInfo.getSelectedPackageIndex());
-		handlePackageSelection();
+	private void handleEclipseProjectSelection(int index) {
+		if (index < 0) {
+			prjFilePathText.setText("");
+		}
+		else {
+			IProject project = eclipseProjects[index];	
+			prjFilePathText.setText(project.getLocation().toOSString());
+		}
+		prjFilePathText.setEnabled(false);	
+	}
+	
+	private void setupSwampProject() {
+		prjUUID = submissionInfo.getSelectedProjectID();
+		for (int i = 0; i < swampProjects.size(); i++) {
+			if (swampProjects.get(i).getUUIDString().equals(prjUUID)) {
+				swampPrjCombo.select(i);
+				handleSwampProjectSelection(i);
+				return;
+			}
+		}
+		prjUUID = null;
+		handleSwampProjectSelection(-1);
+	}
+	
+	private void handleSwampProjectSelection(int index) {
+		if (index < 0) {
+			prjUUID = null;
+			swampPrjCombo.deselectAll();
+			pkgCombo.deselectAll();
+			pkgCombo.setEnabled(false);
+			pkgVersionText.setEnabled(false);
+			pkgTypeCombo.deselectAll();
+			pkgTypeCombo.setEnabled(false);
+			pkgCombo.setItems("");
+		}
+		else {
+			prjUUID = swampProjects.get(index).getUUIDString();
+			pkgCombo.setEnabled(true);
+			pkgVersionText.setEnabled(true);
+			pkgTypeCombo.setEnabled(true);
+			pkgCombo.setItems(getSelectionElements(Type.PACKAGE));
+			setPackageDefault();
+		}
+	}
+	
+	private void setupSwampPackage() {
+		// get the appropriate UUID from submissionInfo
+		// disable the text box
+		String pkgThingUUID = submissionInfo.getSelectedPackageID();
+		for (int i = 0; i < swampPackages.size(); i++) {
+			if (swampPackages.get(i).getUUIDString().equals(pkgThingUUID)) {
+				pkgCombo.select(i+1);
+				handlePackageSelection(i+1);
+				return;
+			}
+		}
+		handlePackageSelection(-1);
+		// if "Create new package" selected, enable the text box
+	}
+	
+	private void handlePackageSelection(int index) {
+		pkgNameText.setText("");
+		if (index == CREATE_NEW_PACKAGE) {
+			pkgNameText.setEnabled(true);
+		}
+		else {
+			pkgNameText.setEnabled(false);
+		}
 	}
 	
 	private void setupBuild() {
-		buildSysCombo.select(submissionInfo.getSelectedBuildSysIndex());
-		handleBuildSelection();
+		// get the build system, not an index
+		// set it
+		String buildSys = submissionInfo.getBuildSystem();
+		for (int i = 0; i < buildSysCombo.getItemCount(); i++) {
+			if (buildSys.equals(buildSysCombo.getItem(i))) {
+				buildSysCombo.select(i);
+				handleBuildSelection(i);
+				return;
+			}
+		}
+		handleBuildSelection(-1);
+		// if auto or no-build, keep the build text boxes disabled
+	}
+	
+	private void handleBuildSelection(int index) {
+		// TODO There is a more elegant way of handling build than hard coding these strings in multiple places
+		String buildSys =  buildSysCombo.getItem(index);
+		if (buildSys.equals(AUTO_GENERATE_BUILD_STRING) || buildSys.equals(NO_BUILD_STRING)) {
+			buildTargetText.setText("");
+			buildTargetText.setEnabled(false);
+			buildDirText.setText("");
+			buildDirText.setEnabled(false);
+			buildFileText.setText("");
+			buildFileText.setEnabled(false);
+		}
+		else {
+			buildTargetText.setEnabled(true);
+			buildDirText.setEnabled(true);
+			buildFileText.setEnabled(true);
+		}
 	}
 	
 	@Override
@@ -266,24 +417,39 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	private boolean isValid() {
-		int prjIndex = eclipsePrjCombo.getSelectionIndex();
-		if (prjIndex < 0) {
-			this.setMessage("Please select an Eclipse project");
-			return false;
+		int swampPrjIndex = swampPrjCombo.getSelectionIndex();
+		if (swampPrjIndex < 0) {
+			this.setMessage("Please select a SWAMP project.");
 		}
 		
 		int pkgIndex = pkgCombo.getSelectionIndex();
-		submissionInfo.setSelectedPackageIndex(pkgIndex);
 		if (pkgIndex < 0) {
-			this.setMessage("Please select a package");
+			this.setMessage("Please select a package.");
 			return false;
 		}
 		
-		if (submissionInfo.isNewPackage()) {
+		if (pkgIndex == CREATE_NEW_PACKAGE) {
 			if (pkgNameText.equals("")) {
-				this.setMessage("Please add a name for your new package");
+				this.setMessage("Please add a name for your new package.");
 				return false;
 			}
+		}
+		
+		if (pkgVersionText.equals("")) {
+			this.setMessage("Please add a descriptor for your package version.");
+			return false;
+		}
+		
+		int pkgTypeIndex = pkgTypeCombo.getSelectionIndex();
+		if (pkgTypeIndex < 0) {
+			this.setMessage("Please select a package type.");
+			return false;
+		}
+		
+		int eclipsePrjIndex = eclipsePrjCombo.getSelectionIndex();
+		if (eclipsePrjIndex < 0) {
+			this.setMessage("Please select an Eclipse project.");
+			return false;
 		}
 		
 		int buildIndex = buildSysCombo.getSelectionIndex();
@@ -291,7 +457,8 @@ public class ConfigDialog extends TitleAreaDialog {
 			this.setMessage("Please select a build system");
 			return false;
 		}
-		if (submissionInfo.noBuild() || submissionInfo.generateBuild()) {
+		String buildSysString = buildSysCombo.getItem(buildIndex);
+		if (buildSysString.equals(NO_BUILD_STRING) || buildSysString.equals(AUTO_GENERATE_BUILD_STRING)) {
 			return true;
 		}
 		
@@ -313,10 +480,34 @@ public class ConfigDialog extends TitleAreaDialog {
 	@Override
 	protected void okPressed() {
 		if (isValid()) {
-			if (submissionInfo.isNewPackage()) {
+			// do a lot of setting of submissionInfo
+			
+			// swamp project (UUID needed)
+			submissionInfo.setSelectedProjectID(prjUUID);
+			
+			// swamp package (UUID if available, otherwise name)
+			int index = pkgCombo.getSelectionIndex();
+			if (index == CREATE_NEW_PACKAGE) {
 				submissionInfo.setPackageName(pkgNameText.getText());
+				submissionInfo.setNewPackage(true);
 			}
-			submissionInfo.setBuildInfo(buildDirText.getText(), buildFileText.getText(), buildTargetText.getText());
+			else {
+				String pkgThingUUID = swampPackages.get(index).getUUIDString();
+				submissionInfo.setSelectedPackageID(pkgThingUUID);
+				submissionInfo.setNewPackage(false);
+			}
+			
+			// swamp package version (String)
+			submissionInfo.setPackageVersion(pkgVersionText.getText());
+			
+			// eclipse project (actual IProject)
+			index = eclipsePrjCombo.getSelectionIndex();
+			submissionInfo.setProject(eclipseProjects[index]);
+			
+			// build system (build system info -- including for create_new...)
+			index = buildSysCombo.getSelectionIndex();
+			String buildSysStr = buildSysCombo.getItem(index);
+			submissionInfo.setBuildInfo(buildSysStr, buildSysStr.equals(AUTO_GENERATE_BUILD_STRING), buildDirText.getText(), buildFileText.getText(), buildTargetText.getText());
 			super.okPressed();
 		}
 	}
@@ -334,16 +525,16 @@ public class ConfigDialog extends TitleAreaDialog {
 			int selection = combo.getSelectionIndex();
 			System.out.println("Index " + selection + " selected");
 			if (type == Type.BUILD) {
-				submissionInfo.setSelectedBuildSysIndex(selection);
-				handleBuildSelection();
+				handleBuildSelection(selection);
 			}
-			else if (type == Type.PROJECT) {
-				submissionInfo.setSelectedProjectIndex(selection);
-				handleProjectSelection();
+			else if (type == Type.SWAMP_PROJECT) {
+				handleSwampProjectSelection(selection);
 			}
-			else { // type == Type.PACKAGE
-				submissionInfo.setSelectedPackageIndex(selection);
-				handlePackageSelection();
+			else if (type == Type.ECLIPSE_PROJECT) {
+				handleEclipseProjectSelection(selection);
+			}
+			else if (type == Type.PACKAGE){ 
+				handlePackageSelection(selection);
 			}
 		}
 		

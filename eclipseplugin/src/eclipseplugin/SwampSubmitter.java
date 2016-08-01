@@ -32,7 +32,6 @@ import org.osgi.framework.Version;
 import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.ConfigDialog;
 import eclipseplugin.dialogs.PlatformDialog;
-import eclipseplugin.dialogs.SelectionDialog;
 import eclipseplugin.dialogs.ToolDialog;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.PackageVersion;
