@@ -19,7 +19,7 @@
          <action
                label="Launch SWAMP"
                style="pulldown"
-               icon="icons/swamp-logo-height-20.png"
+               icon="icons/swamp-logo-square-height-20.png"
                class="eclipseplugin.actions.LaunchAction"
                tooltip="Upload and assess projects in the SWAMP"
                menubarPath="SWAMPMenu/sampleGroup"

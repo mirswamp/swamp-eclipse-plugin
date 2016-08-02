@@ -5,8 +5,6 @@ Immediate:
 -Handling nested projects
 -Add login/logout functionality when functionality has been added to SwampApiWrapper
 -Make portable
--Use smaller SWAMP icon
--More descriptive console messages (time-stamped and with Project and Package names)
 
 Testing:
 -Test automatic export
@@ -32,3 +30,5 @@ DONE:
 -Add an option on the project to submit it to the SWAMP
 -Having serialized config files for each individual project (?)
 -Minor UX improvements from SWAMP API improvements (only showing tools/platforms for a given language, checking tool-platform pair compatibility before submitting)
+-Use smaller SWAMP icon
+-More descriptive console messages (time-stamped and with Project and Package names)
