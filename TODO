@@ -9,6 +9,7 @@ Immediate:
 Testing:
 -Test automatic export
 -Test assessment submission in general
+-Test on other types of builds (i.e. preconfigured builds)
 -Add handling for when assessment results come in (?)
 -Test on Windows
 
@@ -19,6 +20,7 @@ Future:
     -e.g. if it's a Maven project in Eclipse, set that as the build system and populate the build info
 -(?) Stop copying over dependencies that the SWAMP can get over the network (e.g. Maven central dependencies)
 -(?) Keep a persistent .swampbin and check the timestamp on the different libraries to figure out whether they need to be re-copied over. This would result in HUGE savings
+-For build file selection (i.e. if it's preconfigured), use actual file selection dialog that gives view of file system rather than making end user type in directory and filename
 
 ===================================================================================================
 DONE:

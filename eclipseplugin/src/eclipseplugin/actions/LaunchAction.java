@@ -92,6 +92,7 @@ public class LaunchAction implements IWorkbenchWindowPulldownDelegate {
 		MenuItem logIn = makeMenuItem(menu, "Log &In", index++);
 		MenuItem logOut = makeMenuItem(menu, "Log &Out", index++);
 		boolean loggedIn = submitter.loggedIntoSwamp();
+		System.out.println("User is logged in: " + loggedIn);
 		if (loggedIn) {
 			logOut.addListener(SWT.Selection, e -> submitter.logOutOfSwamp());
 			logIn.setEnabled(false);

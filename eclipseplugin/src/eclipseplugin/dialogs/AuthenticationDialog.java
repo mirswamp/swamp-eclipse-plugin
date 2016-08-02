@@ -69,6 +69,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		out.println("Error: Invalid username and/or password entered.");
 		this.setMessage(INVALID_MESSAGE + "\n" + AUTHENTICATION_PROMPT);
 		usernameText.setText("");
+		usernameText.setFocus();
 		passwordText.setText("");
 	}
 	
@@ -81,8 +82,6 @@ public class AuthenticationDialog extends TitleAreaDialog {
 			setInvalidMsgAndClearPrompts();
 			return;
 		}
-		System.out.println("Username: " + username + "\tPassword: " + password);
-		// do the validation with the API using the things in the text fields
 	
 		try {
 			id = api.login(username, password);

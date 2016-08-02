@@ -41,6 +41,7 @@ import edu.wisc.cs.swamp.SwampApiWrapper;
 import edu.wisc.cs.swamp.exceptions.IncompatibleAssessmentTupleException;
 import edu.wisc.cs.swamp.exceptions.InvalidIdentifierException;
 import edu.wisc.cs.swamp.exceptions.SessionExpiredException;
+import edu.wisc.cs.swamp.exceptions.SessionRestoreException;
 
 public class SwampSubmitter {
 
@@ -370,14 +371,25 @@ public class SwampSubmitter {
 			if (!api.restoreSession()) {
 				return false;
 			}
+		} catch (SessionRestoreException e) {
+			return false;
 		} catch (SessionExpiredException e) {
 			return false;
 		}
+		
 		return true;
 	}
 	
 	public void logIntoSwamp() {
-		// TODO Fill this in
+		out = initializeConsole("SWAMP Plugin");
+		AuthenticationDialog ad = new AuthenticationDialog(this.window.getShell(), api, out);
+		ad.create();
+		if (ad.open() != Window.OK) {
+			out.println(Utils.getBracketedTimestamp() + "Status: User manually exited login dialog.");
+		}
+		else {
+			api.saveSession();
+		}
 	}
 	
 	public void logOutOfSwamp() {
