@@ -6,15 +6,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.Date;
 import java.util.List;
-
-import org.eclipse.core.resources.IProject;
-
-import eclipseplugin.dialogs.ConfigDialog;
-import eclipseplugin.dialogs.SelectionDialog;
-import edu.uiuc.ncsa.swamp.api.PackageThing;
-import edu.uiuc.ncsa.swamp.api.PackageVersion;
 
 public class FileSerializer {
 	
@@ -35,11 +27,13 @@ public class FileSerializer {
 		try {
 			filereader = new FileReader(file);
 			reader = new BufferedReader(filereader);
-			
-			deserializeSelectionInfo(reader, si);
-			si.setSelectionInitialized(true);
-			deserializeConfigInfo(reader, si);
+
+			if (!deserializeConfigInfo(reader, si)) {
+				return false;
+			}
 			si.setConfigInitialized(true);
+			deserializeSelectionInfo(reader, si);
+
 			reader.close();
 		}
 		catch (Exception e) {
@@ -62,8 +56,14 @@ public class FileSerializer {
 		try {
 			filewriter = new FileWriter(file);
 			writer = new BufferedWriter(filewriter);
+			
+			serializeConfigInfo(writer, si);
+			serializeSelectionInfo(writer, si);
+			
+			/*
 			serializeSelectionInfo(writer, si);
 			serializeConfigInfo(writer, si);
+			*/
 			writer.close();
 		}
 		catch (Exception e) {
@@ -72,7 +72,9 @@ public class FileSerializer {
 		}
 	}
 	
-	private static void deserializeSelectionInfo(BufferedReader reader, SubmissionInfo si) throws IOException {
+	private static boolean deserializeSelectionInfo(BufferedReader reader, SubmissionInfo si) throws IOException {
+		String str = null;
+		/*
 		// Project UUID
 		String str = reader.readLine();
 		if (str == null || str.equals("\n")) {
@@ -80,34 +82,59 @@ public class FileSerializer {
 			//return false;
 		}
 		si.setSelectedProjectID(str);
+		*/
+		
 		// List of Platform UUIDs
 		str = reader.readLine();
 		if (str == null || str.equals("\n")) {
-			//return false;
+			return false;
 		}
 		List<String> platformList =  Utils.convertDelimitedStringToList(str, DELIMITER);
 		si.setSelectedPlatformIDs(platformList);
+
 		// List of Tool UUIDs
 		str = reader.readLine();
 		if (str == null || str.equals("\n")) {
-			//return false;
+			return false;
 		}
 		List<String> toolList =  Utils.convertDelimitedStringToList(str, DELIMITER);
 		si.setSelectedToolIDs(toolList);
-		si.setSelectionInitialized(true);
+		return true;
 	}
 
-	private static void deserializeConfigInfo(BufferedReader reader, SubmissionInfo si) throws IOException {
+	private static boolean deserializeConfigInfo(BufferedReader reader, SubmissionInfo si) throws IOException {
+		String str = null;
+
+		// Project UUID
+		str = reader.readLine();
+		if (str == null || str.equals("\n")) {
+			// TODO Throw an exception here
+			return false;
+		}
+		si.setSelectedProjectID(str);
+		
+		// Package Type
+		str = reader.readLine();
+		if (str != null && !str.equals("\n")) {
+			si.setPackageType(str);
+		}
+		
 		// Eclipse Project Name
 		String prjName = null, prjPath = null;
-		String str = reader.readLine();
+		str = reader.readLine();
 		if (str != null && !str.equals("\n")) {
 			prjName = str;
 		}
+		else {
+			return false;
+		}
 		// Eclipse Project Path
 		str = reader.readLine();
-		if (str != null & !str.equals("\n")) {
+		if (str != null && !str.equals("\n")) {
 			prjPath = str;
+		}
+		else {
+			return false;
 		}
 		if (!si.initializeProject(prjName, prjPath)) {
 			// TODO Throw an exception here for failing to find project
@@ -115,7 +142,7 @@ public class FileSerializer {
 			// Need custom exception here
 			reader.close();
 			System.out.println("We were unable to find the last selected project");
-			//return false;
+			return false;
 		}
 		
 		// SWAMP Package UUID
@@ -133,51 +160,46 @@ public class FileSerializer {
 				if (!si.setPackageIDFromName(name)) {
 					reader.close();
 					System.out.println("We were unable to find the last SWAMP Package");
-					// return or throw exception here
+					return false;
 				}
 			}
 		}
 
 		// Build system 
-		str = reader.readLine();
-		if (str != null && !str.equals("\n")) {
-			si.setBuildSystem(str);
-		}
+		String buildSys = reader.readLine();
 		
 		str =  reader.readLine();
+		boolean needsBuildFile = false;
 		if (str != null && !str.equals("\n")) {
-			if (str.equals(NEEDS_BUILD_FILE)) {
-				si.setNeedsBuildFile(true);
-			}
-			else if (str.equals(HAS_BUILD_FILE)) {
-				si.setNeedsBuildFile(false);
-			}
-			else {
-				// TODO Handle ERROR
-			}
+			needsBuildFile = str.equals(NEEDS_BUILD_FILE);
+		}
+		else {
+			return false;
 		}
 		
 		// Build File
-		str = reader.readLine();
-		if (str != null && !str.equals("\n")) {
-			si.setBuildFile(str);
-		}
+		String buildFile = reader.readLine();
+		
 		// Build Dir
-		str = reader.readLine();
-		if (str != null && !str.equals("\n")) {
-			si.setBuildDirectory(str);
-		}
+		String buildDir = reader.readLine();
+		
 		// Build Target
-		str = reader.readLine();
-		if (str != null && !str.equals("\n")) {
-			si.setBuildTarget(str);
-		}
+		String buildTarget = reader.readLine();
+		
+		// Package system libraries
+		String pkgSysLibsStr = reader.readLine();
+		boolean pkgSysLibs = Boolean.parseBoolean(pkgSysLibsStr);
+		
+		si.setBuildInfo(buildSys, needsBuildFile, buildDir, buildFile, buildTarget, pkgSysLibs);
+		return true;
 	}
 	
 	public static void serializeSelectionInfo(BufferedWriter writer, SubmissionInfo si) throws IOException {
+		/*
 		// Project UUID
 		writer.write(si.getSelectedProjectID());
 		writer.write("\n");
+		*/
 				
 		// Platform UUIDs
 		List<String> platformIDList = si.getSelectedPlatformIDs();
@@ -193,6 +215,16 @@ public class FileSerializer {
 	}
 	
 	private static void serializeConfigInfo(BufferedWriter writer, SubmissionInfo si) throws IOException {
+		// Project UUID
+		String projectUUID = si.getSelectedProjectID();
+		writer.write(projectUUID);
+		writer.write("\n");
+		
+		// Package Type
+		String packageType = si.getPackageType();
+		writer.write(packageType);
+		writer.write("\n");
+		
 		// Project name
 		String projectName = si.getProjectName();
 		writer.write(projectName);
@@ -239,6 +271,11 @@ public class FileSerializer {
 		// Build Target
 		String buildTarget = si.getBuildTarget();
 		writer.write(buildTarget);
+		writer.write("\n");
+		
+		// Package system libraries?
+		boolean pkgSysLibs = si.packageSystemLibraries();
+		writer.write(Boolean.toString(pkgSysLibs));
 		writer.write("\n");
 	}
 	

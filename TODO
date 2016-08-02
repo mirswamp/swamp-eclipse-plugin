@@ -2,14 +2,17 @@ TODO:
 
 Immediate:
 -Queueing background jobs
--Minor UX improvements from SWAMP API improvements (only showing tools/platforms for a given language, checking tool-platform pair compatibility before submitting)
 -Handling nested projects
 -Add login/logout functionality when functionality has been added to SwampApiWrapper
+-Make portable
+-Use smaller SWAMP icon
+-More descriptive console messages (time-stamped and with Project and Package names)
 
 Testing:
 -Test automatic export
 -Test assessment submission in general
 -Add handling for when assessment results come in (?)
+-Test on Windows
 
 Future:
 -Add an about option to the dropdown menu, that says who I am and what the SWAMP is
@@ -28,3 +31,4 @@ DONE:
 -Stop copying over Java run-time (rt.jar) - this is very expensive
 -Add an option on the project to submit it to the SWAMP
 -Having serialized config files for each individual project (?)
+-Minor UX improvements from SWAMP API improvements (only showing tools/platforms for a given language, checking tool-platform pair compatibility before submitting)

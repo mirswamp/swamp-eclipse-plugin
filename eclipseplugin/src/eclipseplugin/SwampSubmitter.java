@@ -31,7 +31,8 @@ import org.osgi.framework.Version;
 
 import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.ConfigDialog;
-import eclipseplugin.dialogs.SelectionDialog;
+import eclipseplugin.dialogs.PlatformDialog;
+import eclipseplugin.dialogs.ToolDialog;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.PackageVersion;
 import edu.wisc.cs.swamp.SwampApiWrapper;
@@ -48,6 +49,7 @@ public class SwampSubmitter {
 
 	private static String SWAMP_FAMILY 		= "SWAMP_FAMILY";
 	private static String CONFIG_FILENAME 	= ".swampconfig";
+	private static String PLUGIN_EXIT_MANUAL = "Status: Plugin exited manually.";
 	
 	public SwampSubmitter(IWorkbenchWindow window) {
 		this.window = window;
@@ -75,7 +77,8 @@ public class SwampSubmitter {
 	}
 
 	private void runBackgroundJob(SubmissionInfo si, boolean fromFile) {
-		
+		int UNABLE_TO_DESERIALIZE = 0;
+		int UNABLE_TO_GENERATE_BUILD = 1;
 		Job job = new Job("SWAMP Assessment Submission") {
 			
 			@Override
@@ -88,23 +91,30 @@ public class SwampSubmitter {
 				if (fromFile) {
 					if (!FileSerializer.deserializeSubmissionInfo(configFilepath, si)) {
 						// TODO Strengthen error here
-						out.println("ERROR: Error in loading from previous assessment found.");
-						return Status.CANCEL_STATUS;
+						File f = new File(configFilepath);
+						f.delete();
+						out.println(Utils.getBracketedTimestamp() + "ERROR: Error in loading from previous assessment found. Please relaunch plugin.");
+						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_DESERIALIZE ,"Unable to deserialize previous assessment", null);
+						done(status);
+						return status;
 					}
 				}
 				ClasspathHandler classpathHandler = null;
 				if (si.needsBuildFile()) {
-					out.println("Status: Generating build file");
-					classpathHandler = generateBuildFiles(si.getProject());
+					out.println(Utils.getBracketedTimestamp() + "Status: Generating build file");
+					classpathHandler = generateBuildFiles(si.getProject(), si.packageSystemLibraries());
 					if (classpathHandler == null) {
 						// TODO Handle this error better
-						return Status.CANCEL_STATUS;
+						out.println(Utils.getBracketedTimestamp() + "ERROR: Error in generating build file. Please review your project configuration and build path.");
+						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_GENERATE_BUILD , "Unable to generate build files from this project setup", null);
+						done(status);
+						return status; 
 					}
 				}
-				out.println("Status: Packaging Project");
+				out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
 				PackageInfo pkgInfo = packageProject(si.getPackageName(), si.getPackageVersion(), si.getBuildSystem() , si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
 				
-				out.println("Status: Uploading package to SWAMP");
+				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
 				String pkgVersUUID = uploadPackage(pkgInfo.getParentPath(), prjUUID, pkgInfo.getArchiveFilename(), si.isNewPackage());
 				
@@ -125,33 +135,35 @@ public class SwampSubmitter {
 					}
 				}
 				*/
-				out.println("Status: Submitting assessments");
+				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
 				for (String platformUUID : si.getSelectedPlatformIDs()) {
 					for (String toolUUID : si.getSelectedToolIDs()) {
 						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
 					}
 				}
-				
-				return Status.OK_STATUS;
+				IStatus status = Status.OK_STATUS;
+				done(status);
+				return status;
 			}
 		};
 		//job.setRule(new MutexRule());
 		job.setUser(true);
 		job.schedule();
+		
 	}
 	
-	private ClasspathHandler generateBuildFiles(IProject proj) {
+	private ClasspathHandler generateBuildFiles(IProject proj, boolean includeSysLibs) {
 		ClasspathHandler classpathHandler = null;
 		// Generating Buildfile
 		IJavaProject javaProj = JavaCore.create(proj);
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
 		String rootPath = root.getLocation().toString();
-		classpathHandler = new ClasspathHandler(null, javaProj, rootPath);// cd.getPkgPath()); // TODO replace this w/ workspace path
+		classpathHandler = new ClasspathHandler(null, javaProj, rootPath, includeSysLibs);// cd.getPkgPath()); // TODO replace this w/ workspace path
 		System.out.println(classpathHandler.getProjectName());
 		
 		if (classpathHandler.hasCycles()) {
-			out.println("Error: There are cyclic dependencies in this project. Please remove all cycles before resubmitting.");
+			out.println(Utils.getBracketedTimestamp() + "Error: There are cyclic dependencies in this project. Please remove all cycles before resubmitting.");
 			System.err.println("Huge error. Cyclic dependencies!");
 			classpathHandler = null;
 			return null;
@@ -216,7 +228,7 @@ public class SwampSubmitter {
 		try {
 			api = new SwampApiWrapper(SwampApiWrapper.HostType.DEVELOPMENT);
 		} catch (Exception e) {
-			out.println("Error: Unable to initialize SWAMP API.");
+			out.println(Utils.getBracketedTimestamp() + "Error: Unable to initialize SWAMP API.");
 			e.printStackTrace();
 			return false;
 		}
@@ -232,7 +244,7 @@ public class SwampSubmitter {
 		else {
 			versionStr += " (could not detect version)";
 		}
-		out.println("Status: Launched SWAMP plugin - running on " + versionStr + ".");
+		out.println(Utils.getBracketedTimestamp() + "Status: Launched SWAMP plugin - running on " + versionStr + ".");
 	}
 	
 	public void launchBackgroundAssessment(String configPath) {
@@ -259,7 +271,7 @@ public class SwampSubmitter {
 		}
 		SubmissionInfo si = new SubmissionInfo(this.api);
 		if ((configFilepath == null) || (!new File(configFilepath).exists())) {
-			out.println("Error: No previous assessment found.");
+			out.println(Utils.getBracketedTimestamp() + "Error: No previous assessment found.");
 			System.out.println("No previous assessment found at " + configFilepath);
 			launchConfiguration(si);
 		}
@@ -279,30 +291,37 @@ public class SwampSubmitter {
 	}
 	
 	private void launchConfiguration(SubmissionInfo si) {
-		SelectionDialog sd;
 		ConfigDialog cd;
+		ToolDialog td;
+		PlatformDialog pd;
 		
-		sd = new SelectionDialog(window.getShell(), si); 
 		cd = new ConfigDialog(window.getShell(), si);
-		sd.create();
-		if (sd.open() != Window.OK) {
-			// TODO Handle error - I don't think this is actually an error
-		}
-		else {
-			cd.create();
-			System.out.println("Made it to config dialog");
-			if (cd.open() != Window.OK) {
-				// TODO Handle error
+		cd.create();
+		if (cd.open() == Window.OK) {
+			td = new ToolDialog(window.getShell(), si);
+			td.create();
+			if (td.open() == Window.OK) {
+				pd = new PlatformDialog(window.getShell(), si);
+				pd.create();
+				if (pd.open() == Window.OK) {
+					configFilepath = si.getProjectPath() + Path.SEPARATOR + CONFIG_FILENAME;
+					FileSerializer.serializeSubmissionInfo(configFilepath, si);
+					runBackgroundJob(si, false);
+				}
+				else {
+					out.println(Utils.getBracketedTimestamp() + PLUGIN_EXIT_MANUAL);
+				}
 			}
 			else {
-				configFilepath = si.getProjectPath() + Path.SEPARATOR + CONFIG_FILENAME;
-				FileSerializer.serializeSubmissionInfo(configFilepath, si);
-				runBackgroundJob(si, false);
+				out.println(Utils.getBracketedTimestamp() + PLUGIN_EXIT_MANUAL);
 			}
-			out.println("Status: Plugin completed executing");
 		}
+		else {
+			out.println(Utils.getBracketedTimestamp() + PLUGIN_EXIT_MANUAL);
+		}
+		out.println(Utils.getBracketedTimestamp() + "Status: Plugin completed executing");
 	}
-	
+		
 	public void launch(String configPath) {
 		initializeSwampApi();
 		
@@ -363,8 +382,6 @@ public class SwampSubmitter {
 		System.out.println("Project UUID: " + prjUUID);
 		System.out.println("Platform UUID: " + pltUUID);
 		
-		api.printAllPackages(prjUUID, true);
-		
 		String toolName;
 		try {
 			toolName = api.getTool(toolUUID, prjUUID).getName();
@@ -388,12 +405,12 @@ public class SwampSubmitter {
 			e.printStackTrace();
 		}
 		if (assessUUID == null) {
-			out.println("Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");
+			out.println(Utils.getBracketedTimestamp() + "Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");
 			// TODO handle error here
 			System.err.println("Error in running assessment.");
 		}
 		else {
-			out.println("Status: Successfully submitted assessment with tool {" + toolName + "} on platform {" + platformName +"}");
+			out.println(Utils.getBracketedTimestamp() + "Status: Successfully submitted assessment with tool {" + toolName + "} on platform {" + platformName +"}");
 		}
 	}
 	
