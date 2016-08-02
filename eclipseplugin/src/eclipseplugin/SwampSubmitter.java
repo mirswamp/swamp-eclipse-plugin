@@ -3,6 +3,8 @@ package eclipseplugin;
 import java.io.File;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
@@ -11,7 +13,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
@@ -35,6 +36,7 @@ import eclipseplugin.dialogs.PlatformDialog;
 import eclipseplugin.dialogs.ToolDialog;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.PackageVersion;
+import edu.uiuc.ncsa.swamp.api.Platform;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 import edu.wisc.cs.swamp.exceptions.IncompatibleAssessmentTupleException;
 import edu.wisc.cs.swamp.exceptions.InvalidIdentifierException;
@@ -136,9 +138,16 @@ public class SwampSubmitter {
 				}
 				*/
 				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
-				for (String platformUUID : si.getSelectedPlatformIDs()) {
-					for (String toolUUID : si.getSelectedToolIDs()) {
-						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
+				for (String toolUUID : si.getSelectedToolIDs()) {
+					List<Platform> platforms = api.getSupportedPlatforms(toolUUID, prjUUID);
+					Set<String> platformSet = new HashSet<>();
+					for (Platform p : platforms) {
+						platformSet.add(p.getUUIDString());
+					}
+					for (String platformUUID : si.getSelectedPlatformIDs()) {
+						if (platformSet.contains(platformUUID)) {
+							submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
+						}
 					}
 				}
 				IStatus status = Status.OK_STATUS;
@@ -236,7 +245,7 @@ public class SwampSubmitter {
 	}
 	
 	private static void printInitialInfo(MessageConsoleStream out) {
-		Version version = Platform.getBundle("org.eclipse.platform").getVersion();
+		Version version = org.eclipse.core.runtime.Platform.getBundle("org.eclipse.platform").getVersion();
 		String versionStr = "Eclipse";
 		if (version != null) {
 			versionStr += " " + version.toString();
