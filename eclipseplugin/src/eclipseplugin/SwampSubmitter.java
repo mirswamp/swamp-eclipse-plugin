@@ -104,10 +104,10 @@ public class SwampSubmitter {
 						return Status.CANCEL_STATUS;
 					}
 				}
-				out.println(Utils.getBracketedTimestamp() + "Status: Packaging Project");
+				out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
 				PackageInfo pkgInfo = packageProject(si.getPackageName(), si.getPackageVersion(), si.getBuildSystem() , si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
 				
-				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package to SWAMP");
+				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
 				String pkgVersUUID = uploadPackage(pkgInfo.getParentPath(), prjUUID, pkgInfo.getArchiveFilename(), si.isNewPackage());
 				
