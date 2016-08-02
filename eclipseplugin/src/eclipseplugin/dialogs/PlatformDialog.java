@@ -84,7 +84,7 @@ public class PlatformDialog extends TitleAreaDialog {
 		for (int i = 0; i < numPlatforms; i++) {
 			platformArray[i] = platforms.get(i).getName();
 		}
-		Arrays.sort(platformArray);
+		//Arrays.sort(platformArray);
 		return platformArray;
 	}
 	
@@ -119,6 +119,9 @@ public class PlatformDialog extends TitleAreaDialog {
 		for (int i : selectedIndices) {
 			Platform platform = platforms.get(i);
 			selectedPlatformIDs.add(platform.getUUIDString());
+			System.out.println(platform.getUUIDString());
+			System.out.println(platform.getName());
+			System.out.println(platform.getFilename());
 		}
 		submissionInfo.setSelectedPlatformIDs(selectedPlatformIDs);
 		super.okPressed();
