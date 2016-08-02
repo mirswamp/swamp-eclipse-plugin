@@ -77,7 +77,8 @@ public class SwampSubmitter {
 	}
 
 	private void runBackgroundJob(SubmissionInfo si, boolean fromFile) {
-		
+		int UNABLE_TO_DESERIALIZE = 0;
+		int UNABLE_TO_GENERATE_BUILD = 1;
 		Job job = new Job("SWAMP Assessment Submission") {
 			
 			@Override
@@ -90,8 +91,12 @@ public class SwampSubmitter {
 				if (fromFile) {
 					if (!FileSerializer.deserializeSubmissionInfo(configFilepath, si)) {
 						// TODO Strengthen error here
-						out.println(Utils.getBracketedTimestamp() + "ERROR: Error in loading from previous assessment found.");
-						return Status.CANCEL_STATUS;
+						File f = new File(configFilepath);
+						f.delete();
+						out.println(Utils.getBracketedTimestamp() + "ERROR: Error in loading from previous assessment found. Please relaunch plugin.");
+						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_DESERIALIZE ,"Unable to deserialize previous assessment", null);
+						done(status);
+						return status;
 					}
 				}
 				ClasspathHandler classpathHandler = null;
@@ -100,7 +105,10 @@ public class SwampSubmitter {
 					classpathHandler = generateBuildFiles(si.getProject(), si.packageSystemLibraries());
 					if (classpathHandler == null) {
 						// TODO Handle this error better
-						return Status.CANCEL_STATUS;
+						out.println(Utils.getBracketedTimestamp() + "ERROR: Error in generating build file. Please review your project configuration and build path.");
+						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_GENERATE_BUILD , "Unable to generate build files from this project setup", null);
+						done(status);
+						return status; 
 					}
 				}
 				out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
@@ -133,13 +141,15 @@ public class SwampSubmitter {
 						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
 					}
 				}
-				
-				return Status.OK_STATUS;
+				IStatus status = Status.OK_STATUS;
+				done(status);
+				return status;
 			}
 		};
 		//job.setRule(new MutexRule());
 		job.setUser(true);
 		job.schedule();
+		
 	}
 	
 	private ClasspathHandler generateBuildFiles(IProject proj, boolean includeSysLibs) {
