@@ -3,7 +3,6 @@ package eclipseplugin.dialogs;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
@@ -23,14 +22,9 @@ import static eclipseplugin.SubmissionInfo.AUTO_GENERATE_BUILD_STRING;
 import static eclipseplugin.SubmissionInfo.NO_BUILD_STRING;
 import eclipseplugin.Utils;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
-import edu.uiuc.ncsa.swamp.api.PackageVersion;
-import edu.uiuc.ncsa.swamp.api.Platform;
 import edu.uiuc.ncsa.swamp.api.Project;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 public class ConfigDialog extends TitleAreaDialog {
@@ -364,8 +358,8 @@ public class ConfigDialog extends TitleAreaDialog {
 		String pkgThingUUID = submissionInfo.getSelectedPackageID();
 		for (int i = 0; i < swampPackages.size(); i++) {
 			if (swampPackages.get(i).getUUIDString().equals(pkgThingUUID)) {
-				pkgCombo.select(i);
-				handlePackageSelection(i);
+				pkgCombo.select(i+1);
+				handlePackageSelection(i+1);
 				return;
 			}
 		}
@@ -515,7 +509,7 @@ public class ConfigDialog extends TitleAreaDialog {
 				submissionInfo.setNewPackage(true);
 			}
 			else {
-				String pkgThingUUID = swampPackages.get(index).getUUIDString();
+				String pkgThingUUID = swampPackages.get(index-1).getUUIDString();
 				submissionInfo.setSelectedPackageID(pkgThingUUID);
 				submissionInfo.setNewPackage(false);
 			}
