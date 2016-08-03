@@ -35,12 +35,12 @@ public class PackageInfo {
 	private String buildDir;
 	private String buildFile;
 	
-	public PackageInfo(String dirPath, String outputName, String pkgName) {
+	public PackageInfo(String dirPath, String outputName, String pkgName, String outputDir) {
 		
 		String targetDir = "bin"; // TODO Stop assuming target directory is bin
 		buildDir = ".";
 		zipName = outputName;
-		zipPath = zipPackage(dirPath, outputName, targetDir);
+		zipPath = zipPackage(dirPath, outputName, targetDir, outputDir);
 		
 		this.pkgName = pkgName;
 		
@@ -120,20 +120,22 @@ public class PackageInfo {
 	}
 	
 	/* Adapted from example code provided at http://www.oracle.com/technetwork/articles/java/compress-1565076.html */
-	private String zipPackage(String dirPath, String outputName, String target) {
+	private String zipPackage(String dirPath, String outputName, String target, String outputDir) {
 		String finalPath = "";
 		//System.out.println("Writing a zip file of " + dirPath + " to file " + outputName);
 		// this needs to zip the directory specified by Path dir and return the path to the zipped file
 		try {
+			
 			IPath path = new org.eclipse.core.runtime.Path(dirPath);
-			IPath parentPath = path.removeLastSegments(1);
-			parentDir = parentPath.toString();
+			parentDir = outputDir;
 			String lastSegment = path.lastSegment();
-			//System.out.println("Last segment: " + lastSegment);
-			//System.out.println("String dirPath: " + dirPath);
-			//System.out.println("Parent path: " + parentPath);
-			//System.out.println("Child path: " + path);
-			finalPath = parentDir + "/" + outputName;
+			
+			System.out.println("Last segment: " + lastSegment);
+			System.out.println("String dirPath: " + dirPath);
+			System.out.println("Child path: " + path);
+			//finalPath = parentDir + "/" + outputName;
+			finalPath = outputDir + org.eclipse.core.runtime.Path.SEPARATOR + outputName;
+			System.out.println("Final archive path: " + finalPath);
 			FileOutputStream fileOS = new FileOutputStream(finalPath);
 			ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(fileOS));
 			addEntries(dirPath, lastSegment, out, target, false);
@@ -200,7 +202,7 @@ public class PackageInfo {
 		}
 	}
 	
-	public void writePkgConfFile() {
+	public void writePkgConfFile(String pkgDir) {
 		File pkgConf = new File(parentDir + "/package.conf");
 		//System.out.println(pkgConf.getAbsolutePath());
 		PrintWriter writer = null;
@@ -219,10 +221,13 @@ public class PackageInfo {
 		writer.println("package-archive-md5=" + md5hash);
 		writer.println("package-archive-sha512=" + sha512hash);
 		//writer.println("package-dir=" + pkgName);
-		writer.println("package-dir=" + "package");
+		writer.println("package-dir=" + pkgDir);
 		writer.println("package-language=" + "Java");
 		writer.println("build-sys=" + buildSys);
 		if (!buildDir.equals("")) {
+			System.out.println("Build dir: " + buildDir);
+			System.out.println("Build file: " + buildFile);
+			System.out.println("Build target: " + buildTarget);
 			writer.println("build-dir=" + buildDir);
 			writer.println("build-file=" + buildFile);
 			writer.println("build-target=" + buildTarget);

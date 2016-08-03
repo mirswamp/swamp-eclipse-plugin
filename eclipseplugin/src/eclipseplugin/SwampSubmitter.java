@@ -103,6 +103,8 @@ public class SwampSubmitter {
 					}
 				}
 				ClasspathHandler classpathHandler = null;
+				String pathToArchive = null;
+				String pkgDir = null;
 				if (si.needsBuildFile()) {
 					out.println(Utils.getBracketedTimestamp() + "Status: Generating build file");
 					classpathHandler = generateBuildFiles(si.getProject(), si.packageSystemLibraries());
@@ -113,14 +115,22 @@ public class SwampSubmitter {
 						done(status);
 						return status; 
 					}
+					pkgDir = "package";
+					pathToArchive = ResourcesPlugin.getWorkspace().getRoot().getLocation().toOSString() + Path.SEPARATOR + "package";
+				}
+				else {
+					pkgDir = "."; // In top level directory
+					pathToArchive = si.getProjectPath();
+					// create archive from actual location
 				}
 				out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
-				PackageInfo pkgInfo = packageProject(si.getPackageName(), si.getPackageVersion(), si.getBuildSystem() , si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
+				PackageInfo pkgInfo = packageProject(si.getPackageName(), si.getPackageVersion(), pkgDir, pathToArchive, si.getBuildSystem() , si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
 				
 				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
 				String pkgVersUUID = uploadPackage(pkgInfo.getParentPath(), prjUUID, pkgInfo.getArchiveFilename(), si.isNewPackage());
 				
+				// TODO Can we move this up?
 				if (classpathHandler != null) {
 					classpathHandler.revertClasspath(ResourcesPlugin.getWorkspace().getRoot(), new HashSet<ClasspathHandler>());
 				}
@@ -183,12 +193,13 @@ public class SwampSubmitter {
 		return classpathHandler;
 	}
 	
-	private PackageInfo packageProject(String packageName, String packageVersion, String buildSystem, String buildDir, String buildFile, String buildTarget) {
+	private PackageInfo packageProject(String packageName, String packageVersion, String pkgDir, String path, String buildSystem, String buildDir, String buildFile, String buildTarget) {
 		// Zipping and generating package.conf
 		Date date = new Date();
 		String timestamp = date.toString();
 		//String path = cd.getPkgPath();
-		String path = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + "/package";
+		String workspacePath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
+		//String path =  workspacePath + Path.SEPARATOR  + "package";
 		String filename = timestamp + "-" + packageName + ".zip";
 		String filenameNoSpaces = filename.replace(" ", "-").replace(":", "").toLowerCase(); // PackageVersionHandler mangles the name for some reason if there are colons or uppercase letters
 		System.out.println("Package Name: " + packageName);
@@ -196,7 +207,7 @@ public class SwampSubmitter {
 		System.out.println("Filename: " + filenameNoSpaces);
 		// output name should be some combination of pkg name, version, timestamp, extension (.zip)
 		
-		PackageInfo pkg = new PackageInfo(path, filenameNoSpaces, packageName); // pass in path and output zip file name
+		PackageInfo pkg = new PackageInfo(path, filenameNoSpaces, packageName, workspacePath); // pass in path and output zip file name
 		
 		pkg.setPkgShortName(packageName);
 		pkg.setVersion(packageVersion);
@@ -205,7 +216,7 @@ public class SwampSubmitter {
 		pkg.setBuildFile(buildFile);
 		pkg.setBuildTarget(buildTarget);
 		
-		pkg.writePkgConfFile();
+		pkg.writePkgConfFile(pkgDir);
 
 		return pkg;
 	}

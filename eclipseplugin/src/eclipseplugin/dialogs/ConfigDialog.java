@@ -3,6 +3,7 @@ package eclipseplugin.dialogs;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
@@ -14,6 +15,7 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -25,13 +27,12 @@ import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.Project;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 
+import java.awt.Window;
 import java.util.List;
 
 public class ConfigDialog extends TitleAreaDialog {
 
 	/* Instance variables representing widgets */
-	private Text buildDirText;
-	private Text buildFileText;
 	private Text buildTargetText;
 	private Text prjFilePathText;
 	private Text pkgVersionText;
@@ -42,14 +43,18 @@ public class ConfigDialog extends TitleAreaDialog {
 	private Combo pkgTypeCombo;
 	private Combo buildSysCombo;
 	private Button packageRTButton;
+	private Button selectFileButton;
+	private Text buildPathText;
+	private String fullPath;
 	
-	/* Instatnce variables representing state */
+	private Shell shell;
+	
+	/* Instance variables representing state */
 	private List<Project> swampProjects;
 	private IProject[] eclipseProjects;
 	private List<PackageThing> swampPackages;
 
 	private String prjUUID;
-	private String pkgType;
 	
 	private SubmissionInfo submissionInfo;
 	private SwampApiWrapper api;
@@ -64,17 +69,15 @@ public class ConfigDialog extends TitleAreaDialog {
 		super(parentShell);
 		submissionInfo = si;
 		api = submissionInfo.getApi();
+		shell = parentShell;
 	}
 	
 	private void resetWidgets() {
-		buildDirText.setText("");
-		buildDirText.setEnabled(true);
-		buildFileText.setText("");
-		buildFileText.setEnabled(true);
+		buildPathText.setText("");
+		buildPathText.setEditable(false);
 		buildTargetText.setText("");
 		buildTargetText.setEnabled(true);
 		prjFilePathText.setText("");
-		prjFilePathText.setEnabled(false);
 		pkgVersionText.setText("");
 		pkgVersionText.setEnabled(false);  
 		pkgNameText.setText("");
@@ -208,66 +211,66 @@ public class ConfigDialog extends TitleAreaDialog {
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-		
+		int horizontalSpan = 2;
 		Composite container = new Composite(area, SWT.NONE);
 		
 		setTitle("Build Configuration");
 		
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		GridLayout layout = new GridLayout(2, false);
+		GridLayout layout = new GridLayout(4, false);
 		container.setLayout(layout);
 		
-		DialogUtil.initializeLabelWidget("SWAMP Project: ", SWT.NONE, container);
+		DialogUtil.initializeLabelWidget("SWAMP Project: ", SWT.NONE, container, horizontalSpan);
 		String swampPrjOptions[] = getSelectionElements(Type.SWAMP_PROJECT);
-		swampPrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), swampPrjOptions);
+		swampPrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), swampPrjOptions, horizontalSpan);
 		swampPrjCombo.addSelectionListener(new ComboSelectionListener(swampPrjCombo, Type.SWAMP_PROJECT));
 		
-		DialogUtil.initializeLabelWidget("SWAMP Package: ", SWT.NONE, container);
+		DialogUtil.initializeLabelWidget("SWAMP Package: ", SWT.NONE, container, horizontalSpan);
 		String pkgOptions[] = getSelectionElements(Type.PACKAGE);
-		pkgCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgOptions);
+		pkgCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgOptions, horizontalSpan);
 		pkgCombo.addSelectionListener(new ComboSelectionListener(pkgCombo, Type.PACKAGE));
 		pkgCombo.setEnabled(false);
 		
-		DialogUtil.initializeLabelWidget("New Package Name: ", SWT.NONE, container);
-		pkgNameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
+		DialogUtil.initializeLabelWidget("New Package Name: ", SWT.NONE, container, horizontalSpan);
+		pkgNameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
 		pkgNameText.setEnabled(false);
 		
-		DialogUtil.initializeLabelWidget("Package Version: ", SWT.NONE, container);
-		pkgVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));	
+		DialogUtil.initializeLabelWidget("Package Version: ", SWT.NONE, container, horizontalSpan);
+		pkgVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);	
 		pkgVersionText.setText(submissionInfo.getPackageVersion());
 		pkgVersionText.setEnabled(false);
 		
-		DialogUtil.initializeLabelWidget("Package Type: ", SWT.NONE, container);
+		DialogUtil.initializeLabelWidget("Package Type: ", SWT.NONE, container, horizontalSpan);
 		String pkgTypes[] = getSelectionElements(Type.PACKAGE_TYPE);
-		pkgTypeCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgTypes);
+		pkgTypeCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgTypes, horizontalSpan);
 		pkgTypeCombo.setEnabled(false);
 		
-		DialogUtil.initializeLabelWidget("Eclipse Project: ", SWT.NONE, container);
+		DialogUtil.initializeLabelWidget("Eclipse Project: ", SWT.NONE, container, horizontalSpan);
 		String eclipsePrjOptions[] = getSelectionElements(Type.ECLIPSE_PROJECT);
-		eclipsePrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), eclipsePrjOptions);
+		eclipsePrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), eclipsePrjOptions, horizontalSpan);
 		eclipsePrjCombo.addSelectionListener(new ComboSelectionListener(eclipsePrjCombo, Type.ECLIPSE_PROJECT));
 
-		DialogUtil.initializeLabelWidget("Filepath: ", SWT.NONE, container);
-		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
+		DialogUtil.initializeLabelWidget("Filepath: ", SWT.NONE, container, horizontalSpan);
+		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
+		prjFilePathText.setEditable(false);
 		
-		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container);
+		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container, horizontalSpan);
 		String[] buildSysOptions = getSelectionElements(Type.BUILD);
-		buildSysCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), buildSysOptions);		
+		buildSysCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), buildSysOptions, horizontalSpan);		
 		buildSysCombo.addSelectionListener(new ComboSelectionListener(buildSysCombo, Type.BUILD));
 		
-		DialogUtil.initializeLabelWidget("", SWT.NONE, container);
-		packageRTButton = DialogUtil.initializeButtonWidget(container, "Package System Libraries?", new GridData(SWT.FILL, SWT.NONE, true, false), SWT.CHECK);
+		DialogUtil.initializeLabelWidget("", SWT.NONE, container, horizontalSpan);
+		packageRTButton = DialogUtil.initializeButtonWidget(container, "Package System Libraries?", new GridData(SWT.FILL, SWT.NONE, true, false), SWT.CHECK, horizontalSpan);
 		packageRTButton.setEnabled(false);
 		
-		DialogUtil.initializeLabelWidget("Build Directory: ", SWT.NONE, container);
-		buildDirText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
-		buildDirText.setText(".");
+		DialogUtil.initializeLabelWidget("Build File: ", SWT.NONE, container, horizontalSpan);
+		buildPathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), 1);
+		buildPathText.setEditable(false);
+		selectFileButton = DialogUtil.initializeButtonWidget(container, " ... ", new GridData(SWT.FILL, SWT.NONE, false, false), SWT.PUSH, 1);
+		selectFileButton.addSelectionListener(new FileSelectionListener());
 
-		DialogUtil.initializeLabelWidget("Build File: ", SWT.NONE, container);
-		buildFileText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
-
-		DialogUtil.initializeLabelWidget("Build Target: ", SWT.NONE, container);
-		buildTargetText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
+		DialogUtil.initializeLabelWidget("Build Target: ", SWT.NONE, container, horizontalSpan);
+		buildTargetText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
 		
 		if (submissionInfo.isConfigInitialized()) {
 			setupSwampProject();
@@ -315,7 +318,6 @@ public class ConfigDialog extends TitleAreaDialog {
 			IProject project = eclipseProjects[index];	
 			prjFilePathText.setText(project.getLocation().toOSString());
 		}
-		prjFilePathText.setEnabled(false);	
 	}
 	
 	private void setupSwampProject() {
@@ -403,20 +405,22 @@ public class ConfigDialog extends TitleAreaDialog {
 		// TODO There is a more elegant way of handling build than hard coding these strings in multiple places
 		String buildSys =  buildSysCombo.getItem(index);
 		if (buildSys.equals(AUTO_GENERATE_BUILD_STRING) || buildSys.equals(NO_BUILD_STRING)) {
+			selectFileButton.setEnabled(false);
 			buildTargetText.setText("");
 			buildTargetText.setEnabled(false);
-			buildDirText.setText("");
-			buildDirText.setEnabled(false);
-			buildFileText.setText("");
-			buildFileText.setEnabled(false);
+			//buildDirText.setText("");
+			//buildDirText.setEnabled(false);
+			//buildFileText.setText("");
+			//buildFileText.setEnabled(false);
 			if (buildSys.equals(AUTO_GENERATE_BUILD_STRING)) {
 				packageRTButton.setEnabled(true);
 			}
 		}
 		else {
+			selectFileButton.setEnabled(true);
 			buildTargetText.setEnabled(true);
-			buildDirText.setEnabled(true);
-			buildFileText.setEnabled(true);
+			//buildDirText.setEnabled(true);
+			//buildFileText.setEnabled(true);
 			packageRTButton.setSelection(false);
 			packageRTButton.setEnabled(false);
 		}
@@ -471,23 +475,18 @@ public class ConfigDialog extends TitleAreaDialog {
 		
 		int buildIndex = buildSysCombo.getSelectionIndex();
 		if (buildIndex < 0) {
-			this.setMessage("Please select a build system");
+			this.setMessage("Please select a build system.");
 			return false;
 		}
 		String buildSysString = buildSysCombo.getItem(buildIndex);
 		if (buildSysString.equals(NO_BUILD_STRING) || buildSysString.equals(AUTO_GENERATE_BUILD_STRING)) {
 			return true;
 		}
-		
-		if (buildDirText.getText().equals("")) {
-			this.setMessage("Please enter a valid build directory");
-			return false;
-		}
-		if (buildFileText.getText().equals("")) {
-			this.setMessage("Please enter a valid build file");
+		if (buildPathText.getText().equals("")) { // TODO Add check to make sure build file is within project directory
+			this.setMessage("Please select a valid build file.");
 		}
 		if (buildTargetText.getText().equals("")) {
-			this.setMessage("Please enter a valid build target");
+			this.setMessage("Please enter a valid build target.");
 			return false;
 		}
 		return true;
@@ -523,14 +522,39 @@ public class ConfigDialog extends TitleAreaDialog {
 			
 			// eclipse project (actual IProject)
 			index = eclipsePrjCombo.getSelectionIndex();
-			submissionInfo.setProject(eclipseProjects[index]);
+			IProject project = eclipseProjects[index];
+			submissionInfo.setProject(project);
 			
 			// build system (build system info -- including for create_new...)
 			index = buildSysCombo.getSelectionIndex();
 			String buildSysStr = buildSysCombo.getItem(index);
-			submissionInfo.setBuildInfo(buildSysStr, buildSysStr.equals(AUTO_GENERATE_BUILD_STRING), buildDirText.getText(), buildFileText.getText(), buildTargetText.getText(), packageRTButton.getSelection());
+			String relativeDir = "";
+			String buildFile = "";
+			boolean createBuildFile = false;
+			if (buildSysStr.equals(AUTO_GENERATE_BUILD_STRING)) {
+				createBuildFile = true;
+			}
+			else {
+				relativeDir = getRelativeBuildDir(project.getLocation().toOSString(), fullPath);
+				buildFile = buildPathText.getText();
+				System.out.println("Relative Directory: " + relativeDir);
+				System.out.println("Build file: " + buildFile);
+			}
+			submissionInfo.setBuildInfo(buildSysStr, buildSysStr.equals(AUTO_GENERATE_BUILD_STRING), relativeDir, buildFile, buildTargetText.getText(), packageRTButton.getSelection());
+			//submissionInfo.setBuildInfo(buildSysStr, buildSysStr.equals(AUTO_GENERATE_BUILD_STRING), buildDirText.getText(), buildFileText.getText(), buildTargetText.getText(), packageRTButton.getSelection());
 			super.okPressed();
 		}
+	}
+	
+	private String getRelativeBuildDir(String projectDir, String buildPath) {
+		int index = projectDir.lastIndexOf(Path.SEPARATOR);
+		int fileIndex = buildPath.lastIndexOf(Path.SEPARATOR);
+		String relPath = buildPath.substring(index+1, fileIndex);
+		System.out.println("Rel path: " + relPath);
+		if (relPath.equals("")) {
+			relPath = ".";
+		}
+		return relPath;
 	}
 	
 	private class ComboSelectionListener implements SelectionListener {
@@ -577,5 +601,32 @@ public class ConfigDialog extends TitleAreaDialog {
 		@Override
 		public void widgetDefaultSelected(SelectionEvent e) {
 		}
+	}
+	
+	private class FileSelectionListener implements SelectionListener {
+		public FileSelectionListener() {
+		}
+		
+		@Override
+		public void widgetSelected(SelectionEvent e) {
+			FileDialog dialog = new FileDialog(shell);
+			String path = prjFilePathText.getText();
+			if (path.equals("")) {
+				path = ResourcesPlugin.getWorkspace().getRoot().getLocation().toOSString();
+			}
+			dialog.setFilterPath(path);
+			String rc = dialog.open();
+			fullPath = rc;
+			if (rc != null) {
+				String lastSegment = rc.substring(rc.lastIndexOf(Path.SEPARATOR)+1);
+				buildPathText.setText(lastSegment);
+			}
+		}
+		
+		@Override
+		public void widgetDefaultSelected(SelectionEvent e) {
+			
+		}
+		
 	}
 }

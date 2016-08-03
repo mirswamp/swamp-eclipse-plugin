@@ -123,6 +123,10 @@ public class ClasspathHandler {
 		
 	}
 	
+	public String getRootPath() {
+		return this.root.path;
+	}
+	
 	public boolean hasCycles() {
 		return hasCycles;
 	}

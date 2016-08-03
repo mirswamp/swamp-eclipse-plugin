@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.wisc.cs.swamp.SwampApiWrapper;
@@ -180,7 +182,7 @@ public class SubmissionInfo {
 		return packageSystemLibs;
 	}
 	
-	public void setBuildInfo(String buildSys, boolean needsBuildFile, String dir, String file, String target, boolean packageRTLibs) {
+	public void setBuildInfo(String buildSys, boolean needsBuildFile, String buildDir, String buildFile, String target, boolean packageRTLibs) {
 		if (needsBuildFile) {
 			createBuildFile = true;
 			buildSystem = "ant";
@@ -197,8 +199,8 @@ public class SubmissionInfo {
 		}
 		else {
 			buildSystem = buildSys;
-			buildDirectory = dir;
-			buildFile = file;
+			buildDirectory = buildDir;
+			this.buildFile = buildFile;
 			buildTarget = target;
 		}
 	}
