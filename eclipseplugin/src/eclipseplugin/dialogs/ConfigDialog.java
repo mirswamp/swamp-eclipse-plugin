@@ -305,6 +305,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		String MAVEN_BUILD = "pom.xml";
 		String MAKE_UPPERCASE = "Makefile";
 		String MAKE_LOWERCASE = "makefile";
+		String path = project.getLocation().toOSString();
 		IProjectDescription description = null;
 		try {
 			description = project.getDescription();
@@ -319,17 +320,17 @@ public class ConfigDialog extends TitleAreaDialog {
 				System.out.println("Nature " + i + ": " + nature);
 				if (nature.equals(GRADLE_NATURE)) {
 					setBuildSystem("ant");
+					setBuildPath(path, ANT_BUILD);
 					return;
 				}
 				if (nature.equals(MAVEN_NATURE)) {
 					setBuildSystem("Maven");
+					setBuildPath(path, MAVEN_BUILD);
 					return;
 				}
 			}
 		}
 		// (2) File approach
-		String path = project.getLocation().toOSString();
-		System.out.println("Filepath: " + path);
 		File file = new File(path);
 		String files[] = file.list();
 		
@@ -363,6 +364,17 @@ public class ConfigDialog extends TitleAreaDialog {
 			}
 		}
 		buildSysCombo.deselectAll();
+		buildPathText.setText("");
+	}
+	
+	private void setBuildPath(String dirPath, String filename) {
+		File file = new File(dirPath);
+		for (String f : file.list()) {
+			if (f.equals(filename)) {
+				buildPathText.setText(dirPath + SEPARATOR + file);
+				return;
+			}
+		}
 		buildPathText.setText("");
 	}
 	
