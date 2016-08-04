@@ -2,8 +2,6 @@ High:
 
 
 Medium:
--Issue with serialization
--Project filepath not initializing properly
+
 
 Low:
--fileSelectionButton and buildPathText should be disabled/uneditable more intuitively

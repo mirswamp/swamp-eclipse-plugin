@@ -188,14 +188,14 @@ public class SubmissionInfo {
 			buildSystem = "ant";
 			buildTarget = "build";
 			buildDirectory = "." + project.getName();
-			buildFile = "build.xml";
+			this.buildFile = "build.xml";
 			packageSystemLibs = packageRTLibs;
 		}
 		else if (buildSys.equals(NO_BUILD_STRING)) {
 			buildSystem = "no-build";
 			buildTarget = "";
 			buildDirectory = "";
-			buildFile = "";
+			this.buildFile = "";
 		}
 		else {
 			buildSystem = buildSys;

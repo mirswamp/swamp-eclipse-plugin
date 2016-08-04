@@ -305,6 +305,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			if (project.equals(eclipseProjects[i])) {
 				eclipsePrjCombo.select(i);
 				handleEclipseProjectSelection(i);
+				return;
 			}
 		}
 		handleEclipseProjectSelection(-1);
@@ -408,10 +409,8 @@ public class ConfigDialog extends TitleAreaDialog {
 			selectFileButton.setEnabled(false);
 			buildTargetText.setText("");
 			buildTargetText.setEnabled(false);
-			//buildDirText.setText("");
-			//buildDirText.setEnabled(false);
-			//buildFileText.setText("");
-			//buildFileText.setEnabled(false);
+			buildPathText.setText("");
+			buildPathText.setEnabled(false);
 			if (buildSys.equals(AUTO_GENERATE_BUILD_STRING)) {
 				packageRTButton.setEnabled(true);
 			}
@@ -419,8 +418,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		else {
 			selectFileButton.setEnabled(true);
 			buildTargetText.setEnabled(true);
-			//buildDirText.setEnabled(true);
-			//buildFileText.setEnabled(true);
+			buildPathText.setEnabled(true);
 			packageRTButton.setSelection(false);
 			packageRTButton.setEnabled(false);
 		}
