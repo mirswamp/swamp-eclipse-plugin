@@ -96,7 +96,7 @@ public class CycleDetector {
 			}
 				
 			for (IProject proj : projects) {
-				String path = proj.getFullPath().makeAbsolute().toString();
+				String path = proj.getFullPath().makeAbsolute().toOSString();
 				System.out.println("Key: " + path);
 				//IPath path = proj.getFullPath();
 				int v;

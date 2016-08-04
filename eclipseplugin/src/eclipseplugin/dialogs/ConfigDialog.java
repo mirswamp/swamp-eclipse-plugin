@@ -3,7 +3,6 @@ package eclipseplugin.dialogs;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
@@ -26,8 +25,8 @@ import eclipseplugin.Utils;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.Project;
 import edu.wisc.cs.swamp.SwampApiWrapper;
+import static org.eclipse.core.runtime.Path.SEPARATOR;
 
-import java.awt.Window;
 import java.util.List;
 
 public class ConfigDialog extends TitleAreaDialog {
@@ -538,15 +537,15 @@ public class ConfigDialog extends TitleAreaDialog {
 				System.out.println("Relative Directory: " + relativeDir);
 				System.out.println("Build file: " + buildFile);
 			}
-			submissionInfo.setBuildInfo(buildSysStr, buildSysStr.equals(AUTO_GENERATE_BUILD_STRING), relativeDir, buildFile, buildTargetText.getText(), packageRTButton.getSelection());
+			submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relativeDir, buildFile, buildTargetText.getText(), packageRTButton.getSelection());
 			//submissionInfo.setBuildInfo(buildSysStr, buildSysStr.equals(AUTO_GENERATE_BUILD_STRING), buildDirText.getText(), buildFileText.getText(), buildTargetText.getText(), packageRTButton.getSelection());
 			super.okPressed();
 		}
 	}
 	
 	private String getRelativeBuildDir(String projectDir, String buildPath) {
-		int index = projectDir.lastIndexOf(Path.SEPARATOR);
-		int fileIndex = buildPath.lastIndexOf(Path.SEPARATOR);
+		int index = projectDir.lastIndexOf(SEPARATOR);
+		int fileIndex = buildPath.lastIndexOf(SEPARATOR);
 		String relPath = buildPath.substring(index+1, fileIndex);
 		System.out.println("Rel path: " + relPath);
 		if (relPath.equals("")) {
@@ -616,7 +615,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			String rc = dialog.open();
 			fullPath = rc;
 			if (rc != null) {
-				String lastSegment = rc.substring(rc.lastIndexOf(Path.SEPARATOR)+1);
+				String lastSegment = rc.substring(rc.lastIndexOf(SEPARATOR)+1);
 				buildPathText.setText(lastSegment);
 			}
 		}

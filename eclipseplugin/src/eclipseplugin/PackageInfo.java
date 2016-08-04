@@ -17,6 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.apache.commons.codec.binary.Hex;
+import static org.eclipse.core.runtime.Path.SEPARATOR;
 
 import org.eclipse.core.runtime.IPath;
 
@@ -27,7 +28,6 @@ public class PackageInfo {
 	private String zipPath;
 	private String md5hash;
 	private String sha512hash;
-	private String pkgName;
 	private String buildSys;
 	private String buildTarget;
 	private String parentDir;
@@ -41,8 +41,6 @@ public class PackageInfo {
 		buildDir = ".";
 		zipName = outputName;
 		zipPath = zipPackage(dirPath, outputName, targetDir, outputDir);
-		
-		this.pkgName = pkgName;
 		
 		MessageDigest md5 = null;
 		MessageDigest sha512 = null;
@@ -79,7 +77,7 @@ public class PackageInfo {
 	public void deleteFiles() {
 		// Delete the archive and package.conf
 		deleteFile(zipPath);
-		deleteFile(parentDir + "/package.conf");
+		deleteFile(parentDir + SEPARATOR + "package.conf");
 	}
 	
 	private String getDigest(byte[] bytes, MessageDigest m) {
@@ -133,8 +131,7 @@ public class PackageInfo {
 			System.out.println("Last segment: " + lastSegment);
 			System.out.println("String dirPath: " + dirPath);
 			System.out.println("Child path: " + path);
-			//finalPath = parentDir + "/" + outputName;
-			finalPath = outputDir + org.eclipse.core.runtime.Path.SEPARATOR + outputName;
+			finalPath = outputDir + SEPARATOR + outputName;
 			System.out.println("Final archive path: " + finalPath);
 			FileOutputStream fileOS = new FileOutputStream(finalPath);
 			ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(fileOS));
@@ -162,17 +159,17 @@ public class PackageInfo {
 		*/
 		
 		for (int i = 0; i < files.length; i++) {
-			filename = pathname + "/" + files[i];
+			filename = pathname + SEPARATOR + files[i];
 			//System.out.println("Filename: " + filename);
 			File f = new File(filename);
 			//System.out.println(f);
 			if (f.isDirectory()) {
 				boolean excl = (files[i].equals(target)) ? true : excludeClass;
-				addEntries(filename, basePath + "/" + files[i], out, target, excl);
+				addEntries(filename, basePath + SEPARATOR + files[i], out, target, excl);
 			}
 			else {
 				if ((!excludeClass) || (!files[i].matches(".+\\.class"))) {
-					addFileToZip(filename, basePath + "/" + files[i], out);
+					addFileToZip(filename, basePath + SEPARATOR + files[i], out);
 				}
 				else {
 					//System.out.println("Excluded Class: " + files[i]);
@@ -203,7 +200,7 @@ public class PackageInfo {
 	}
 	
 	public void writePkgConfFile(String pkgDir) {
-		File pkgConf = new File(parentDir + "/package.conf");
+		File pkgConf = new File(parentDir + SEPARATOR + "package.conf");
 		//System.out.println(pkgConf.getAbsolutePath());
 		PrintWriter writer = null;
 		try {

@@ -20,13 +20,14 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import static org.eclipse.core.runtime.Path.SEPARATOR;
 
 /* This class is to do the actual generation of the buildfiles */
 public class BuildfileGenerator {
 	
 	private static String 	CLASSPATH_NAME 		= "project.classpath";
 	private static String 	SWAMPBIN_NAME 		= "swampbin";
-	private static String 	SWAMPBIN_REL_PATH 	= "../.swampbin";//"package/.swampbin";
+	private static String 	SWAMPBIN_REL_PATH 	= ".." + SEPARATOR + ".swampbin";
 	private static String 	BUILDFILE_NAME		= "build.xml";
 	private static int 		INDENT_SPACES 		= 4;
 
@@ -62,8 +63,8 @@ public class BuildfileGenerator {
 			Transformer transformer = transformerFactory.newTransformer();
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 			DOMSource source = new DOMSource(doc);
-			System.out.println("File written to: " + project.getProjectPath() + "/" + BUILDFILE_NAME);
-			StreamResult result = new StreamResult(new File(project.getProjectPath() + "/" + BUILDFILE_NAME));
+			System.out.println("File written to: " + project.getProjectPath() + SEPARATOR + BUILDFILE_NAME);
+			StreamResult result = new StreamResult(new File(project.getProjectPath() + SEPARATOR + BUILDFILE_NAME));
 			transformer.transform(source, result);
 			
 		} catch (ParserConfigurationException p) {
@@ -114,7 +115,7 @@ public class BuildfileGenerator {
 			// TODO get the actual filename (I don't think entry.toString() will do it
 			Element pathElement = doc.createElement("pathelement");
 			String name = entry.getPath().lastSegment();
-			pathElement.setAttribute("location", swampbin + "/" + name);
+			pathElement.setAttribute("location", swampbin + SEPARATOR + name);
 			path.appendChild(pathElement);
 		}
 		root.appendChild(path);
@@ -143,7 +144,7 @@ public class BuildfileGenerator {
 			System.out.println("Relative path: " + dir.substring(index+1));
 			return dir.substring(index + projectName.length() + 1);
 		}
-		index = dir.indexOf("package/");
+		index = dir.indexOf("package" + SEPARATOR);
 		if (index > -1) {
 			// this is an absolute path
 			System.out.println(".." + dir.substring(index + "package".length()));
@@ -168,14 +169,14 @@ public class BuildfileGenerator {
 		root.appendChild(target);
 		
 		for (ClasspathHandler c : list) {
-			String filepath = c.getProjectPath() + "/" + BUILDFILE_NAME;
+			String filepath = c.getProjectPath() + SEPARATOR + BUILDFILE_NAME;
 			if (!new File(filepath).exists()) {
 				BuildfileGenerator.generateBuildFile(c);
 			}
-			String relPath = "../" + c.getProjectName() + "/" + BUILDFILE_NAME;
+			String relPath = ".." + SEPARATOR + c.getProjectName() + SEPARATOR + BUILDFILE_NAME;
 			Element ant = doc.createElement("ant");
 			ant.setAttribute("antfile", relPath); 
-			ant.setAttribute("dir", "../" + c.getProjectName());
+			ant.setAttribute("dir", ".." + SEPARATOR + c.getProjectName());
 			ant.setAttribute("target", "build");
 			target.appendChild(ant);
 		}
@@ -202,12 +203,12 @@ public class BuildfileGenerator {
 			javac.setAttribute("target", "${target}");
 			
 			Element src = doc.createElement("src");
-			IPath absPath = entry.getPath().makeAbsolute();
+			String absPath = entry.getPath().makeAbsolute().toOSString();
 
 			addInclusionExclusionPatterns(doc, javac, "include", entry.getInclusionPatterns());
 			addInclusionExclusionPatterns(doc, javac, "exclude", entry.getExclusionPatterns());
 	
-			String strRelPath = relativizeDirectory(absPath.toString(), projectName);
+			String strRelPath = relativizeDirectory(absPath, projectName);
 			System.out.println("Made relative: " + strRelPath);
 			src.setAttribute("path", strRelPath);
 			javac.appendChild(src);

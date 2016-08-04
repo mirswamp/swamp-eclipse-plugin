@@ -12,7 +12,6 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
@@ -42,6 +41,8 @@ import edu.wisc.cs.swamp.exceptions.IncompatibleAssessmentTupleException;
 import edu.wisc.cs.swamp.exceptions.InvalidIdentifierException;
 import edu.wisc.cs.swamp.exceptions.SessionExpiredException;
 import edu.wisc.cs.swamp.exceptions.SessionRestoreException;
+
+import static org.eclipse.core.runtime.Path.SEPARATOR;
 
 public class SwampSubmitter {
 
@@ -116,7 +117,7 @@ public class SwampSubmitter {
 						return status; 
 					}
 					pkgDir = "package";
-					pathToArchive = ResourcesPlugin.getWorkspace().getRoot().getLocation().toOSString() + Path.SEPARATOR + "package";
+					pathToArchive = ResourcesPlugin.getWorkspace().getRoot().getLocation().toOSString() + SEPARATOR + "package";
 				}
 				else {
 					pkgDir = "."; // In top level directory
@@ -224,12 +225,12 @@ public class SwampSubmitter {
 	private String uploadPackage(String parentDir, String prjUUID, String filename, boolean newPackage) {
 		// Upload package
 		System.out.println("Uploading package");
-		System.out.println("Package-conf directory: " + parentDir + "/package.conf");
-		System.out.println("Archive directory: " + parentDir + "/" + filename);
+		System.out.println("Package-conf directory: " + parentDir + SEPARATOR +"package.conf");
+		System.out.println("Archive directory: " + parentDir + SEPARATOR + filename);
 		System.out.println("Project UUID: " + prjUUID);
 		String pkgVersUUID = null;
 		try {
-			pkgVersUUID = api.uploadPackage(parentDir + "/package.conf", parentDir + "/" + filename, prjUUID, newPackage);
+			pkgVersUUID = api.uploadPackage(parentDir + SEPARATOR + "package.conf", parentDir + SEPARATOR + filename, prjUUID, newPackage);
 		} catch (InvalidIdentifierException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -288,7 +289,7 @@ public class SwampSubmitter {
 			configFilepath = null;
 		}
 		else {
-			configFilepath = configPath + File.separator + CONFIG_FILENAME;
+			configFilepath = configPath + SEPARATOR + CONFIG_FILENAME;
 		}
 		SubmissionInfo si = new SubmissionInfo(this.api);
 		if ((configFilepath == null) || (!new File(configFilepath).exists())) {
@@ -325,7 +326,7 @@ public class SwampSubmitter {
 				pd = new PlatformDialog(window.getShell(), si);
 				pd.create();
 				if (pd.open() == Window.OK) {
-					configFilepath = si.getProjectPath() + Path.SEPARATOR + CONFIG_FILENAME;
+					configFilepath = si.getProjectPath() + SEPARATOR + CONFIG_FILENAME;
 					FileSerializer.serializeSubmissionInfo(configFilepath, si);
 					runBackgroundJob(si, false);
 				}
@@ -366,7 +367,7 @@ public class SwampSubmitter {
 			configFilepath = null;
 		}
 		else {
-			configFilepath = configPath + File.separator + CONFIG_FILENAME;
+			configFilepath = configPath + SEPARATOR + CONFIG_FILENAME;
 		}
 		if ((configFilepath != null) && (new File(configFilepath).exists())) {
 			boolean returnCode = FileSerializer.deserializeSubmissionInfo(configFilepath, si);

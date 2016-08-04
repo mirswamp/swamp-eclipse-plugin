@@ -3,12 +3,11 @@ TODO:
 Immediate:
 -Queueing background jobs
 -Handling nested projects
--Add login/logout functionality when functionality has been added to SwampApiWrapper
--Make portable
 
 Testing:
 -Test automatic export
 -Test assessment submission in general
+-Test with multiple source directories and multiple output destination directories
 -Test on other types of builds (i.e. preconfigured builds)
 -Add handling for when assessment results come in (?)
 -Test on Windows
@@ -34,3 +33,5 @@ DONE:
 -Minor UX improvements from SWAMP API improvements (only showing tools/platforms for a given language, checking tool-platform pair compatibility before submitting)
 -Use smaller SWAMP icon
 -More descriptive console messages (time-stamped and with Project and Package names)
+-Make portable
+-Add login/logout functionality when functionality has been added to SwampApiWrapper

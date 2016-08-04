@@ -25,9 +25,8 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
-import org.eclipse.ui.console.MessageConsole;
-import org.eclipse.ui.console.MessageConsoleStream;
 import org.apache.commons.io.*;
+import static org.eclipse.core.runtime.Path.SEPARATOR;
 
 public class ClasspathHandler {
 
@@ -81,9 +80,9 @@ public class ClasspathHandler {
 				return;
 			}
 			this.root = this;
-			this.path = path + "/" + PACKAGE_DIR;
+			this.path = path + SEPARATOR + PACKAGE_DIR;
 			setupDirectory(this.path);
-			targetDir = setupDirectory(this.path + "/" + BIN_DIR);
+			targetDir = setupDirectory(this.path + SEPARATOR + BIN_DIR);
 
 			IProject newProject = setupProject(projectRoot.getProject(), this.oldEntries);
 			this.project = JavaCore.create(newProject);
@@ -96,7 +95,7 @@ public class ClasspathHandler {
 		dependentProjects = new ArrayList<ClasspathHandler>();
 		projectsVisited = new HashSet<String>();
 		// TODO Is project set appropriately at this point? --> It should be
-		projectPath = this.root.path + "/" + this.project.getProject().getName();
+		projectPath = this.root.path + SEPARATOR + this.project.getProject().getName();
 
 		for (IClasspathEntry entry : oldEntries) {
 			System.out.println(entry.getPath());
@@ -343,7 +342,7 @@ public class ClasspathHandler {
 				srcPath = uri.getPath();
 			}
 			prjName = project.getName();
-			destPath = this.root.path + "/." + prjName;
+			destPath = this.root.path + SEPARATOR + "." + prjName;
 			System.out.println("Dest path: " + destPath);
 			ClasspathHandler.copyDirectory(srcPath, destPath);
 		} catch (Exception e) {
@@ -389,7 +388,7 @@ public class ClasspathHandler {
 		String newOutputLoc = originalOutputLoc.replace(prjName, "." + prjName);
 		System.out.println("New output location: " + newOutputLoc);
 		//String relPath = BuildfileGenerator.makeRelative(newOutputLoc, "." + prjName);
-		//String absPath = destPath + "/" + relPath;
+		//String absPath = destPath + SEPARATOR + relPath;
 		
 		//IFolder binDir = newProject.getFolder("bin");
 		//IPath binPath = binDir.getFullPath();
@@ -454,8 +453,7 @@ public class ClasspathHandler {
 			newEntry = entry;
 		}
 		else {
-			IPath path = entry.getPath().makeAbsolute();
-			String strPath = path.toString();
+			String strPath = entry.getPath().toOSString();
 			if (this.root.entryCache.containsKey(strPath)) {
 				newEntry = this.root.entryCache.get(strPath);
 			}
@@ -553,8 +551,8 @@ public class ClasspathHandler {
 			System.out.println("Classpath entry points to non-existent file: " + src);
 			return null;
 		}
-		//File f = new File(this.root.targetDir.getAbsolutePath() + "/" + lastSegment);
-		File f = new File(this.root.targetDir.getAbsolutePath() + "/" + strPath);
+		//File f = new File(this.root.targetDir.getAbsolutePath() + SEPARATOR + lastSegment);
+		File f = new File(this.root.targetDir.getAbsolutePath() + SEPARATOR + strPath);
 		Path dest = f.toPath();
 		try {
 			System.out.println("Written to destination: " + dest);
