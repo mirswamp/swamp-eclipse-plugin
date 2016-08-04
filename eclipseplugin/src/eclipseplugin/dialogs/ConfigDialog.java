@@ -1,6 +1,7 @@
 package eclipseplugin.dialogs;
 
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -27,6 +28,7 @@ import edu.uiuc.ncsa.swamp.api.Project;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 import static org.eclipse.core.runtime.Path.SEPARATOR;
 
+import java.io.File;
 import java.util.List;
 
 public class ConfigDialog extends TitleAreaDialog {
@@ -100,7 +102,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	private void setEclipseProjectDefault() {
 		if (eclipsePrjCombo.getItemCount() == 1) {
 			eclipsePrjCombo.select(0);
-			handleEclipseProjectSelection(0);
+			handleEclipseProjectSelection(0, false);
 		}
 	}
 	
@@ -288,12 +290,87 @@ public class ConfigDialog extends TitleAreaDialog {
 	private void setupPackageType() {
 		// get the appropriate pkgType String, not the index
 		String pkgType = submissionInfo.getPackageType();
-		System.out.println("Package Type: |" + pkgType + "|");
 		for (int i = 0; i < pkgTypeCombo.getItemCount(); i++) {
-			System.out.println("Package type in combo: |" + pkgTypeCombo.getItem(i) + "|");
 			if (pkgTypeCombo.getItem(i).equals(pkgType)) {
 				pkgTypeCombo.select(i);
 				return;
+			}
+		}
+	}
+	
+	private void setPredictedBuildSys(IProject project) {
+		String GRADLE_NATURE = "org.eclipse.buildship.core.gradleprojectnature";
+		String MAVEN_NATURE = "org.eclipse.m2e.core.maven2Nature";
+		String ANT_BUILD = "build.xml"; // this could be ant or ant+Ivy
+		String MAVEN_BUILD = "pom.xml";
+		String MAKE_UPPERCASE = "Makefile";
+		String MAKE_LOWERCASE = "makefile";
+		IProjectDescription description = null;
+		try {
+			description = project.getDescription();
+		} catch (CoreException e) {
+			return;
+		}
+		if (description != null) {
+			String[] natures = description.getNatureIds();
+			// (1) nature approach
+			for (int i = 0; i < natures.length; i++) {
+				String nature = natures[i];
+				System.out.println("Nature " + i + ": " + nature);
+				if (nature.equals(GRADLE_NATURE)) {
+					setBuildSystem("ant");
+					return;
+				}
+				if (nature.equals(MAVEN_NATURE)) {
+					setBuildSystem("Maven");
+					return;
+				}
+			}
+		}
+		// (2) File approach
+		String path = project.getLocation().toOSString();
+		System.out.println("Filepath: " + path);
+		File file = new File(path);
+		String files[] = file.list();
+		
+		for (int i = 0; i < files.length; i++) {
+			String filename = files[i];
+			System.out.println("Filename: " + filename);
+			String filepath = path + SEPARATOR + filename;
+			File f = new File(filepath);
+			if (f.isDirectory()) {
+				continue;
+			}
+			if (filename.equals(ANT_BUILD)) {
+				setBuildSystem("ant");
+				buildPathText.setText(filepath);
+				return;
+			}
+			if (filename.equals(MAVEN_BUILD)) {
+				setBuildSystem("Maven");
+				buildPathText.setText(filepath);
+				return;
+			}
+			if (filename.equals(MAKE_UPPERCASE)) {
+				setBuildSystem("make");
+				buildPathText.setText(filepath);
+				return;
+			}
+			if (filename.equals(MAKE_LOWERCASE)) {
+				setBuildSystem("make");
+				buildPathText.setText(filepath);
+				return;
+			}
+		}
+		buildSysCombo.deselectAll();
+		buildPathText.setText("");
+	}
+	
+	private void setBuildSystem(String buildSys) {
+		for (int i = 0; i < buildSysCombo.getItemCount(); i++) {
+			if (buildSysCombo.getItem(i).equals(buildSys)) {
+				buildSysCombo.select(i);
+				handleBuildSelection(i);
 			}
 		}
 	}
@@ -303,20 +380,23 @@ public class ConfigDialog extends TitleAreaDialog {
 		for (int i = 0; i < eclipseProjects.length; i++) {
 			if (project.equals(eclipseProjects[i])) {
 				eclipsePrjCombo.select(i);
-				handleEclipseProjectSelection(i);
+				handleEclipseProjectSelection(i, true);
 				return;
 			}
 		}
-		handleEclipseProjectSelection(-1);
+		handleEclipseProjectSelection(-1, true);
 	}
 	
-	private void handleEclipseProjectSelection(int index) {
+	private void handleEclipseProjectSelection(int index, boolean fromFile) {
 		if (index < 0) {
 			prjFilePathText.setText("");
 		}
 		else {
 			IProject project = eclipseProjects[index];	
 			prjFilePathText.setText(project.getLocation().toOSString());
+			if (!fromFile) {
+				setPredictedBuildSys(project);
+			}
 		}
 	}
 	
@@ -366,7 +446,6 @@ public class ConfigDialog extends TitleAreaDialog {
 			}
 		}
 		handlePackageSelection(-1);
-		// if "Create new package" selected, enable the text box
 	}
 	
 	private void handlePackageSelection(int index) {
@@ -538,7 +617,6 @@ public class ConfigDialog extends TitleAreaDialog {
 				System.out.println("Build file: " + buildFile);
 			}
 			submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relativeDir, buildFile, buildTargetText.getText(), packageRTButton.getSelection());
-			//submissionInfo.setBuildInfo(buildSysStr, buildSysStr.equals(AUTO_GENERATE_BUILD_STRING), buildDirText.getText(), buildFileText.getText(), buildTargetText.getText(), packageRTButton.getSelection());
 			super.okPressed();
 		}
 	}
@@ -573,7 +651,7 @@ public class ConfigDialog extends TitleAreaDialog {
 				handleSwampProjectSelection(selection);
 			}
 			else if (type == Type.ECLIPSE_PROJECT) {
-				handleEclipseProjectSelection(selection);
+				handleEclipseProjectSelection(selection, false);
 			}
 			else if (type == Type.PACKAGE){ 
 				handlePackageSelection(selection);
