@@ -5,6 +5,7 @@ import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -61,6 +62,18 @@ public class ConfigDialog extends TitleAreaDialog {
 	private SwampApiWrapper api;
 	
 	private static int CREATE_NEW_PACKAGE = 0;
+	private static final String CONFIG_TITLE = "Build Configuration";
+	
+	private static final String SWAMP_PROJECT_HELP 				= "Select the SWAMP project that contains the package you want to assess. New projects can only be created using the SWAMP web interface.";
+	private static final String SWAMP_PACKAGE_HELP 				= "Select the SWAMP package you want to assess or select \"Create a new package\".";
+	private static final String NEW_PACKAGE_HELP 				= "Enter the name of your new package.";
+	private static final String PACKAGE_VERSION_HELP			= "Enter the version of your package that you are submitting now.";
+	private static final String PACKAGE_TYPE_HELP				= "Select the type of the package that you are uploading.";
+	private static final String ECLIPSE_PROJECT_HELP			= "Select the Eclipse project in your workspace to upload to the SWAMP.";
+	private static final String BUILD_SYSTEM_HELP				= "Select the build system of your project or select \"Auto-generate build file\".";
+	private static final String BUILD_TARGET_HELP				= "Select the build target in the build file.";
+	private static final String SELECT_FILE_HELP				= "Select the build file for this project.";
+	private static final String PACKAGE_SYSTEM_LIBRARIES_HELP 	= "Select this option to upload system libraries (e.g. JDK) to the SWAMP. By default, they will not be uploaded.";
 	
 	private enum Type {
 		PACKAGE_TYPE, ECLIPSE_PROJECT, BUILD, PACKAGE, SWAMP_PROJECT
@@ -215,7 +228,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		int horizontalSpan = 2;
 		Composite container = new Composite(area, SWT.NONE);
 		
-		setTitle("Build Configuration");
+		setTitle(CONFIG_TITLE);
 		
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		GridLayout layout = new GridLayout(4, false);
@@ -225,31 +238,38 @@ public class ConfigDialog extends TitleAreaDialog {
 		String swampPrjOptions[] = getSelectionElements(Type.SWAMP_PROJECT);
 		swampPrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), swampPrjOptions, horizontalSpan);
 		swampPrjCombo.addSelectionListener(new ComboSelectionListener(swampPrjCombo, Type.SWAMP_PROJECT));
+		swampPrjCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, SWAMP_PROJECT_HELP));
 		
 		DialogUtil.initializeLabelWidget("SWAMP Package: ", SWT.NONE, container, horizontalSpan);
 		String pkgOptions[] = getSelectionElements(Type.PACKAGE);
 		pkgCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgOptions, horizontalSpan);
 		pkgCombo.addSelectionListener(new ComboSelectionListener(pkgCombo, Type.PACKAGE));
 		pkgCombo.setEnabled(false);
+		pkgCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, SWAMP_PACKAGE_HELP));
+
 		
 		DialogUtil.initializeLabelWidget("New Package Name: ", SWT.NONE, container, horizontalSpan);
 		pkgNameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
 		pkgNameText.setEnabled(false);
+		pkgNameText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, NEW_PACKAGE_HELP));
 		
 		DialogUtil.initializeLabelWidget("Package Version: ", SWT.NONE, container, horizontalSpan);
 		pkgVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);	
 		pkgVersionText.setText(submissionInfo.getPackageVersion());
 		pkgVersionText.setEnabled(false);
+		pkgVersionText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_VERSION_HELP));
 		
 		DialogUtil.initializeLabelWidget("Package Type: ", SWT.NONE, container, horizontalSpan);
 		String pkgTypes[] = getSelectionElements(Type.PACKAGE_TYPE);
 		pkgTypeCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgTypes, horizontalSpan);
 		pkgTypeCombo.setEnabled(false);
+		pkgTypeCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_TYPE_HELP));
 		
 		DialogUtil.initializeLabelWidget("Eclipse Project: ", SWT.NONE, container, horizontalSpan);
 		String eclipsePrjOptions[] = getSelectionElements(Type.ECLIPSE_PROJECT);
 		eclipsePrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), eclipsePrjOptions, horizontalSpan);
 		eclipsePrjCombo.addSelectionListener(new ComboSelectionListener(eclipsePrjCombo, Type.ECLIPSE_PROJECT));
+		eclipsePrjCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, ECLIPSE_PROJECT_HELP));
 
 		DialogUtil.initializeLabelWidget("Filepath: ", SWT.NONE, container, horizontalSpan);
 		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
@@ -259,19 +279,25 @@ public class ConfigDialog extends TitleAreaDialog {
 		String[] buildSysOptions = getSelectionElements(Type.BUILD);
 		buildSysCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), buildSysOptions, horizontalSpan);		
 		buildSysCombo.addSelectionListener(new ComboSelectionListener(buildSysCombo, Type.BUILD));
+		buildSysCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, BUILD_SYSTEM_HELP));
 		
 		DialogUtil.initializeLabelWidget("", SWT.NONE, container, horizontalSpan);
 		packageRTButton = DialogUtil.initializeButtonWidget(container, "Package System Libraries?", new GridData(SWT.FILL, SWT.NONE, true, false), SWT.CHECK, horizontalSpan);
 		packageRTButton.setEnabled(false);
+		packageRTButton.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_SYSTEM_LIBRARIES_HELP));
 		
 		DialogUtil.initializeLabelWidget("Build File: ", SWT.NONE, container, horizontalSpan);
 		buildPathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), 1);
 		buildPathText.setEditable(false);
+		pkgTypeCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_TYPE_HELP));
+
 		selectFileButton = DialogUtil.initializeButtonWidget(container, " ... ", new GridData(SWT.FILL, SWT.NONE, false, false), SWT.PUSH, 1);
 		selectFileButton.addSelectionListener(new FileSelectionListener());
+		selectFileButton.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, SELECT_FILE_HELP));
 
 		DialogUtil.initializeLabelWidget("Build Target: ", SWT.NONE, container, horizontalSpan);
 		buildTargetText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
+		buildTargetText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, BUILD_TARGET_HELP));
 		
 		if (submissionInfo.isConfigInitialized()) {
 			setupSwampProject();
@@ -519,10 +545,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		
 		parent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
 		
-		Button button = createButton(parent, IDialogConstants.NO_ID, "Clear All", false);
+		Button button = createButton(parent, IDialogConstants.NO_ID, DialogUtil.CLEAR_CAPTION, false);
 		button.addSelectionListener(new ClearButtonSelectionListener());
-		createButton(parent, IDialogConstants.OK_ID, "OK", true);
-		createButton(parent, IDialogConstants.CANCEL_ID, "Cancel", false);
+		createButton(parent, IDialogConstants.OK_ID, DialogUtil.OK_CAPTION, true);
+		createButton(parent, IDialogConstants.CANCEL_ID, DialogUtil.CANCEL_CAPTION, false);
 	}
 	
 	private boolean isValid() {

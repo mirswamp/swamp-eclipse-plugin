@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -27,9 +28,14 @@ public class PlatformDialog extends TitleAreaDialog {
 	private org.eclipse.swt.widgets.List swtPlatformList;
 	private SwampApiWrapper api;
 	private SubmissionInfo submissionInfo;
+	private Shell shell;
+	
+	private static final String PLATFORM_TITLE	= "Platform Selection";
+	private static final String PLATFORM_HELP 	= "Select one or more platforms to run your assessment on.";
 	
 	public PlatformDialog(Shell parentShell, SubmissionInfo si) {
 		super(parentShell);
+		shell = parentShell;
 		submissionInfo = si;
 		api = submissionInfo.getApi();
 	}
@@ -38,7 +44,7 @@ public class PlatformDialog extends TitleAreaDialog {
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
 		
-		this.setTitle("Platform Selection");
+		this.setTitle(PLATFORM_TITLE);
 		
 		/* Note: From GridData JavaDoc, "Do not reuse GridData objects. Every control in a composite
 		 * that is managed by a GridLayout must have a unique GridData object."
@@ -50,6 +56,7 @@ public class PlatformDialog extends TitleAreaDialog {
 		DialogUtil.initializeLabelWidget("Platforms: ", SWT.NONE, container);
 		platforms = getPlatforms(submissionInfo.getSelectedToolIDs(), submissionInfo.getSelectedProjectID());
 		swtPlatformList = DialogUtil.initializeListWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), convertPlatformListToStringArray());
+		swtPlatformList.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PLATFORM_HELP));
 		
 		if (submissionInfo.platformsInitialized()) {
 			List<String> platformUUIDs = submissionInfo.getSelectedPlatformIDs();
@@ -103,10 +110,10 @@ public class PlatformDialog extends TitleAreaDialog {
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		parent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
-		Button button = createButton(parent, IDialogConstants.NO_ID, "Clear All", false);
+		Button button = createButton(parent, IDialogConstants.NO_ID, DialogUtil.CLEAR_CAPTION, false);
 		button.addSelectionListener(new ClearButtonSelectionListener());
-		createButton(parent, IDialogConstants.OK_ID, "OK", true);
-		createButton(parent, IDialogConstants.CANCEL_ID, "Cancel", false);
+		createButton(parent, IDialogConstants.OK_ID, DialogUtil.OK_CAPTION, true);
+		createButton(parent, IDialogConstants.CANCEL_ID, DialogUtil.CANCEL_CAPTION, false);
 	}
 
 	@Override

@@ -8,6 +8,7 @@
 package eclipseplugin.dialogs;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.console.MessageConsoleStream;
@@ -22,14 +23,20 @@ import edu.wisc.cs.swamp.*;
 public class AuthenticationDialog extends TitleAreaDialog {
 	private Text usernameText;
 	private Text passwordText;
+	private static final String AUTHENTICATION_TITLE = "SWAMP Authentication";
 	private static final String AUTHENTICATION_PROMPT = "Please enter your authentication information for the SWAMP.";
 	private static final String INVALID_MESSAGE = "Invalid username or password.";
+	private static final String USERNAME_HELP = "Enter your SWAMP username.";
+	private static final String PASSWORD_HELP = "Enter your SWAMP password.";
+	private static final String LOGIN_CAPTION = "Login";
 	private SwampApiWrapper api;
 	private String id;
 	private MessageConsoleStream out;
+	private Shell shell;
 	
 	public AuthenticationDialog(Shell parentShell, SwampApiWrapper swampApi, MessageConsoleStream stream) {
 		super(parentShell);
+		shell = parentShell;
 		api = swampApi;
 		out = stream;
 	}
@@ -39,7 +46,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
 		
-		this.setTitle("SWAMP Authentication");
+		this.setTitle(AUTHENTICATION_TITLE);
 		this.setMessage(AUTHENTICATION_PROMPT);
 		
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
@@ -52,17 +59,19 @@ public class AuthenticationDialog extends TitleAreaDialog {
 
 		DialogUtil.initializeLabelWidget("Username: ", SWT.NONE, container);
 		usernameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, griddata);
+		usernameText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, USERNAME_HELP));
 		
 		DialogUtil.initializeLabelWidget("Password: ", SWT.NONE, container);
 		passwordText = DialogUtil.initializeTextWidget(SWT.PASSWORD | SWT.BORDER, container, griddata);
-				
+		passwordText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PASSWORD_HELP));
+		
 		return area;
 	}
 	
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
-		createButton(parent, IDialogConstants.OK_ID, "Login", true);
-		createButton(parent, IDialogConstants.CANCEL_ID, "Cancel", false);
+		createButton(parent, IDialogConstants.OK_ID, LOGIN_CAPTION, true);
+		createButton(parent, IDialogConstants.CANCEL_ID, DialogUtil.CANCEL_CAPTION, false);
 	}
 	
 	void setInvalidMsgAndClearPrompts() {
