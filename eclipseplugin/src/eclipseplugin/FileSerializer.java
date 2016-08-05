@@ -13,6 +13,7 @@ public class FileSerializer {
 	private static String DELIMITER = ",";
 	private static String NEEDS_BUILD_FILE = "NEEDSBUILDFILE";
 	private static String HAS_BUILD_FILE = "HASBUILDFILE";
+	private static String LINE_SEPARATOR = System.lineSeparator();
 	
 	public static boolean deserializeSubmissionInfo(String filepath, SubmissionInfo si) {
 		File file = new File(filepath);
@@ -77,7 +78,7 @@ public class FileSerializer {
 		/*
 		// Project UUID
 		String str = reader.readLine();
-		if (str == null || str.equals("\n")) {
+		if (str == null || str.equals(LINE_SEPARATOR)) {
 			// TODO Throw an exception here
 			//return false;
 		}
@@ -86,7 +87,7 @@ public class FileSerializer {
 		
 		// List of Platform UUIDs
 		str = reader.readLine();
-		if (str == null || str.equals("\n")) {
+		if (str == null || str.equals(LINE_SEPARATOR)) {
 			return false;
 		}
 		List<String> platformList =  Utils.convertDelimitedStringToList(str, DELIMITER);
@@ -94,7 +95,7 @@ public class FileSerializer {
 
 		// List of Tool UUIDs
 		str = reader.readLine();
-		if (str == null || str.equals("\n")) {
+		if (str == null || str.equals(LINE_SEPARATOR)) {
 			return false;
 		}
 		List<String> toolList =  Utils.convertDelimitedStringToList(str, DELIMITER);
@@ -107,7 +108,7 @@ public class FileSerializer {
 
 		// Project UUID
 		str = reader.readLine();
-		if (str == null || str.equals("\n")) {
+		if (str == null || str.equals(LINE_SEPARATOR)) {
 			// TODO Throw an exception here
 			return false;
 		}
@@ -115,14 +116,14 @@ public class FileSerializer {
 		
 		// Package Type
 		str = reader.readLine();
-		if (str != null && !str.equals("\n")) {
+		if (str != null && !str.equals(LINE_SEPARATOR)) {
 			si.setPackageType(str);
 		}
 		
 		// Eclipse Project Name
 		String prjName = null, prjPath = null;
 		str = reader.readLine();
-		if (str != null && !str.equals("\n")) {
+		if (str != null && !str.equals(LINE_SEPARATOR)) {
 			prjName = str;
 		}
 		else {
@@ -130,7 +131,7 @@ public class FileSerializer {
 		}
 		// Eclipse Project Path
 		str = reader.readLine();
-		if (str != null && !str.equals("\n")) {
+		if (str != null && !str.equals(LINE_SEPARATOR)) {
 			prjPath = str;
 		}
 		else {
@@ -149,7 +150,7 @@ public class FileSerializer {
 		String pkgUUID = null;
 		
 		str = reader.readLine();
-		if (str != null && !str.equals("\n")) {
+		if (str != null && !str.equals(LINE_SEPARATOR)) {
 			char c = str.charAt(0);
 			if (c == '\t') {
 				pkgUUID = str.substring(1, str.length());
@@ -170,7 +171,7 @@ public class FileSerializer {
 		
 		str =  reader.readLine();
 		boolean needsBuildFile = false;
-		if (str != null && !str.equals("\n")) {
+		if (str != null && !str.equals(LINE_SEPARATOR)) {
 			needsBuildFile = str.equals(NEEDS_BUILD_FILE);
 		}
 		else {
@@ -198,42 +199,42 @@ public class FileSerializer {
 		/*
 		// Project UUID
 		writer.write(si.getSelectedProjectID());
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 		*/
 				
 		// Platform UUIDs
 		List<String> platformIDList = si.getSelectedPlatformIDs();
 		String platformIDString = Utils.convertListToDelimitedString(platformIDList, DELIMITER);
 		writer.write(platformIDString);
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 				
 		// Tool UUIDs
 		List<String> toolIDList = si.getSelectedToolIDs();
 		String toolIDString = Utils.convertListToDelimitedString(toolIDList, DELIMITER);
 		writer.write(toolIDString);
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 	}
 	
 	private static void serializeConfigInfo(BufferedWriter writer, SubmissionInfo si) throws IOException {
 		// Project UUID
 		String projectUUID = si.getSelectedProjectID();
 		writer.write(projectUUID);
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 		
 		// Package Type
 		String packageType = si.getPackageType();
 		writer.write(packageType);
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 		
 		// Project name
 		String projectName = si.getProjectName();
 		writer.write(projectName);
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 		
 		// Project path
 		String projectPath = si.getProjectPath();
 		writer.write(projectPath);
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 		
 		// Package UUID or Package Name
 		if (si.isNewPackage()) {
@@ -242,12 +243,12 @@ public class FileSerializer {
 		else {
 			writer.write("\t" + si.getSelectedPackageID());
 		}
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 		
 		// Build system
 		String buildSystem = si.getBuildSystem();
 		writer.write(buildSystem);
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 		
 		// Make new build file
 		if (si.needsBuildFile()) {
@@ -256,27 +257,27 @@ public class FileSerializer {
 		else {
 			writer.write(HAS_BUILD_FILE);
 		}
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 		
 		// Build file
 		String buildFile = si.getBuildFile();
 		writer.write(buildFile);
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 		
 		// Build directory
 		String buildDirectory = si.getBuildDirectory();
 		writer.write(buildDirectory);
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 		
 		// Build Target
 		String buildTarget = si.getBuildTarget();
 		writer.write(buildTarget);
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 		
 		// Package system libraries?
 		boolean pkgSysLibs = si.packageSystemLibraries();
 		writer.write(Boolean.toString(pkgSysLibs));
-		writer.write("\n");
+		writer.write(LINE_SEPARATOR);
 	}
 	
 	private static void deleteFile(String filepath) {

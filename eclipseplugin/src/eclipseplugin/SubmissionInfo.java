@@ -164,7 +164,7 @@ public class SubmissionInfo {
 		eclipseProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
 		for (int i = 0; i < eclipseProjects.length; i++) {
 			IProject project = eclipseProjects[i];
-			if (project.getName().equals(projectName) && project.getLocation().toString().equals(prjPath)) {
+			if (project.getName().equals(projectName) && project.getLocation().toOSString().equals(prjPath)) {
 				this.project = project;
 				return true;
 			}

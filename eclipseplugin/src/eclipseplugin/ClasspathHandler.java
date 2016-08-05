@@ -545,6 +545,7 @@ public class ClasspathHandler {
 			strPath = strPath.substring(1);
 		}
 		strPath = strPath.replace(IPath.SEPARATOR, DASH);
+		strPath = strPath.replace(IPath.DEVICE_SEPARATOR, DASH);
 		Path src = ClasspathHandler.getPathFromIPath(path);
 		if (!src.toFile().exists()) {
 			// TODO Some serious logging
