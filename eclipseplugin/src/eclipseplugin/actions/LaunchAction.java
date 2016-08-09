@@ -49,7 +49,7 @@ public class LaunchAction implements IWorkbenchWindowPulldownDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		submitter.launchBackgroundAssessment(getActiveProjectLocation());
+		submitter.launchBackgroundAssessment(HandlerUtils.getActiveProjectLocation(window));
 	}
 
 	/**
@@ -82,13 +82,13 @@ public class LaunchAction implements IWorkbenchWindowPulldownDelegate {
 
 	@Override
 	public Menu getMenu(Control parent) {
-		System.out.println("Active project location: " + getActiveProjectLocation());
+		System.out.println("Active project location: " + HandlerUtils.getActiveProjectLocation(window));
 		Menu menu = new Menu(parent);
 		int index = 0;
 		MenuItem configLaunch = makeMenuItem(menu, "&Configure Assessment Submission", index++);
-		configLaunch.addListener(SWT.Selection, e -> submitter.launch(getActiveProjectLocation()));
+		configLaunch.addListener(SWT.Selection, e -> submitter.launch(HandlerUtils.getActiveProjectLocation(window)));
 		MenuItem resubmit = makeMenuItem(menu, "&Resubmit Previous Assessment", index++);
-		resubmit.addListener(SWT.Selection, e -> submitter.launchBackgroundAssessment(getActiveProjectLocation()));
+		resubmit.addListener(SWT.Selection, e -> submitter.launchBackgroundAssessment(HandlerUtils.getActiveProjectLocation(window)));
 		MenuItem logIn = makeMenuItem(menu, "Log &In", index++);
 		MenuItem logOut = makeMenuItem(menu, "Log &Out", index++);
 		boolean loggedIn = submitter.loggedIntoSwamp();
@@ -110,33 +110,7 @@ public class LaunchAction implements IWorkbenchWindowPulldownDelegate {
 		return menuItem;
 	}
 	
-	public String getActiveProjectLocation() {
-		IWorkbenchPage workbenchPage = window.getActivePage();
-		if (workbenchPage == null) {
-			// TODO Add some MessageDialog to say we were unable to get the project - are you sure you have an editor open?
-			return null;
-		}
-		IEditorPart editorPart = workbenchPage.getActiveEditor();
-		if (editorPart == null) {
-			// TODO Add some MessageDialog to say we were unable to get the project - are you sure you have an editor open?
-			return null;
-		}
-		
-		/* Code adapted from Eclipse wiki (https://wiki.eclipse.org/FAQ_How_do_I_access_the_active_project%3F) */
-		IEditorInput input = editorPart.getEditorInput();
-		if (!(input instanceof IFileEditorInput)) {
-			return null;
-		}
-		IResource resource = (IResource)((IFileEditorInput)input).getFile();
-		if (resource == null) {
-			return null;
-		}
-		IProject project = resource.getProject();
-		if (project == null) {
-			return null;
-		}
-		return project.getLocation().toOSString();
-	}
+
 	
 	
 	
