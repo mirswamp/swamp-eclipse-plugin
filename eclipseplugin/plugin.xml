@@ -1,81 +1,103 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-
-<!-- TODO: Action sets are deprecated - replace this with commands at some time -->
-   <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            label="Display Plugin"
-            visible="true"
-            id="eclipseplugin.actionSet">
-         <menu
-               label="SWAMP Menu"
-               id="SWAMPMenu">
-            <separator
-                  name="sampleGroup">
-            </separator>
-         </menu>
-         <action
-               label="Launch SWAMP"
-               style="pulldown"
-               icon="icons/swamp-logo-square-height-20.png"
-               class="eclipseplugin.actions.LaunchAction"
-               tooltip="Upload and assess projects in the SWAMP"
-               menubarPath="SWAMPMenu/sampleGroup"
-               toolbarPath="sampleGroup"
-               id="eclipseplugin.actions.LaunchAction">
-         </action>
-      </actionSet>
-   </extension>
-  <!-- 
-  org.eclipse.ui.popupMenus is deprecated, we'll do it using commands instead
-   <extension 
-   		point="org.eclipse.ui.popupMenus">
-   	  	<objectContribution
-   	  		id="org.eclipse.ui.articles.action.contribution.popup.object"
-   	  		objectClass="org.eclipse.core.resources.IFile">
-   	  		<filter
-   	  			name="projectNature"
-   	  			value="org.eclipse.jdt.core.javanature">
-   	  		</filter>
-   	  		<action
-   	  			id="eclipseplugin.actions.RightClickAction"
-   	  			label="Upload and assess project"
-   	  			icon="icons/swamp-logo-height-20.png"
-   	  			menubarPath="additions"
-   	  			class="eclipseplugin.actions.LaunchAction">
-   	  		</action>
-   	  	</objectContribution>
-   </extension>
-  -->
   
+<!-- Declaring commands -->
   <extension
   	point="org.eclipse.ui.commands">
+  	<category
+  		id="eclipseplugin.commands.category"
+  		name="Eclipse Command Category">
+  	</category>
   	<command
   		categoryId="eclipseplugin.commands.category"
   		id="eclipseplugin.commands.launchCommand"
+  		name="Launch Commands"
+  		defaultHandler="eclipseplugin.handlers.LaunchHandler">
+  		<commandParameter 
+  			id="eclipseplugin.internal.msg" 
+  			name="Message" 
+  			optional="true">	
+  		</commandParameter>
+  	</command>
+  	<command
+  		categoryId="eclipseplugin.commands.category"
+  		id="eclipseplugin.commands.rightClickCommand"
   		name="Launch Command">
+  	</command>
+  	<command
+  		id="eclipseplugin.commands.login"
+  		categoryId="eclipseplugin.commands.category"
+  		name="Log In">
+  	</command>
+  	<command
+  		id="eclipseplugin.commands.logout"
+  		categoryId="eclipseplugin.commands.category"
+  		name="Log Out">
+  	</command>
+  	<command
+  		categoryId="eclipseplugin.commands.category"
+  		id="someothercommand1"
+  		name="Ughh...">
   	</command>
   </extension>
   
+  <extension point="org.eclipse.ui.commandImages">
+  	<image 
+  		commandId="eclipseplugin.commands.launchCommand"
+  		icon="icons/swamp-logo-square-height-20.png">
+  	</image>
+  </extension>
+  
+  <extension
+  	point="org.eclipse.core.expressions.propertyTesters">
+  	<propertyTester
+  		id="eclipseplugin.internal.LoginPropertyTester"
+  		namespace="eclipseplugin.tester"
+  		properties="loggedIn"
+  		class="eclipseplugin.handlers.LoginPropertyTester"
+  		type="java.lang.Object"> <!-- see if we can make this more restrictive (e.g. org.eclipse.core.runtime.IAdaptable or org.eclipse.core.resources.IResource") -->
+  	</propertyTester>
+  </extension>
+	
   <extension
   	point="org.eclipse.ui.handlers">
   	<handler
-  		class="eclipseplugin.handlers.CommandHandler"
-  		commandId="eclipseplugin.commands.launchCommand">
+  		class="eclipseplugin.handlers.LaunchHandler"
+  		commandId="eclipseplugin.commands.login">
+  		<visibleWhen>
+  			<not>
+  				<test
+  					property="eclipseplugin.tester.loggedIn">
+  				</test>
+  			</not>
+  		</visibleWhen>
+  	</handler>
+  	<handler
+  		class="eclipseplugin.handlers.LaunchHandler"
+  		commandId="eclipseplugin.commands.logout">
+  		<visibleWhen>
+  			<test
+  				property="eclipseplugin.tester.loggedIn">
+  			</test>
+  		</visibleWhen>
   	</handler>
   </extension>
-  		 
+  
+  
   <extension
   	point="org.eclipse.ui.menus">
   	<menuContribution
   		locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
   		<command
   			commandId="eclipseplugin.commands.launchCommand"
-  			id="eclipseplugin.menus.launchCommand"
+  			id="eclipseplugin.menus.rightClickCommand"
   			label="Assess Project on SWAMP"
   			mnemonic="A">
+  			<parameter 
+  				name="eclipseplugin.internal.msg" 
+  				value="Launch Selection">
+  			</parameter>
   			<visibleWhen
   				checkEnabled="false">
                	<with variable="activeMenuSelection">
@@ -86,6 +108,64 @@
                		</iterate>
             	</with>
   			</visibleWhen>
+  		</command>
+  	</menuContribution>
+  	<!-- Adding commands to toolbar -->
+  	<menuContribution
+  		locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+  		<toolbar
+  			id="eclipseplugins.toolbars.swampToolbar">
+  			<command
+  				commandId="eclipseplugin.commands.launchCommand"
+  				label="SWAMP Command"
+  				tooltip="SWAMP Command Tooltip"
+  				style="pulldown"
+  				id="eclipseplugin.toolbars.toolbarCommand">
+  			</command>
+  		</toolbar>
+  	</menuContribution>
+  	<menuContribution
+  		locationURI="menu:eclipseplugin.toolbars.toolbarCommand">             
+  		<command
+  			commandId="eclipseplugin.commands.launchCommand"
+  			id="eclipseplugin.menus.configureCommand"
+  			style="push"
+  			label="Configure Assessment Submission"
+  			mnemonic="C">
+  			  <parameter 
+  				name="eclipseplugin.internal.msg" 
+  				value="Configure">
+  			</parameter>
+  		</command>
+  		<separator name="additions1" visible="true">
+        </separator>
+  		<command
+  			commandId="eclipseplugin.commands.launchCommand"
+  			id="eclipseplugin.menus.resubmitCommand"
+  			style="push"
+  			label="Resubmit Previous Assessment"
+  			mnemonic="R">
+  		  	<parameter 
+  				name="eclipseplugin.internal.msg" 
+  				value="Resubmit">
+  			</parameter>
+  		</command>
+  		<separator name="additions2" visible="true">
+        </separator>
+  		<command
+  			commandId="eclipseplugin.commands.login"
+  			id="eclipseplugin.menus.loginCommand"
+  			style="push"
+  			label="Log In"
+  			tooltip="Log into the SWAMP"
+  			mnemonic="I">
+  		</command>
+  		<command
+  			commandId="eclipseplugin.commands.logout"
+  			id="eclipseplugin.menus.logoutCommand"
+  			label="Log Out"
+  			style="push"
+  			mnemonic="O">
   		</command>
   	</menuContribution>
   </extension>

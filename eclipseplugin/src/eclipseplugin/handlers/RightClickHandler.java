@@ -19,7 +19,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
  * @see org.eclipse.core.commands.IHandler
  * @see org.eclipse.core.commands.AbstractHandler
  */
-public class CommandHandler extends AbstractHandler {
+public class RightClickHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
