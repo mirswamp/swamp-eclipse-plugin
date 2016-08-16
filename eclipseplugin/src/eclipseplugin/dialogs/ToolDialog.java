@@ -30,6 +30,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
 
 import eclipseplugin.SubmissionInfo;
+import edu.uiuc.ncsa.swamp.api.Platform;
 import edu.uiuc.ncsa.swamp.api.Tool;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 
@@ -192,7 +193,8 @@ public class ToolDialog extends TitleAreaDialog {
 	 * Method for handling back button being pressed 
 	 */
 	private void backPressed() {
-		submissionInfo.setSelectedToolIDs(null);
+		//submissionInfo.setSelectedToolIDs(null);
+		submissionInfo.setSelectedToolIDs(getSelectedIDs());
 		super.setReturnCode(IDialogConstants.BACK_ID);
 		super.close();
 	}
@@ -206,14 +208,22 @@ public class ToolDialog extends TitleAreaDialog {
 		if (swtToolList.getSelectionCount() < 1) {
 			this.setMessage("Select at least one tool.");
 		}
+		submissionInfo.setSelectedToolIDs(getSelectedIDs());
+		super.okPressed();
+	}
+	
+	/**
+	 * Helper method for converting the widget's selected elements to a list
+	 * of their UUIDs
+	 */
+	private List<String> getSelectedIDs() {
 		int[] selectedIndices = swtToolList.getSelectionIndices();
 		List<String> selectedToolIDs = new ArrayList<String>(selectedIndices.length);
 		for (int i : selectedIndices) {
 			Tool tool = tools.get(i);
 			selectedToolIDs.add(tool.getUUIDString());
 		}
-		submissionInfo.setSelectedToolIDs(selectedToolIDs);
-		super.okPressed();
+		return selectedToolIDs;
 	}
 
 /**

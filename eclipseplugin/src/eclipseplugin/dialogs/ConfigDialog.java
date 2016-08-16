@@ -290,7 +290,6 @@ public class ConfigDialog extends TitleAreaDialog {
 		pkgTypeCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgTypes, horizontalSpan);
 		pkgTypeCombo.setEnabled(false);
 		pkgTypeCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_TYPE_HELP));
-
 		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container, horizontalSpan);
 		String[] buildSysOptions = getSelectionElements(Type.BUILD);
 		buildSysCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), buildSysOptions, horizontalSpan);		
@@ -317,8 +316,8 @@ public class ConfigDialog extends TitleAreaDialog {
 		if (submissionInfo.isConfigInitialized()) {
 			setupSwampProject();
 			setupSwampPackage();
-			setupPackageType();
 			setupEclipseProject();
+			setupPackageType();
 			setupBuild();
 		}
 		else {
@@ -668,7 +667,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			
 			// package type
 			index = pkgTypeCombo.getSelectionIndex();
-			submissionInfo.setPackageType(pkgTypeCombo.getItem(index));
+			submissionInfo.setPackageType(pkgTypeCombo.getItem(index), false);
 			
 			// eclipse project (actual IProject)
 			index = eclipsePrjCombo.getSelectionIndex();

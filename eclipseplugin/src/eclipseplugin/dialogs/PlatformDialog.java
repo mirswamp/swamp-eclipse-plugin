@@ -146,7 +146,8 @@ public class PlatformDialog extends TitleAreaDialog {
 	}
 		
 	protected void backPressed() {
-		submissionInfo.setSelectedPlatformIDs(null);
+		//submissionInfo.setSelectedPlatformIDs(null);
+		submissionInfo.setSelectedPlatformIDs(getSelectedIDs());
 		super.setReturnCode(IDialogConstants.BACK_ID);
 		super.close();
 	}
@@ -156,17 +157,22 @@ public class PlatformDialog extends TitleAreaDialog {
 		if (swtPlatformList.getSelectionCount() < 1) {
 			this.setMessage("Select at least one platform.");
 		}
+		submissionInfo.setSelectedPlatformIDs(getSelectedIDs());
+		super.okPressed();
+	}
+	
+	/**
+	 * Helper method for converting the widget's selected elements to a list
+	 * of their UUIDs
+	 */
+	private List<String> getSelectedIDs() {
 		int[] selectedIndices = swtPlatformList.getSelectionIndices();
 		List<String> selectedPlatformIDs = new ArrayList<String>(selectedIndices.length);
 		for (int i : selectedIndices) {
 			Platform platform = platforms.get(i);
 			selectedPlatformIDs.add(platform.getUUIDString());
-			System.out.println(platform.getUUIDString());
-			System.out.println(platform.getName());
-			System.out.println(platform.getFilename());
 		}
-		submissionInfo.setSelectedPlatformIDs(selectedPlatformIDs);
-		super.okPressed();
+		return selectedPlatformIDs;
 	}
 
 private class ClearButtonSelectionListener implements SelectionListener {

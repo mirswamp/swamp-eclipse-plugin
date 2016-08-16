@@ -29,6 +29,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -45,6 +46,7 @@ import org.eclipse.ui.console.IConsoleView;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.osgi.framework.Version;
+import org.osgi.service.prefs.Preferences;
 
 import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.ConfigDialog;
@@ -60,6 +62,7 @@ import edu.wisc.cs.swamp.exceptions.SessionExpiredException;
 import edu.wisc.cs.swamp.exceptions.SessionRestoreException;
 
 import static org.eclipse.core.runtime.Path.SEPARATOR;
+import static eclipseplugin.Activator.PLUGIN_ID;
 
 public class SwampSubmitter {
 
@@ -335,6 +338,9 @@ public class SwampSubmitter {
 		PlatformDialog pd;
 		Deque<TitleAreaDialog> stack = new ArrayDeque<>();
 		
+		// load plug-in preferences
+		si.loadPluginSettings();
+		
 		cd = new ConfigDialog(window.getShell(), si);
 		
 		td = new ToolDialog(window.getShell(), si);
@@ -362,6 +368,9 @@ public class SwampSubmitter {
 				}
 			}
 		}
+		
+		// save plug-in preferences
+		si.savePluginSettings();
 		
 		configFilepath = si.getProjectPath() + SEPARATOR + CONFIG_FILENAME;
 		FileSerializer.serializeSubmissionInfo(configFilepath, si);

@@ -57,9 +57,10 @@ public class Utils {
 	 */
 	public static String convertListToDelimitedString(List<String> list, String delimiter) {
 		StringBuffer sb = new StringBuffer();
-		for (int i = 0; i < list.size(); i++) {
+		for (int i = 0; i < list.size()-1; i++) {
 			sb.append(list.get(i) + delimiter);
 		}
+		sb.append(list.get(list.size()-1));
 		return sb.toString();
 	}
 	

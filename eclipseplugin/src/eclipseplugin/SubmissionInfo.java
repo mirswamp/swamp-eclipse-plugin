@@ -13,10 +13,15 @@
 
 package eclipseplugin;
 
+import static eclipseplugin.Activator.PLUGIN_ID;
+
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.osgi.service.prefs.BackingStoreException;
+import org.osgi.service.prefs.Preferences;
 
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.wisc.cs.swamp.SwampApiWrapper;
@@ -53,6 +58,8 @@ public class SubmissionInfo {
 	public static String NO_BUILD_STRING = "no-build";
 	public static String AUTO_GENERATE_BUILD_STRING = "Auto-generate build file";
 	private static String buildOptions[] = { "Auto-generate build file", "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", "no-build", "other" };
+	private static String PROJECT_KEY = "PROJECT";
+	private static String DELIMITER = ",";
 	
 	public SubmissionInfo(SwampApiWrapper api) {
 		this.api = api;
@@ -74,8 +81,22 @@ public class SubmissionInfo {
 		return packageType;
 	}
 	
-	public void setPackageType(String pkgType) {
+	public void setPackageType(String pkgType, boolean fromFile) {
 		packageType = pkgType;
+		if (fromFile) {
+			return;
+		}
+		Preferences prefs = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
+		selectedToolIDs = getPreferences(prefs, getToolKey());
+		selectedPlatformIDs = getPreferences(prefs, getPlatformKey());
+	}
+	
+	private List<String> getPreferences(Preferences prefs, String key) {
+		String idList = prefs.get(key, null);
+		if (idList == null) {
+			return null;
+		}
+		return Utils.convertDelimitedStringToList(idList, DELIMITER);
 	}
 	
 	public SwampApiWrapper getApi() {
@@ -272,5 +293,32 @@ public class SubmissionInfo {
 			System.out.println(s);
 		}
 		
+	}
+	
+	public void savePluginSettings() {
+		Preferences prefs = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
+		prefs.put(PROJECT_KEY, selectedProjectID);
+		prefs.put(getToolKey(), Utils.convertListToDelimitedString(selectedToolIDs, DELIMITER));
+		prefs.put(getPlatformKey(), Utils.convertListToDelimitedString(selectedPlatformIDs, DELIMITER));
+		try {
+			prefs.flush();
+		} catch(BackingStoreException e) {
+		}
+	}
+	
+	public void loadPluginSettings() {
+		if (selectedProjectID != null) {
+			return;
+		}
+		Preferences prefs = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
+		selectedProjectID = prefs.get(PROJECT_KEY, null);
+	}
+	
+	private String getToolKey() {
+		return packageType + "-TOOLS"; 
+	}
+	
+	private String getPlatformKey() {
+		return packageType + "-PLATFORMS";
 	}
 }

@@ -171,7 +171,7 @@ public class FileSerializer {
 		// Package Type
 		str = reader.readLine();
 		if (str != null && !str.equals(LINE_SEPARATOR)) {
-			si.setPackageType(str);
+			si.setPackageType(str, true);
 		}
 		
 		// Eclipse Project Name
