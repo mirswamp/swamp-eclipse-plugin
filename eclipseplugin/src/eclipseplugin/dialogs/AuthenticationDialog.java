@@ -26,27 +26,79 @@ import org.eclipse.swt.widgets.*;
 import edu.uiuc.ncsa.swamp.session.HTTPException;
 import edu.wisc.cs.swamp.*;
 
+/**
+ * This class creates a dialog for SWAMP authentication
+ * @author Malcolm Reid Jr. (reid-jr@cs.wisc.edu)
+ * @since 07/2016 
+ */
 public class AuthenticationDialog extends TitleAreaDialog {
+	/**
+	 * The Text widget for username
+	 */
 	private Text usernameText;
+	/**
+	 * The Text widget for password
+	 */
 	private Text passwordText;
+	/**
+	 * The title for this dialog
+	 */
 	private static final String AUTHENTICATION_TITLE = "SWAMP Authentication";
+	/**
+	 * The prompting message for this dialog
+	 */
 	private static final String AUTHENTICATION_PROMPT = "Please enter your authentication information for the SWAMP.";
+	/**
+	 * Message for invalid username or password
+	 */
 	private static final String INVALID_MESSAGE = "Invalid username or password.";
+	/**
+	 * Help message for username Text
+	 */
 	private static final String USERNAME_HELP = "Enter your SWAMP username.";
+	/**
+	 * Help message for password Text
+	 */
 	private static final String PASSWORD_HELP = "Enter your SWAMP password.";
+	/**
+	 * Caption for login button
+	 */
 	private static final String LOGIN_CAPTION = "Login";
+	/**
+	 * Reference to SwampApiWrapper object. This facilitates interaction with
+	 * the SWAMP
+	 */
 	private SwampApiWrapper api;
-	private String id;
+	/**
+	 * Stream for writing to end user's console
+	 */
 	private MessageConsoleStream out;
+	/**
+	 * Shell object
+	 */
 	private Shell shell;
 	
+	/**
+	 * Constructor for AuthenticationDialog
+	 *
+	 * @param shell the shell that this dialog will be in
+	 * @param swampApi SwampApiWrapper object for communicating with the SWAMP
+	 * @param stream stream for end user's console
+	 */
 	public AuthenticationDialog(Shell parentShell, SwampApiWrapper swampApi, MessageConsoleStream stream) {
 		super(parentShell);
 		shell = parentShell;
 		api = swampApi;
 		out = stream;
 	}
-	
+
+	/**
+	 * Creates dialog area of window and places widgets on it
+	 *
+	 * @param parent the parent Composite that the widgets will be placed on 
+	 * top of
+	 * @return Control with widgets on it
+	 */
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
@@ -74,13 +126,23 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		return area;
 	}
 	
+	/**
+	 * Creates buttons for the window's button bar
+	 *
+	 * @param parent the parent Composite that the buttons will be placed on 
+	 * top of
+	 */
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		createButton(parent, IDialogConstants.OK_ID, LOGIN_CAPTION, true);
 		createButton(parent, IDialogConstants.CANCEL_ID, DialogUtil.CANCEL_CAPTION, false);
 	}
 	
-	void setInvalidMsgAndClearPrompts() {
+	/**
+	 * Sets invalid message for the dialog and clears username and password
+	 * prompts
+	 */
+	private void setInvalidMsgAndClearPrompts() {
 		out.println("Error: Invalid username and/or password entered.");
 		this.setMessage(INVALID_MESSAGE + "\n" + AUTHENTICATION_PROMPT);
 		usernameText.setText("");
@@ -88,10 +150,14 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		passwordText.setText("");
 	}
 	
+	/**
+	 * Tries authenticating with the SWAMP
+	 */
 	@Override
 	protected void okPressed() {
 		String username = usernameText.getText();
 		String password = passwordText.getText();
+		String id;
 		
 		if ((username.length() == 0) || (password.length() == 0)) {
 			setInvalidMsgAndClearPrompts();

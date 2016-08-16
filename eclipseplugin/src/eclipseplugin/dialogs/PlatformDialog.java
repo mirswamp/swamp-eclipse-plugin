@@ -14,7 +14,6 @@
 package eclipseplugin.dialogs;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,6 +53,7 @@ public class PlatformDialog extends TitleAreaDialog {
 	}
 	
 	@Override protected Control createDialogArea(Composite parent) {
+		System.out.println("We're redrawing the platform dialog");
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
 		
@@ -72,6 +72,7 @@ public class PlatformDialog extends TitleAreaDialog {
 		swtPlatformList.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PLATFORM_HELP));
 		
 		if (submissionInfo.platformsInitialized()) {
+			System.out.println("Platforms Initialized");
 			List<String> platformUUIDs = submissionInfo.getSelectedPlatformIDs();
 			setSelectedPlatforms(platformUUIDs);
 		}
@@ -123,10 +124,31 @@ public class PlatformDialog extends TitleAreaDialog {
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		parent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
-		Button button = createButton(parent, IDialogConstants.NO_ID, DialogUtil.CLEAR_CAPTION, false);
-		button.addSelectionListener(new ClearButtonSelectionListener());
+		Button clear = createButton(parent, IDialogConstants.NO_ID, DialogUtil.CLEAR_CAPTION, false);
+		clear.addSelectionListener(new ClearButtonSelectionListener());
+		createButton(parent, IDialogConstants.BACK_ID, DialogUtil.BACK_CAPTION, false);
 		createButton(parent, IDialogConstants.OK_ID, DialogUtil.OK_CAPTION, true);
 		createButton(parent, IDialogConstants.CANCEL_ID, DialogUtil.CANCEL_CAPTION, false);
+	}
+	
+	@Override
+	public void buttonPressed(int buttonID) {
+		switch (buttonID) {
+		case IDialogConstants.OK_ID:
+			okPressed();
+			break;
+		case IDialogConstants.BACK_ID:
+			backPressed();
+			break;
+		case IDialogConstants.CANCEL_ID:
+			super.cancelPressed();
+		}
+	}
+		
+	protected void backPressed() {
+		submissionInfo.setSelectedPlatformIDs(null);
+		super.setReturnCode(IDialogConstants.BACK_ID);
+		super.close();
 	}
 
 	@Override
@@ -146,7 +168,7 @@ public class PlatformDialog extends TitleAreaDialog {
 		submissionInfo.setSelectedPlatformIDs(selectedPlatformIDs);
 		super.okPressed();
 	}
-	
+
 private class ClearButtonSelectionListener implements SelectionListener {
 		
 		public ClearButtonSelectionListener() {

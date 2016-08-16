@@ -17,8 +17,19 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * This class provides utility methods that provide basic
+ * functionality.
+ * @author Malcolm Reid Jr. (reid-jr@cs.wisc.edu)
+ * @since 07/2016 
+ */
 public class Utils {
 
+	/**
+	 * Generates a timestamp without spaces for the current time 
+	 *
+	 * @return a timestamp for the current time
+	 */
 	public static String getCurrentTimestamp() {
 		Timestamp timestamp = new Timestamp(new Date().getTime());
 		String timeString = timestamp.toString();
@@ -27,10 +38,23 @@ public class Utils {
 		return timeString;
 	}
 	
+	/**
+	 * Generates a bracketed timestamp for the current time 
+	 *
+	 * @return a bracketed timestamp for the current time
+	 */
 	public static String getBracketedTimestamp() {
 		return "[" + getCurrentTimestamp() + "] ";
 	}
 	
+	/**
+	 * Converts a List of Strings to a delimited String
+	 *
+	 * @param list the list of Strings
+	 * @param delimiter the delimiter to be used between elements of
+	 * the list
+	 * @return the delimited String
+	 */
 	public static String convertListToDelimitedString(List<String> list, String delimiter) {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < list.size(); i++) {
@@ -39,6 +63,13 @@ public class Utils {
 		return sb.toString();
 	}
 	
+	/**
+	 * Converts a delimited String into a List of Strings
+	 *
+	 * @param delimitedString the delimited String
+	 * @param delimiter the String that delimits separate elements in the delimited String
+	 * @return list of Strings
+	 */
 	public static List<String> convertDelimitedStringToList(String delimitedString, String delimiter) {
 		String[] array = delimitedString.split(delimiter);
 		List<String> list = new ArrayList<String>(array.length);
@@ -48,6 +79,12 @@ public class Utils {
 		return list;
 	}
 	
+	/**
+	 * Converts a List of Integers into an array of ints
+	 *
+	 * @param list the list of Integer objects
+	 * @return an array of ints
+	 */
 	public static int[] convertIntListToArray(List<Integer> list) {
 		int size = list.size();
 		int[] array = new int[size];
@@ -57,6 +94,12 @@ public class Utils {
 		return array;
 	}
 	
+	/**
+	 * Converts an array of ints into a List of Integers
+	 *
+	 * @param array the array of ints
+	 * @return the List of Integer objects
+	 */
 	public static List<Integer> convertIntArrayToList(int[] array) {
 		int size = array.length;
 		List<Integer> list = new ArrayList<Integer>(size);
@@ -66,6 +109,12 @@ public class Utils {
 		return list;
 	}
 	
+	/**
+	 * Converts a List of Strings into an array of Strings
+	 *
+	 * @param list the list of String objects
+	 * @return the array of String objects
+	 */
 	public static String[] convertStringListToArray(List<String> list) {
 		String[] ary = null;
 		if (list != null) {

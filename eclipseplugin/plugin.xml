@@ -21,7 +21,7 @@
          <action
                label="Launch SWAMP"
                style="pulldown"
-               icon="icons/swamp-logo-square-height-20.png"
+               icon="icons/swamp-logo-new-square-height-20.png"
                class="eclipseplugin.actions.LaunchAction"
                tooltip="Upload and assess projects in the SWAMP"
                toolbarPath="sampleGroup"
@@ -79,7 +79,7 @@
    	  		<action
    	  			id="eclipseplugin.actions.RightClickAction"
    	  			label="Upload and assess project"
-   	  			icon="icons/swamp-logo-height-20.png"
+   	  			icon="icons/swamp-logo-new-square-height-20.png"
    	  			menubarPath="additions"
    	  			class="eclipseplugin.actions.LaunchAction">
    	  		</action>

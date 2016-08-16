@@ -35,21 +35,57 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import static org.eclipse.core.runtime.Path.SEPARATOR;
 
-/* This class is to do the actual generation of the buildfiles */
+/**
+ * This class does the actual generation of the build files.
+ * @author Malcolm Reid Jr. (reid-jr@cs.wisc.edu)
+ * @since 07/2016 
+ */
 public class BuildfileGenerator {
 	
+	/**
+	 * The name used for referencing the classpath for a project.
+	 */
 	private static String 	CLASSPATH_NAME 		= "project.classpath";
+	
+	/**
+	 * The name used for referencing the SWAMP binary directory.
+	 */
 	private static String 	SWAMPBIN_NAME 		= "swampbin";
+	
+	/**
+	 * The relative path of the SWAMP binary directory.
+	 */
 	private static String 	SWAMPBIN_REL_PATH 	= ".." + SEPARATOR + ".swampbin";
+	
+	/**
+	 * The name of the generated build file.
+	 */
 	private static String 	BUILDFILE_NAME		= "build.xml";
+	
+	/**
+	 * The number of spaces to indent per level in the generated XML 
+	 * file.
+	 */
 	private static int 		INDENT_SPACES 		= 4;
 
+	/**
+	 * Generates build files for the set of projects passed in, 
+	 * and saves each build file in the project's top-level directory
+	 *
+	 * @param projects a set of ClasspathHandler objects
+	 */
 	public static void generateBuildFiles(Set<ClasspathHandler> projects) {
 		for (ClasspathHandler c : projects) {
 			generateBuildFile(c);
 		}
 	}
 	
+	/**
+	 * Generates a build file for the passed in project and saves the
+	 * build file in the project's top-level directory 
+	 *
+	 * @param project a ClasspathHandler object for a project
+	 */
 	public static void generateBuildFile(ClasspathHandler project) {
 		// Here's how to write XML in Java
 		/* Adapted from www.mkyong.com/java/how-to-create-xml-file-in-java-dom */
@@ -63,9 +99,9 @@ public class BuildfileGenerator {
 			Element root = generateRoot(doc, project.getProjectName());
 			doc.appendChild(root);
 			// properties
-			setProperties(doc, root, SWAMPBIN_REL_PATH, "1.7", "1.7"); // TODO Set this based off of config dialog
+			setProperties(doc, root, SWAMPBIN_REL_PATH, project.getSourceVersion(), project.getTargetVersion()); 
 			// classpath
-			setLibraryClasspath(doc, root, project.getLibraryClasspath());
+			setLibraryClasspath(doc, root, project.getLibraryClasspath(), project.getProjectName());
 			// init target (as of now just creating output directory)
 			String prjName = project.getProjectName();
 			// build target
@@ -88,6 +124,14 @@ public class BuildfileGenerator {
 		
 	}
 	
+	/**
+	 * Utility method that returns an element for this project, 
+	 * attached to the doc. This is the root element for the XML doc
+	 *
+	 * @param doc the document
+	 * @param projectName the name of the project
+	 * @return the root element attached to the doc for this project
+	 */
 	private static Element generateRoot(Document doc, String projectName) {
 		// project
 		Element root = doc.createElement("project");
@@ -100,6 +144,15 @@ public class BuildfileGenerator {
 		return root;
 	}
 	
+	/**
+	 * Utility method for creating properties and then setting them
+	 * on the root
+	 *
+	 * @param doc the document
+	 * @param binPath the path to the SWAMP binary directory
+	 * @param srcVersion the Java source version
+	 * @param targetVersion the Java target version
+	 */
 	private static void setProperties(Document doc, Element root, String binPath, String srcVersion, String targetVersion) {
 		Element swampbinProperty = getProperty(doc, SWAMPBIN_NAME, binPath);
 		root.appendChild(swampbinProperty);
@@ -111,6 +164,13 @@ public class BuildfileGenerator {
 		root.appendChild(targetVersionProperty);
 	}
 	
+	/**
+	 * Returns an image descriptor for the image file at the given
+	 * plug-in relative path
+	 *
+	 * @param path the path
+	 * @return the image descriptor
+	 */
 	private static Element getProperty(Document doc, String name, String value) {
 		Element property = doc.createElement("property");
 		property.setAttribute("name", name);
@@ -118,17 +178,35 @@ public class BuildfileGenerator {
 		return property;
 	}
 	
-	private static void setLibraryClasspath(Document doc, Element root, List<IClasspathEntry> entries) {
+	/**
+	 * Adds library entries to the classpath
+	 *
+	 * @param doc the document
+	 * @param root the root element
+	 * @param entries list of library classpath entries (either in 
+	 * SWAMP binary directory or within the project directory)
+	 * @param projectName the projectName
+	 */
+	private static void setLibraryClasspath(Document doc, Element root, List<IClasspathEntry> entries, String projectName) {
 		Element path = doc.createElement("path");
 		path.setAttribute("id", CLASSPATH_NAME);
 		// TODO Maybe change name of classpath doc for different projects (?)
 		//Element pathElement = doc.createElement("pathelement");
 		String swampbin = "${" + SWAMPBIN_NAME + "}";
 		for (IClasspathEntry entry : entries) {
+			System.out.println("Library entry path: " + entry);
 			// TODO get the actual filename (I don't think entry.toString() will do it
 			Element pathElement = doc.createElement("pathelement");
-			String name = entry.getPath().lastSegment();
-			pathElement.setAttribute("location", swampbin + SEPARATOR + name);
+			if (entry.getPath().toOSString().contains(SWAMPBIN_NAME)) {
+				String name = entry.getPath().lastSegment();
+				pathElement.setAttribute("location", swampbin + SEPARATOR + name);
+			}
+			else { // not in swampbin
+				String relDir = relativizeDirectory(entry.getPath().toOSString(), projectName);
+				System.out.println("Non-SWAMPBIN directory location: " + relDir);
+				pathElement.setAttribute("location", relDir);
+			}
+			
 			path.appendChild(pathElement);
 		}
 		root.appendChild(path);
@@ -136,6 +214,16 @@ public class BuildfileGenerator {
 		// TODO Add handling for bootclasspath (?)
 	}
 	
+	/**
+	 * Sets the output directory as a child of the root and creates
+	 * an element for making that directory in case it doesn't exist 
+	 *
+	 * @param doc the document
+	 * @param root the root
+	 * @param relOutputDir the output directory, relative to this
+	 * project's directory
+	 * @return the element for "mkdir" of the output directory
+	 */
 	private static Element setInitTarget(Document doc, Element root, String relOutputDir) {
 		Element target = doc.createElement("target");
 		target.setAttribute("name", "init");
@@ -147,6 +235,17 @@ public class BuildfileGenerator {
 		return target;
 	}
 	
+	/**
+	 * Returns the relative path of a directory. 
+	 *
+	 * @param dir the path of the directory. The directory will
+	 * either be within the project (in which case getting the
+	 * relative path is trivial) or outside of the project (in which
+	 * case we just need to move up one level)
+	 * @param projectName the name of the project that we are
+	 * currently generating a build file for
+	 * @return the relative path of the directory
+	 */
 	private static String relativizeDirectory(String dir, String projectName) {
 		System.out.println("\n\nRelativizeDirectory");
 		System.out.println("Original path: " + dir);
@@ -168,6 +267,19 @@ public class BuildfileGenerator {
 		return ".." + dir;
 	}
 	
+	/**
+	 * Returns an image descriptor for the image file at the given
+	 * plug-in relative path
+	 *
+	 * @param doc the document
+	 * @param root the root element
+	 * @param prjOutputDirectory the output directory
+	 * @param list the list of projects that the calling project 
+	 * depends on
+	 * @param projectName the name of the calling project
+	 * @param isRoot is this project the root  
+	 * @return the image descriptor
+	 */
 	private static void setBuildTarget(Document doc, Element root, String prjOutputDirectory, List<ClasspathHandler> list, List<IClasspathEntry> srcEntries, String projectName, boolean isRoot) {
 		
 		prjOutputDirectory = relativizeDirectory(prjOutputDirectory, projectName);
@@ -230,6 +342,14 @@ public class BuildfileGenerator {
 		
 	}
 	
+	/**
+	 * Adds inclusion and exclusion patterns to the passed in element
+	 *
+	 * @param doc the document
+	 * @param parent the parent element
+	 * @param taskName the name of the Ant task (either include or exclude)
+	 * @param patterns the array of inclusion or exclusion patterns
+	 */
 	private static void addInclusionExclusionPatterns(Document doc, Element parent, String taskName, IPath[] patterns) {
 		if ((patterns == null) || (patterns.length == 0)) {
 			return;

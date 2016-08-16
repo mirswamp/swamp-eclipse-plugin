@@ -27,6 +27,7 @@ public class DialogUtil {
 	public static final String CLEAR_CAPTION 		= "Clear";
 	public static final String OK_CAPTION 			= "OK";
 	public static final String CANCEL_CAPTION 		= "Cancel";
+	public static final String BACK_CAPTION			= "Back";
 	
 	public static Text initializeTextWidget(int style, Composite container, GridData griddata, int span)  {
 		Text text = new Text(container, style);
@@ -59,7 +60,7 @@ public class DialogUtil {
 		combo.setItems(options);
 		return combo;
 	}
-	
+
 	public static Combo initializeComboWidget(Composite container, GridData griddata, String[] options) {
 		return initializeComboWidget(container, griddata, options, 1);
 	}

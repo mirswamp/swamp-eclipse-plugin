@@ -17,6 +17,8 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jdt.core.IJavaProject;
+import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -237,6 +239,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	
 	@Override
 	protected Control createDialogArea(Composite parent) {
+		System.out.println("Redrawing Config Dialog");
 		Composite area = (Composite) super.createDialogArea(parent);
 		int horizontalSpan = 2;
 		Composite container = new Composite(area, SWT.NONE);
@@ -272,12 +275,6 @@ public class ConfigDialog extends TitleAreaDialog {
 		pkgVersionText.setEnabled(false);
 		pkgVersionText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_VERSION_HELP));
 		
-		DialogUtil.initializeLabelWidget("Package Type: ", SWT.NONE, container, horizontalSpan);
-		String pkgTypes[] = getSelectionElements(Type.PACKAGE_TYPE);
-		pkgTypeCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgTypes, horizontalSpan);
-		pkgTypeCombo.setEnabled(false);
-		pkgTypeCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_TYPE_HELP));
-		
 		DialogUtil.initializeLabelWidget("Eclipse Project: ", SWT.NONE, container, horizontalSpan);
 		String eclipsePrjOptions[] = getSelectionElements(Type.ECLIPSE_PROJECT);
 		eclipsePrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), eclipsePrjOptions, horizontalSpan);
@@ -287,7 +284,13 @@ public class ConfigDialog extends TitleAreaDialog {
 		DialogUtil.initializeLabelWidget("Filepath: ", SWT.NONE, container, horizontalSpan);
 		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
 		prjFilePathText.setEditable(false);
-		
+		DialogUtil.initializeLabelWidget("Package Type: ", SWT.NONE, container, horizontalSpan);
+
+		String pkgTypes[] = getSelectionElements(Type.PACKAGE_TYPE);
+		pkgTypeCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgTypes, horizontalSpan);
+		pkgTypeCombo.setEnabled(false);
+		pkgTypeCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_TYPE_HELP));
+
 		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container, horizontalSpan);
 		String[] buildSysOptions = getSelectionElements(Type.BUILD);
 		buildSysCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), buildSysOptions, horizontalSpan);		
@@ -302,7 +305,6 @@ public class ConfigDialog extends TitleAreaDialog {
 		DialogUtil.initializeLabelWidget("Build File: ", SWT.NONE, container, horizontalSpan);
 		buildPathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), 1);
 		buildPathText.setEditable(false);
-		pkgTypeCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_TYPE_HELP));
 
 		selectFileButton = DialogUtil.initializeButtonWidget(container, " ... ", new GridData(SWT.FILL, SWT.NONE, false, false), SWT.PUSH, 1);
 		selectFileButton.addSelectionListener(new FileSelectionListener());
@@ -402,8 +404,8 @@ public class ConfigDialog extends TitleAreaDialog {
 				return;
 			}
 		}
-		buildSysCombo.deselectAll();
-		buildPathText.setText("");
+		// default to auto-generate
+		setBuildSystem(AUTO_GENERATE_BUILD_STRING);
 	}
 	
 	private void setBuildPath(String dirPath, String filename) {
@@ -444,9 +446,30 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		else {
 			IProject project = eclipseProjects[index];	
+			IJavaProject jp = JavaCore.create(project);
+			String complianceVersion = jp.getOption("org.eclipse.jdt.core.compiler.compliance", true);
+			if (complianceVersion != null) {
+				if (complianceVersion.equals("1.7")) {
+					// set package type to Java 7
+					setPackageType(api.getPkgTypeString("Java", "java7", "", null));
+				}
+				else if (complianceVersion.equals("1.8")) {
+					// set package type to Java 8
+					setPackageType(api.getPkgTypeString("Java", "java8", "", null));
+				}
+			}
 			prjFilePathText.setText(project.getLocation().toOSString());
 			if (!fromFile) {
 				setPredictedBuildSys(project);
+			}
+		}
+	}
+	
+	private void setPackageType(String versionString) {
+		for (int i = 0; i < pkgTypeCombo.getItemCount(); i++) {
+			if (pkgTypeCombo.getItem(i).equals(versionString)) {
+				pkgTypeCombo.select(i);
+				return;
 			}
 		}
 	}
@@ -668,6 +691,7 @@ public class ConfigDialog extends TitleAreaDialog {
 				System.out.println("Build file: " + buildFile);
 			}
 			submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relativeDir, buildFile, buildTargetText.getText(), packageRTButton.getSelection());
+			submissionInfo.setConfigInitialized(true);
 			super.okPressed();
 		}
 	}

@@ -58,9 +58,13 @@ public class ClasspathHandler {
 	private boolean hasCycles;
 	private boolean includeSystemLibraries;
 	private Map<String, ClasspathHandler> projectCache; // this is so we only have to visit referenced projects once regardless of how many times they've been referenced. We always look at root.
+	private String srcVersion;
+	private String targetVersion;
 	
 	private static String BIN_DIR = ".swampbin";
 	private static String PACKAGE_DIR = "package";
+	private static String SOURCE_VERSION_OPTION = "org.eclipse.jdt.core.compiler.source";
+	private static String TARGET_VERSION_OPTION = "org.eclipse.jdt.core.compiler.codegen.targetPlatform";
 	
 	public ClasspathHandler(ClasspathHandler root, IJavaProject projectRoot, String path, boolean includeSysLibs) {
 		project = projectRoot;
@@ -104,7 +108,10 @@ public class ClasspathHandler {
 		}
 		else {
 			this.root = root;
+			this.project = projectRoot;
 		}
+		this.srcVersion = this.project.getOption(SOURCE_VERSION_OPTION, true);
+		this.targetVersion = this.project.getOption(TARGET_VERSION_OPTION, true);
 		dependentProjects = new ArrayList<ClasspathHandler>();
 		projectsVisited = new HashSet<String>();
 		// TODO Is project set appropriately at this point? --> It should be
@@ -133,6 +140,14 @@ public class ClasspathHandler {
 		ClasspathHandler.listEntries("New entries", libEntries);
 		setProjectClasspath(libEntries);
 		
+	}
+	
+	public String getSourceVersion() {
+		return srcVersion;
+	}
+	
+	public String getTargetVersion() {
+		return targetVersion;
 	}
 	
 	public String getRootPath() {
@@ -462,8 +477,14 @@ public class ClasspathHandler {
 	private void handleLibrary(IClasspathEntry entry) {
 		IClasspathEntry newEntry;
 		if (isInRootDirectory(entry)) {
-			System.out.println("This entry is in root directory: " + entry.getPath());
-			newEntry = entry;
+			System.out.println("This entry is in root directory: " + entry.getPath().toOSString());
+			// make a new entry that points to the current project's directory
+			String absPath = entry.getPath().toOSString();
+			absPath = absPath.substring(1);
+			String path = this.root.path + SEPARATOR + "." + absPath;
+			System.out.println("This entry is in root dir: " + path);
+			IPath iPath = new org.eclipse.core.runtime.Path(path);
+			newEntry = JavaCore.newLibraryEntry(iPath, iPath, null);
 		}
 		else {
 			String strPath = entry.getPath().toOSString();

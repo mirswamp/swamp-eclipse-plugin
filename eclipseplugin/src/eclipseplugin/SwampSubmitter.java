@@ -14,7 +14,9 @@
 package eclipseplugin;
 
 import java.io.File;
+import java.util.ArrayDeque;
 import java.util.Date;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +31,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -292,7 +296,7 @@ public class SwampSubmitter {
 					return;
 				}
 			}	
-		} catch (SessionExpiredException e) {
+		} catch (Exception e) {
 				// launch authentication dialog
 			if (!authenticateUser()) {
 				return;
@@ -329,34 +333,42 @@ public class SwampSubmitter {
 		ConfigDialog cd;
 		ToolDialog td;
 		PlatformDialog pd;
+		Deque<TitleAreaDialog> stack = new ArrayDeque<>();
 		
 		cd = new ConfigDialog(window.getShell(), si);
-		cd.create();
-		if (cd.open() == Window.OK) {
-			td = new ToolDialog(window.getShell(), si);
-			td.create();
-			if (td.open() == Window.OK) {
-				pd = new PlatformDialog(window.getShell(), si);
-				pd.create();
-				if (pd.open() == Window.OK) {
-					configFilepath = si.getProjectPath() + SEPARATOR + CONFIG_FILENAME;
-					FileSerializer.serializeSubmissionInfo(configFilepath, si);
-					runBackgroundJob(si, false);
-				}
-				else {
-					out.println(Utils.getBracketedTimestamp() + PLUGIN_EXIT_MANUAL);
-				}
-			}
-			else {
-				out.println(Utils.getBracketedTimestamp() + PLUGIN_EXIT_MANUAL);
-			}
-		}
-		else {
-			out.println(Utils.getBracketedTimestamp() + PLUGIN_EXIT_MANUAL);
-		}
-		out.println(Utils.getBracketedTimestamp() + "Status: Plugin completed executing");
-	}
 		
+		td = new ToolDialog(window.getShell(), si);
+		
+		pd = new PlatformDialog(window.getShell(), si);
+		
+		stack.addFirst(pd);
+		stack.addFirst(td);
+		stack.addFirst(cd);
+		
+		while (!stack.isEmpty()) {
+			TitleAreaDialog dialog = stack.removeFirst();
+			int retCode = dialog.open();
+			if (retCode == Window.CANCEL) {
+				out.println(Utils.getBracketedTimestamp() + PLUGIN_EXIT_MANUAL);
+				return;
+			}
+			else if (retCode == IDialogConstants.BACK_ID) {
+				stack.addFirst(dialog);
+				if (dialog instanceof ToolDialog) {
+					stack.addFirst(cd);
+				}
+				else { // dialog instanceof PlatformDialog
+					stack.addFirst(td);
+				}
+			}
+		}
+		
+		configFilepath = si.getProjectPath() + SEPARATOR + CONFIG_FILENAME;
+		FileSerializer.serializeSubmissionInfo(configFilepath, si);
+		runBackgroundJob(si, false);
+		
+	}
+	
 	public void launch(String configPath) {
 		initializeSwampApi();
 		
