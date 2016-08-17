@@ -30,6 +30,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -40,6 +41,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
 import org.apache.commons.io.*;
 import static org.eclipse.core.runtime.Path.SEPARATOR;
+import static eclipseplugin.Activator.PLUGIN_ID;
 
 public class ClasspathHandler {
 
@@ -55,7 +57,6 @@ public class ClasspathHandler {
 	private static String PROJECT_ROOT;
 	private ClasspathHandler root;
 	private String path;
-	private boolean hasCycles;
 	private boolean includeSystemLibraries;
 	private Map<String, ClasspathHandler> projectCache; // this is so we only have to visit referenced projects once regardless of how many times they've been referenced. We always look at root.
 	private String srcVersion;
@@ -77,6 +78,18 @@ public class ClasspathHandler {
 		entryCache = null;
 		includeSystemLibraries = includeSysLibs;
 		
+		// Testing some stuff
+		IProject prj = projectRoot.getProject();
+		System.out.println("Working location: " + prj.getWorkingLocation(PLUGIN_ID));
+		// Clean project
+		try {
+			prj.build(IncrementalProjectBuilder.CLEAN_BUILD, null);
+		} catch (CoreException e1) {
+			// TODO Auto-generated catch block
+			System.err.println("Unable to do a clean build on the project for some reason");
+			e1.printStackTrace();
+		}
+		
 		PROJECT_ROOT = projectRoot.getElementName();
 		System.out.println("PROJECT ROOT: " + PROJECT_ROOT);
 		try {
@@ -89,13 +102,6 @@ public class ClasspathHandler {
 			return;
 		}
 		if (root == null) {
-			CycleDetector cd = new CycleDetector();
-			if (cd.projectHasCycle(projectRoot)) {
-				hasCycles = true;
-				System.err.println("There are cyclic dependencies preventing this project from being built");
-				System.err.println("Please remove all cycles before resubmitting.");
-				return;
-			}
 			this.root = this;
 			this.path = path + SEPARATOR + PACKAGE_DIR;
 			setupDirectory(this.path);
@@ -152,10 +158,6 @@ public class ClasspathHandler {
 	
 	public String getRootPath() {
 		return this.root.path;
-	}
-	
-	public boolean hasCycles() {
-		return hasCycles;
 	}
 	
 	private File setupDirectory(String path) {

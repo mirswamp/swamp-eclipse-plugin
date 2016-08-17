@@ -31,6 +31,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.window.Window;
@@ -50,6 +51,7 @@ import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.ConfigDialog;
 import eclipseplugin.dialogs.PlatformDialog;
 import eclipseplugin.dialogs.ToolDialog;
+import eclipseplugin.exceptions.CyclicDependenciesException;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.PackageVersion;
 import edu.uiuc.ncsa.swamp.api.Platform;
@@ -115,7 +117,7 @@ public class SwampSubmitter {
 						// TODO Strengthen error here
 						File f = new File(configFilepath);
 						f.delete();
-						out.println(Utils.getBracketedTimestamp() + "ERROR: Error in loading from previous assessment found. Please relaunch plugin.");
+						out.println(Utils.getBracketedTimestamp() + "Error: Error in loading from previous assessment found. Please relaunch plugin.");
 						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_DESERIALIZE ,"Unable to deserialize previous assessment", null);
 						done(status);
 						return status;
@@ -126,10 +128,24 @@ public class SwampSubmitter {
 				String pkgDir = null;
 				if (si.needsBuildFile()) {
 					out.println(Utils.getBracketedTimestamp() + "Status: Generating build file");
+					try {
 					classpathHandler = generateBuildFiles(si.getProject(), si.packageSystemLibraries());
+					} catch (JavaModelException e) {
+						e.printStackTrace();
+						out.println(Utils.getBracketedTimestamp() + "Error: There was an error in checking your project for cycles. Please reconfigure build and resubmit.");
+						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_GENERATE_BUILD , "Unable to generate build files from this project setup", null);
+						done(status);
+						return status;
+					} catch (CyclicDependenciesException c) {
+						c.printStackTrace();
+						out.println(Utils.getBracketedTimestamp() + "Error: There are cyclic dependencies preventing this project from being built. Please remove all cycles before resubmitting.");
+						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_GENERATE_BUILD , "Unable to generate build files from this project setup", null);
+						done(status);
+						return status;
+					}
 					if (classpathHandler == null) {
 						// TODO Handle this error better
-						out.println(Utils.getBracketedTimestamp() + "ERROR: Error in generating build file. Please review your project configuration and build path.");
+						out.println(Utils.getBracketedTimestamp() + "Error: Error in generating build file. Please review your project configuration and build path.");
 						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_GENERATE_BUILD , "Unable to generate build files from this project setup", null);
 						done(status);
 						return status; 
@@ -191,22 +207,17 @@ public class SwampSubmitter {
 		
 	}
 	
-	private ClasspathHandler generateBuildFiles(IProject proj, boolean includeSysLibs) {
+	private ClasspathHandler generateBuildFiles(IProject proj, boolean includeSysLibs) throws CyclicDependenciesException, JavaModelException {
 		ClasspathHandler classpathHandler = null;
 		// Generating Buildfile
 		IJavaProject javaProj = JavaCore.create(proj);
+		if (javaProj.hasClasspathCycle(javaProj.getRawClasspath())) {
+			throw new CyclicDependenciesException("Cycle exists in dependencies making it impossible to build project");
+		} 
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
 		String rootPath = root.getLocation().toString();
 		classpathHandler = new ClasspathHandler(null, javaProj, rootPath, includeSysLibs);// cd.getPkgPath()); // TODO replace this w/ workspace path
-		System.out.println(classpathHandler.getProjectName());
-		
-		if (classpathHandler.hasCycles()) {
-			out.println(Utils.getBracketedTimestamp() + "Error: There are cyclic dependencies in this project. Please remove all cycles before resubmitting.");
-			System.err.println("Huge error. Cyclic dependencies!");
-			classpathHandler = null;
-			return null;
-		}
 		BuildfileGenerator.generateBuildFile(classpathHandler);
 		System.out.println("Build file generated");
 		return classpathHandler;
