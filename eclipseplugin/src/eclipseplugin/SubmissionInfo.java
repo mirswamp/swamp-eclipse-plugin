@@ -187,6 +187,10 @@ public class SubmissionInfo {
 		return false;
 	}
 	
+	public boolean isProjectInitialized() {
+		return project != null;
+	}
+	
 	public void setProject(IProject p) {
 		this.project = p;
 	}

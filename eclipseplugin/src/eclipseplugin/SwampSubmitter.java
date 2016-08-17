@@ -60,6 +60,7 @@ import edu.wisc.cs.swamp.exceptions.SessionExpiredException;
 import edu.wisc.cs.swamp.exceptions.SessionRestoreException;
 
 import static org.eclipse.core.runtime.Path.SEPARATOR;
+import static eclipseplugin.Activator.PLUGIN_ID;
 
 public class SwampSubmitter {
 
@@ -286,7 +287,7 @@ public class SwampSubmitter {
 		out.println(Utils.getBracketedTimestamp() + "Status: Launched SWAMP plugin - running on " + versionStr + ".");
 	}
 	
-	public void launchBackgroundAssessment(String configPath) {
+	public void launchBackgroundAssessment(IProject project) {
 		initializeSwampApi();
 		out = initializeConsole("SWAMP Plugin");
 		try {
@@ -302,16 +303,13 @@ public class SwampSubmitter {
 				return;
 			}
 		}
-		if (configPath == null || configPath.equals("")) {
-			configFilepath = null;
-		}
-		else {
-			configFilepath = configPath + SEPARATOR + CONFIG_FILENAME;
-		}
+	
+		configFilepath = project.getWorkingLocation(PLUGIN_ID).toOSString() + SEPARATOR + CONFIG_FILENAME;
 		SubmissionInfo si = new SubmissionInfo(this.api);
 		if ((configFilepath == null) || (!new File(configFilepath).exists())) {
 			out.println(Utils.getBracketedTimestamp() + "Error: No previous assessment found.");
 			System.out.println("No previous assessment found at " + configFilepath);
+			si.initializeProject(project.getName(), project.getLocation().toOSString());
 			launchConfiguration(si);
 		}
 		else {
@@ -369,7 +367,7 @@ public class SwampSubmitter {
 		
 	}
 	
-	public void launch(String configPath) {
+	public void launch(IProject project) {
 		initializeSwampApi();
 		
 		out = initializeConsole("SWAMP Plugin");
@@ -388,14 +386,9 @@ public class SwampSubmitter {
 		}
 		// TODO we can fail here, i.e. by not connecting and we're not handling it as of now
 		SubmissionInfo si = new SubmissionInfo(this.api);
-		if (configPath == null || configPath.equals("")) {
-			configFilepath = null;
-		}
-		else {
-			configFilepath = configPath + SEPARATOR + CONFIG_FILENAME;
-		}
-		if ((configFilepath != null) && (new File(configFilepath).exists())) {
-			boolean returnCode = FileSerializer.deserializeSubmissionInfo(configFilepath, si);
+		configFilepath = project.getWorkingLocation(PLUGIN_ID).toOSString() + SEPARATOR + CONFIG_FILENAME;
+		if ((configFilepath == null) || ((!(new File(configFilepath).exists()))) || (!FileSerializer.deserializeSubmissionInfo(configFilepath, si))) {
+			si.initializeProject(project.getName(), project.getLocation().toOSString());
 		}
 		launchConfiguration(si);
 	}

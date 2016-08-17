@@ -317,9 +317,12 @@ public class ConfigDialog extends TitleAreaDialog {
 		if (submissionInfo.isConfigInitialized()) {
 			setupSwampProject();
 			setupSwampPackage();
-			setupPackageType();
 			setupEclipseProject();
+			setupPackageType();
 			setupBuild();
+		}
+		else if (submissionInfo.isProjectInitialized()) {
+			setupEclipseProject();
 		}
 		else {
 			setDefaults();

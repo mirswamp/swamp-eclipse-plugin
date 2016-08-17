@@ -31,7 +31,7 @@ public class ConfigureAction implements IWorkbenchWindowActionDelegate {
 	}
 	
 	public void run(IAction action) {
-		ss.launch(HandlerUtils.getActiveProjectLocation(window));
+		ss.launch(HandlerUtils.getActiveProject(window));
 	}
 
 	@Override
