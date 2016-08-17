@@ -24,8 +24,8 @@ import org.eclipse.ui.handlers.HandlerUtil;
 
 import eclipseplugin.SwampSubmitter;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import static eclipseplugin.Activator.PLUGIN_ID;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -61,7 +61,8 @@ public class CommandHandler extends AbstractHandler {
 		
 		// TODO (1) Make this project-specific
 		SwampSubmitter ss = new SwampSubmitter(window);
-		String configDir = project.getProject().getLocation().toOSString();
+		IProject prj = project.getProject();
+		String configDir = prj.getWorkingLocation(PLUGIN_ID).toOSString();
 		
 		ss.launchBackgroundAssessment(configDir);
 		

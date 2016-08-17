@@ -21,6 +21,8 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 
+import static eclipseplugin.Activator.PLUGIN_ID;
+
 public class SubmissionInfo {
 
 	private boolean configInitialized;
@@ -223,6 +225,10 @@ public class SubmissionInfo {
 	
 	public String getProjectPath() {
 		return project.getLocation().toOSString();
+	}
+	
+	public String getProjectWorkingLocation() {
+		return project.getWorkingLocation(PLUGIN_ID).toOSString();
 	}
 	
 	public boolean needsBuildFile() {

@@ -20,6 +20,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFileEditorInput;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import static eclipseplugin.Activator.PLUGIN_ID;
 
 public class HandlerUtils {
 
@@ -48,6 +49,6 @@ public class HandlerUtils {
 		if (project == null) {
 			return null;
 		}
-		return project.getLocation().toOSString();
+		return project.getWorkingLocation(PLUGIN_ID).toOSString();
 	}
 }

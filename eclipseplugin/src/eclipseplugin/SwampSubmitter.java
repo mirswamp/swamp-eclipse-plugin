@@ -69,7 +69,7 @@ public class SwampSubmitter {
 	private String configFilepath;
 
 	private static String SWAMP_FAMILY 		= "SWAMP_FAMILY";
-	private static String CONFIG_FILENAME 	= ".swampconfig";
+	private static String CONFIG_FILENAME 	= "swampconfig.txt";
 	private static String PLUGIN_EXIT_MANUAL = "Status: Plugin exited manually.";
 	
 	public SwampSubmitter(IWorkbenchWindow window) {
@@ -363,7 +363,7 @@ public class SwampSubmitter {
 			}
 		}
 		
-		configFilepath = si.getProjectPath() + SEPARATOR + CONFIG_FILENAME;
+		configFilepath = si.getProjectWorkingLocation() + SEPARATOR + CONFIG_FILENAME;
 		FileSerializer.serializeSubmissionInfo(configFilepath, si);
 		runBackgroundJob(si, false);
 		
