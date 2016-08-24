@@ -15,8 +15,10 @@ package eclipseplugin;
 
 import java.util.List;
 
+import org.eclipse.core.internal.resources.Project;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.wisc.cs.swamp.SwampApiWrapper;
@@ -74,6 +76,16 @@ public class SubmissionInfo {
 	
 	public String getPackageType() {
 		return packageType;
+	}
+	
+	public String getPkgConfPackageType() {
+		if (packageType.equals("Java 8 Source Code")) {
+			return "java-8";
+		}
+		if (packageType.equals("Java 7 Source Code")) {
+			return "java-7";
+		}
+		return "";
 	}
 	
 	public void setPackageType(String pkgType) {
@@ -204,8 +216,8 @@ public class SubmissionInfo {
 			createBuildFile = true;
 			buildSystem = "ant";
 			buildTarget = "build";
-			buildDirectory = "." + project.getName();
-			this.buildFile = "build.xml";
+			buildDirectory = "."; // Top-level directory
+			this.buildFile = getProjectName() + BuildfileGenerator.BUILDFILE_EXT;
 			packageSystemLibs = packageRTLibs;
 		}
 		else if (buildSys.equals(NO_BUILD_STRING)) {

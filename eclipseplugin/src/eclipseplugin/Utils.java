@@ -12,10 +12,26 @@
  */
 
 package eclipseplugin;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Set;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
+
+import static org.eclipse.core.runtime.IPath.SEPARATOR;
 
 /**
  * This class provides utility methods that provide basic
@@ -122,5 +138,87 @@ public class Utils {
 			list.toArray(ary);
 		}
 		return ary;
+	}
+	
+	public static java.nio.file.Path zipFiles(Set<String> files, String zipFilePath, String zipFileName) {
+		String finalPath = zipFilePath + SEPARATOR + zipFileName;
+		FileOutputStream fileOS = null;
+		try {
+			fileOS = new FileOutputStream(finalPath);
+			ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(fileOS));
+			// All of these files should be top level in the generated archive
+			for (String file : files) {
+				String lastSegment = new Path(file).lastSegment();
+				File f = new File(file);
+				System.out.println(file);
+				if (f.isDirectory()) {
+					addEntries(file, lastSegment, out);
+				}
+				else {
+					addFileToZip(file, lastSegment, out);
+					
+				}
+			}
+			out.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return Paths.get(finalPath);
+	}
+	
+	/**
+	 * Method for adding entries from a directory to the zip output stream
+	 *
+	 * @param pathname the path for the directory
+	 * @param basePath the segment that this is relative to
+	 * @param out the output stream for the zip file being built
+	 */
+	private static void addEntries(String pathname, String basePath, ZipOutputStream out) {
+		File file = new File(pathname);
+		String filename;
+		String files[] = file.list();
+		
+		for (int i = 0; i < files.length; i++) {
+			filename = pathname + SEPARATOR + files[i];
+			File f = new File(filename);
+			if (f.isDirectory()) {
+				addEntries(filename, basePath.equals("") ? files[i]:basePath + SEPARATOR + files[i], out);
+			}
+			else {
+				System.out.println("File name: " + filename);
+				addFileToZip(filename, basePath + SEPARATOR + files[i], out);
+			}
+		}
+	}
+	
+	/**
+	 * Private method to add file to the zip file being built
+	 *
+	 * @param pathname the pathname of the file
+	 * @param relPath the relative path of the entry
+	 * @param out the output stream for the zip file being built
+	 */
+	private static void addFileToZip(String pathname, String relPath, ZipOutputStream out) {
+		int BUF_SIZE = 2048;
+		byte data[] = new byte[BUF_SIZE];
+		try {
+			FileInputStream fi = new FileInputStream(pathname);
+			BufferedInputStream in = new BufferedInputStream(fi, 2048);
+			ZipEntry entry = new ZipEntry(relPath);
+			out.putNextEntry(entry);
+			int cnt;
+			while ((cnt = in.read(data, 0, BUF_SIZE)) != -1) {
+				out.write(data, 0, cnt);
+			}
+			in.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static String getProjectDirectory(IProject p) {
+		IPath path = p.getLocation();
+		return path.lastSegment();
 	}
 }

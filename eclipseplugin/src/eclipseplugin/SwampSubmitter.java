@@ -14,21 +14,30 @@
 package eclipseplugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.jobs.MultiRule;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.JavaModelException;
@@ -103,6 +112,7 @@ public class SwampSubmitter {
 	private void runBackgroundJob(SubmissionInfo si, boolean fromFile) {
 		int UNABLE_TO_DESERIALIZE = 0;
 		int UNABLE_TO_GENERATE_BUILD = 1;
+		
 		Job job = new Job("SWAMP Assessment Submission") {
 			
 			@Override
@@ -112,6 +122,7 @@ public class SwampSubmitter {
 			
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+				
 				if (fromFile) {
 					if (!FileSerializer.deserializeSubmissionInfo(configFilepath, si)) {
 						// TODO Strengthen error here
@@ -123,76 +134,67 @@ public class SwampSubmitter {
 						return status;
 					}
 				}
-				ClasspathHandler classpathHandler = null;
-				String pathToArchive = null;
-				String pkgDir = null;
+				
 				if (si.needsBuildFile()) {
 					out.println(Utils.getBracketedTimestamp() + "Status: Generating build file");
+					ImprovedClasspathHandler ich = new ImprovedClasspathHandler(JavaCore.create(si.getProject()), !si.packageSystemLibraries());
+					Set<String> files = ich.getFilesToArchive();
+					
+					String path = BuildfileGenerator.generateBuildFile(ich);
+					if (path != null) {
+						files.add(path);
+					} 
+					
+					out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
+					String pluginLoc = ich.getProjectPluginLocation();
+					Date date = new Date();
+					String timestamp = date.toString();
+					String filename = timestamp + "-" + si.getPackageName() + ".zip";
+					String archiveName = filename.replace(" ", "-").replace(":", "").toLowerCase(); 
+					Path archivePath = Utils.zipFiles(files, ich.getProjectPluginLocation(), archiveName);
+					
+					File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
+					//PackageInfo pkgInfo = packageProject(si.getPackageName(), si.getPackageVersion(), pkgDir, pathToArchive, si.getBuildSystem() , si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
+					
+					out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
+					String prjUUID = si.getSelectedProjectID();
+					String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
+					
+					// Delete ant buildfile
 					try {
-					classpathHandler = generateBuildFiles(si.getProject(), si.packageSystemLibraries());
-					} catch (JavaModelException e) {
+						//FileUtils.forceDelete(pkgConf);
+						//FileUtils.forceDelete(archivePath.toFile());
+						ich.deleteSwampBin();
+					} catch (IOException e) {
+						// This isn't really a problem but why?
 						e.printStackTrace();
-						out.println(Utils.getBracketedTimestamp() + "Error: There was an error in checking your project for cycles. Please reconfigure build and resubmit.");
-						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_GENERATE_BUILD , "Unable to generate build files from this project setup", null);
-						done(status);
-						return status;
-					} catch (CyclicDependenciesException c) {
-						c.printStackTrace();
-						out.println(Utils.getBracketedTimestamp() + "Error: There are cyclic dependencies preventing this project from being built. Please remove all cycles before resubmitting.");
-						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_GENERATE_BUILD , "Unable to generate build files from this project setup", null);
-						done(status);
-						return status;
 					}
-					if (classpathHandler == null) {
-						// TODO Handle this error better
-						out.println(Utils.getBracketedTimestamp() + "Error: Error in generating build file. Please review your project configuration and build path.");
-						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_GENERATE_BUILD , "Unable to generate build files from this project setup", null);
-						done(status);
-						return status; 
-					}
-					pkgDir = "package";
-					pathToArchive = ResourcesPlugin.getWorkspace().getRoot().getLocation().toOSString() + SEPARATOR + "package";
-				}
-				else {
-					pkgDir = "."; // In top level directory
-					pathToArchive = si.getProjectPath();
-					// create archive from actual location
-				}
-				out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
-				PackageInfo pkgInfo = packageProject(si.getPackageName(), si.getPackageVersion(), pkgDir, pathToArchive, si.getBuildSystem() , si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
-				
-				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
-				String prjUUID = si.getSelectedProjectID();
-				String pkgVersUUID = uploadPackage(pkgInfo.getParentPath(), prjUUID, pkgInfo.getArchiveFilename(), si.isNewPackage());
-				
-				// TODO Can we move this up?
-				if (classpathHandler != null) {
-					classpathHandler.revertClasspath(ResourcesPlugin.getWorkspace().getRoot(), new HashSet<ClasspathHandler>());
-				}
-				
-				// Deletion code - uncomment for release
-				/*
-				pkg.deleteFiles();
-				if (autoGenBuild) {
-					System.out.println("Auto-generated build file at " + path + "/build.xml");
-					File f = new File(path + "/build.xml");
-					if (f != null) {
-						if (!f.delete()) {
-							System.err.println("Unable to delete auto-generated build file");
+					// Delete swampbin
+					// Delete archive
+					// Deletion code - uncomment for release
+					/*
+					pkg.deleteFiles();
+					if (autoGenBuild) {
+						System.out.println("Auto-generated build file at " + path + "/build.xml");
+						File f = new File(path + "/build.xml");
+						if (f != null) {
+							if (!f.delete()) {
+								System.err.println("Unable to delete auto-generated build file");
+							}
 						}
 					}
-				}
-				*/
-				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
-				for (String toolUUID : si.getSelectedToolIDs()) {
-					List<Platform> platforms = api.getSupportedPlatforms(toolUUID, prjUUID);
-					Set<String> platformSet = new HashSet<>();
-					for (Platform p : platforms) {
-						platformSet.add(p.getUUIDString());
-					}
-					for (String platformUUID : si.getSelectedPlatformIDs()) {
-						if (platformSet.contains(platformUUID)) {
-							submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
+					*/
+					out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
+					for (String toolUUID : si.getSelectedToolIDs()) {
+						List<Platform> platforms = api.getSupportedPlatforms(toolUUID, prjUUID);
+						Set<String> platformSet = new HashSet<>();
+						for (Platform p : platforms) {
+							platformSet.add(p.getUUIDString());
+						}
+						for (String platformUUID : si.getSelectedPlatformIDs()) {
+							if (platformSet.contains(platformUUID)) {
+								submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
+							}
 						}
 					}
 				}
@@ -201,12 +203,13 @@ public class SwampSubmitter {
 				return status;
 			}
 		};
-		//job.setRule(new MutexRule());
+		job.setRule(ResourcesPlugin.getWorkspace().getRoot()); // we have to lock the root for building projects (i.e. cleaning them). We could potentially get the set of projects, clean the set of projects, and then get a lesser project-scoped rule?
 		job.setUser(true);
 		job.schedule();
 		
 	}
 	
+	/*
 	private ClasspathHandler generateBuildFiles(IProject proj, boolean includeSysLibs) throws CyclicDependenciesException, JavaModelException {
 		ClasspathHandler classpathHandler = null;
 		// Generating Buildfile
@@ -218,48 +221,21 @@ public class SwampSubmitter {
 		IWorkspaceRoot root = workspace.getRoot();
 		String rootPath = root.getLocation().toString();
 		classpathHandler = new ClasspathHandler(null, javaProj, rootPath, includeSysLibs);// cd.getPkgPath()); // TODO replace this w/ workspace path
-		BuildfileGenerator.generateBuildFile(classpathHandler);
+		//BuildfileGenerator.generateBuildFile(classpathHandler);
 		System.out.println("Build file generated");
 		return classpathHandler;
 	}
+	*/
 	
-	private PackageInfo packageProject(String packageName, String packageVersion, String pkgDir, String path, String buildSystem, String buildDir, String buildFile, String buildTarget) {
-		// Zipping and generating package.conf
-		Date date = new Date();
-		String timestamp = date.toString();
-		//String path = cd.getPkgPath();
-		String workspacePath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
-		//String path =  workspacePath + Path.SEPARATOR  + "package";
-		String filename = timestamp + "-" + packageName + ".zip";
-		String filenameNoSpaces = filename.replace(" ", "-").replace(":", "").toLowerCase(); // PackageVersionHandler mangles the name for some reason if there are colons or uppercase letters
-		System.out.println("Package Name: " + packageName);
-		System.out.println("Path: " + path);
-		System.out.println("Filename: " + filenameNoSpaces);
-		// output name should be some combination of pkg name, version, timestamp, extension (.zip)
-		
-		PackageInfo pkg = new PackageInfo(path, filenameNoSpaces, packageName, workspacePath); // pass in path and output zip file name
-		
-		pkg.setPkgShortName(packageName);
-		pkg.setVersion(packageVersion);
-		pkg.setBuildSys(buildSystem);
-		pkg.setBuildDir(buildDir);
-		pkg.setBuildFile(buildFile);
-		pkg.setBuildTarget(buildTarget);
-		
-		pkg.writePkgConfFile(pkgDir);
-
-		return pkg;
-	}
-
-	private String uploadPackage(String parentDir, String prjUUID, String filename, boolean newPackage) {
+	private String uploadPackage(String pkgConfPath, String archivePath, String prjUUID, boolean newPackage) {
 		// Upload package
 		System.out.println("Uploading package");
-		System.out.println("Package-conf directory: " + parentDir + SEPARATOR +"package.conf");
-		System.out.println("Archive directory: " + parentDir + SEPARATOR + filename);
+		System.out.println("Package-conf directory: " + pkgConfPath);
+		System.out.println("Archive directory: " + archivePath);
 		System.out.println("Project UUID: " + prjUUID);
 		String pkgVersUUID = null;
 		try {
-			pkgVersUUID = api.uploadPackage(parentDir + SEPARATOR + "package.conf", parentDir + SEPARATOR + filename, prjUUID, newPackage);
+			pkgVersUUID = api.uploadPackage(pkgConfPath, archivePath, prjUUID, newPackage);
 		} catch (InvalidIdentifierException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -277,6 +253,7 @@ public class SwampSubmitter {
 			return true;
 		}
 		try {
+			System.out.println("Initialized SWAMP API");
 			api = new SwampApiWrapper(SwampApiWrapper.HostType.DEVELOPMENT);
 		} catch (Exception e) {
 			out.println(Utils.getBracketedTimestamp() + "Error: Unable to initialize SWAMP API.");
