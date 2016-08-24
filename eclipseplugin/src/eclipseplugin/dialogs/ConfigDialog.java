@@ -542,6 +542,12 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		else {
 			buildSys = submissionInfo.getBuildSystem();
+			String prjLocation = eclipseProjects[eclipsePrjCombo.getSelectionIndex()].getLocation().toOSString();
+			String buildDir = submissionInfo.getBuildDirectory();
+			String buildFile = submissionInfo.getBuildFile();
+			String path = prjLocation + SEPARATOR + (buildDir.equals(".") ? buildFile : buildDir + SEPARATOR + buildFile);
+			buildPathText.setText(path);
+			buildTargetText.setText(submissionInfo.getBuildTarget());
 		}
 		for (int i = 0; i < buildSysCombo.getItemCount(); i++) {
 			if (buildSys.equals(buildSysCombo.getItem(i))) {
