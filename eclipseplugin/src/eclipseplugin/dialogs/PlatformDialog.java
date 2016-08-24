@@ -107,7 +107,7 @@ public class PlatformDialog extends TitleAreaDialog {
 		container.setLayout(new GridLayout(2, false));
 
 		DialogUtil.initializeLabelWidget("Platforms: ", SWT.NONE, container);
-		platforms = getPlatforms(submissionInfo.getSelectedToolIDs(), submissionInfo.getSelectedProjectID());
+		platforms = getPlatforms(submissionInfo.getPackageType());
 		swtPlatformList = DialogUtil.initializeListWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), convertPlatformListToStringArray());
 		swtPlatformList.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PLATFORM_HELP));
 		
@@ -128,22 +128,14 @@ public class PlatformDialog extends TitleAreaDialog {
 	 * Gets java.util.List of Platforms from the SWAMP given the selected Tools
 	 * and SWAMP project
 	 *
-	 * @param toolUUIDs identifiers for the selected tools
-	 * @param prjUUID identifier for the project
+	 * @param pkgType the package type of the package being assessed
 	 * @return List of SWAMP Platforms
 	 */
-	private List<Platform> getPlatforms(List<String> toolUUIDs, String prjUUID) {
-		Set<Platform> platformSet = new HashSet<Platform>();
-		for (String toolUUID : toolUUIDs) {
-			List<Platform> list = api.getSupportedPlatforms(toolUUID, prjUUID);
-			for (Platform p : list) {
-				platformSet.add(p);
-			}
-		}
-		List<Platform> platformList = new ArrayList<Platform>(platformSet.size());
-		for (Platform p : platformSet) {
-			platformList.add(p);
-		}
+	private List<Platform> getPlatforms(String pkgType) {
+		
+		Platform p = api.getDefaultPlatform(pkgType);
+		List<Platform> platformList = new ArrayList<Platform>();
+		platformList.add(p);
 		return platformList;
 	}
 	

@@ -396,12 +396,7 @@ public class ConfigDialog extends TitleAreaDialog {
 				buildPathText.setText(filepath);
 				return;
 			}
-			if (filename.equals(MAKE_UPPERCASE)) {
-				setBuildSystem("make");
-				buildPathText.setText(filepath);
-				return;
-			}
-			if (filename.equals(MAKE_LOWERCASE)) {
+			if ((filename.equals(MAKE_UPPERCASE)) || (filename.equals(MAKE_LOWERCASE))) {
 				setBuildSystem("make");
 				buildPathText.setText(filepath);
 				return;
@@ -453,12 +448,17 @@ public class ConfigDialog extends TitleAreaDialog {
 			String complianceVersion = jp.getOption("org.eclipse.jdt.core.compiler.compliance", true);
 			if (complianceVersion != null) {
 				if (complianceVersion.equals("1.7")) {
+					System.out.println("Java 7 package");
 					// set package type to Java 7
-					setPackageType(api.getPkgTypeString("Java", "java7", "", null));
+					// This API doesn't really make sense for our purposes
+					//setPackageType(api.getPkgTypeString("Java", "java-7", "", null));
+					setPackageType("Java 7 Source Code");
 				}
 				else if (complianceVersion.equals("1.8")) {
+					System.out.println("Java 8 package");
 					// set package type to Java 8
-					setPackageType(api.getPkgTypeString("Java", "java8", "", null));
+					//setPackageType(api.getPkgTypeString("Java", "java-8", "", null));
+					setPackageType("Java 8 Source Code");
 				}
 			}
 			prjFilePathText.setText(project.getLocation().toOSString());
