@@ -112,6 +112,7 @@ public class SwampSubmitter {
 	private void runBackgroundJob(SubmissionInfo si, boolean fromFile) {
 		int UNABLE_TO_DESERIALIZE = 0;
 		int UNABLE_TO_GENERATE_BUILD = 1;
+		int CYCLICAL_DEPENDENCIES = 2;
 		
 		Job job = new Job("SWAMP Assessment Submission") {
 			
@@ -129,15 +130,31 @@ public class SwampSubmitter {
 						File f = new File(configFilepath);
 						f.delete();
 						out.println(Utils.getBracketedTimestamp() + "Error: Error in loading from previous assessment found. Please relaunch plugin.");
-						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_DESERIALIZE ,"Unable to deserialize previous assessment", null);
+						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_DESERIALIZE, "Unable to deserialize previous assessment", null);
 						done(status);
 						return status;
 					}
 				}
 				
 				if (si.needsBuildFile()) {
+					IJavaProject jp = JavaCore.create(si.getProject());
+					try {
+						if (jp.hasClasspathCycle(jp.getRawClasspath())) {
+							out.println(Utils.getBracketedTimestamp() + "Error: Classpath has cyclical dependencies. Please resolve these issues and resubmit.");
+							Status status = new Status(IStatus.ERROR, "eclipseplugin", CYCLICAL_DEPENDENCIES, "Project has cyclical dependencies", null);
+							done(status);
+							return status;
+						}
+					} catch (JavaModelException e1) {
+						// TODO Auto-generated catch block
+						out.println(Utils.getBracketedTimestamp() + "Error: Unable to access classpath. Please resolve any issues in the project's build path and resubmit.");
+						e1.printStackTrace();
+						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_GENERATE_BUILD, "Unable to generate build for this project", null);
+						done(status);
+						return status;
+					}
 					out.println(Utils.getBracketedTimestamp() + "Status: Generating build file");
-					ImprovedClasspathHandler ich = new ImprovedClasspathHandler(JavaCore.create(si.getProject()), !si.packageSystemLibraries());
+					ImprovedClasspathHandler ich = new ImprovedClasspathHandler(jp, !si.packageSystemLibraries());
 					Set<String> files = ich.getFilesToArchive();
 					
 					String path = BuildfileGenerator.generateBuildFile(ich);
