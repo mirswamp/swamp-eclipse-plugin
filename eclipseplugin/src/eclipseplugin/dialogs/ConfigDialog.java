@@ -62,7 +62,6 @@ public class ConfigDialog extends TitleAreaDialog {
 	private Button packageRTButton;
 	private Button selectFileButton;
 	private Text buildPathText;
-	private String fullPath;
 	
 	private Shell shell;
 	
@@ -130,7 +129,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	private void setEclipseProjectDefault() {
 		if (eclipsePrjCombo.getItemCount() == 1) {
 			eclipsePrjCombo.select(0);
-			handleEclipseProjectSelection(0, false);
+			handleEclipseProjectSelection(0);
 		}
 	}
 	
@@ -431,14 +430,14 @@ public class ConfigDialog extends TitleAreaDialog {
 		for (int i = 0; i < eclipseProjects.length; i++) {
 			if (project.equals(eclipseProjects[i])) {
 				eclipsePrjCombo.select(i);
-				handleEclipseProjectSelection(i, true);
+				handleEclipseProjectSelection(i);
 				return;
 			}
 		}
-		handleEclipseProjectSelection(-1, true);
+		handleEclipseProjectSelection(-1);
 	}
 	
-	private void handleEclipseProjectSelection(int index, boolean fromFile) {
+	private void handleEclipseProjectSelection(int index) {
 		if (index < 0) {
 			prjFilePathText.setText("");
 		}
@@ -462,9 +461,7 @@ public class ConfigDialog extends TitleAreaDialog {
 				}
 			}
 			prjFilePathText.setText(project.getLocation().toOSString());
-			if (!fromFile) {
-				setPredictedBuildSys(project);
-			}
+			setPredictedBuildSys(project);
 		}
 	}
 	
@@ -681,33 +678,29 @@ public class ConfigDialog extends TitleAreaDialog {
 			// build system (build system info -- including for create_new...)
 			index = buildSysCombo.getSelectionIndex();
 			String buildSysStr = buildSysCombo.getItem(index);
-			String relativeDir = "";
-			String buildFile = "";
+			String relBuildDir = "";
+			String buildFileName = "";
 			boolean createBuildFile = false;
 			if (buildSysStr.equals(AUTO_GENERATE_BUILD_STRING)) {
 				createBuildFile = true;
 			}
 			else {
-				relativeDir = getRelativeBuildDir(project.getLocation().toOSString(), fullPath);
-				buildFile = buildPathText.getText();
-				System.out.println("Relative Directory: " + relativeDir);
-				System.out.println("Build file: " + buildFile);
+				String prjDir = project.getLocation().toOSString();
+				String buildPath = buildPathText.getText();
+				int prjIndex = prjDir.lastIndexOf(SEPARATOR);
+				int fileIndex = buildPath.lastIndexOf(SEPARATOR);
+				relBuildDir = buildPath.substring(prjIndex+1, fileIndex);
+				if (relBuildDir.equals("")) {
+					relBuildDir = ".";
+				}
+				buildFileName = buildPath.substring(fileIndex+1);
+				System.out.println("Relative Directory: " + relBuildDir);
+				System.out.println("Build file: " + buildFileName);
 			}
-			submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relativeDir, buildFile, buildTargetText.getText(), packageRTButton.getSelection());
+			submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relBuildDir, buildFileName, buildTargetText.getText(), packageRTButton.getSelection());
 			submissionInfo.setConfigInitialized(true);
 			super.okPressed();
 		}
-	}
-	
-	private String getRelativeBuildDir(String projectDir, String buildPath) {
-		int index = projectDir.lastIndexOf(SEPARATOR);
-		int fileIndex = buildPath.lastIndexOf(SEPARATOR);
-		String relPath = buildPath.substring(index+1, fileIndex);
-		System.out.println("Rel path: " + relPath);
-		if (relPath.equals("")) {
-			relPath = ".";
-		}
-		return relPath;
 	}
 	
 	private class ComboSelectionListener implements SelectionListener {
@@ -729,7 +722,7 @@ public class ConfigDialog extends TitleAreaDialog {
 				handleSwampProjectSelection(selection);
 			}
 			else if (type == Type.ECLIPSE_PROJECT) {
-				handleEclipseProjectSelection(selection, false);
+				handleEclipseProjectSelection(selection);
 			}
 			else if (type == Type.PACKAGE){ 
 				handlePackageSelection(selection);
@@ -769,10 +762,11 @@ public class ConfigDialog extends TitleAreaDialog {
 			}
 			dialog.setFilterPath(path);
 			String rc = dialog.open();
-			fullPath = rc;
+			//fullPath = rc;
 			if (rc != null) {
-				String lastSegment = rc.substring(rc.lastIndexOf(SEPARATOR)+1);
-				buildPathText.setText(lastSegment);
+				//String lastSegment = rc.substring(rc.lastIndexOf(SEPARATOR)+1);
+				//buildPathText.setText(lastSegment);
+				buildPathText.setText(rc);
 			}
 		}
 		
