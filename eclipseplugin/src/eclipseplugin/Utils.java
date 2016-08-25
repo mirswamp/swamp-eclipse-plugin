@@ -49,7 +49,7 @@ public class Utils {
 	public static String getCurrentTimestamp() {
 		Timestamp timestamp = new Timestamp(new Date().getTime());
 		String timeString = timestamp.toString();
-		timeString = timeString.substring(0, timeString.length()-4);
+		timeString = timeString.substring(0, timeString.lastIndexOf('.'));
 		timeString = timeString.replace(" ","-");
 		return timeString;
 	}
