@@ -52,7 +52,7 @@ public class ImprovedClasspathHandler {
 	private String srcVersion;
 	private String targetVersion;
 	
-	public  ImprovedClasspathHandler(IJavaProject project, boolean exclSysLibs) {
+	public  ImprovedClasspathHandler(IJavaProject project, ImprovedClasspathHandler root, boolean exclSysLibs) {
 		this.excludeSysLibs = exclSysLibs;
 		sources = new ArrayList<IClasspathEntry>();
 		libs = new ArrayList<IClasspathEntry>();
@@ -70,6 +70,7 @@ public class ImprovedClasspathHandler {
 			filesToArchive = new HashSet<String>();
 		}
 		else {
+			this.root = root;
 			visitedProjects = root.visitedProjects;
 			SWAMPBIN_PATH = root.SWAMPBIN_PATH;
 			filesToArchive = root.filesToArchive;
@@ -207,8 +208,8 @@ public class ImprovedClasspathHandler {
 			dependentProjects.add(visitedProjects.get(path));
 		}
 		else {
-			IProject project = root.getFile(entry.getPath()).getProject();
-			ImprovedClasspathHandler ich = new ImprovedClasspathHandler(JavaCore.create(project), this.root.excludeSysLibs);
+			IProject project = root.getProject(entry.getPath().toOSString());
+			ImprovedClasspathHandler ich = new ImprovedClasspathHandler(JavaCore.create(project), this.root, this.root.excludeSysLibs);
 			dependentProjects.add(ich);
 			visitedProjects.put(path, ich);
 		}
@@ -295,6 +296,10 @@ public class ImprovedClasspathHandler {
 	}
 
 	public Set<String> getFilesToArchive() {
+		System.out.println("FILES TO ARCHIVE");
+		for (String s : filesToArchive) {
+			System.out.println(s);
+		}
 		return filesToArchive;
 	}
 	
@@ -333,11 +338,11 @@ public class ImprovedClasspathHandler {
 	}
 	
 	public String getProjectPluginLocation() {
-		return project.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
+		return root.project.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
 	}
 	
-	public List<ClasspathHandler> getDependentProjects() {
-		return null;
+	public List<ImprovedClasspathHandler> getDependentProjects() {
+		return dependentProjects;
 	}
 	
 	public boolean isRoot() {

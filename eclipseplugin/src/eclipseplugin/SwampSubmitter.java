@@ -227,13 +227,16 @@ public class SwampSubmitter {
 					return status;
 				}
 				out.println(Utils.getBracketedTimestamp() + "Status: Generating build file");
-				ImprovedClasspathHandler ich = new ImprovedClasspathHandler(jp, !si.packageSystemLibraries());
+				ImprovedClasspathHandler ich = new ImprovedClasspathHandler(jp, null, !si.packageSystemLibraries());
 				Set<String> files = ich.getFilesToArchive();
 				
-				String path = BuildfileGenerator.generateBuildFile(ich);
-				if (path != null) {
-					files.add(path);
-				} 
+				BuildfileGenerator.generateBuildFile(ich, files);
+				
+				try {
+					cleanProjects(si.getProject());
+				} catch (CoreException e) {
+					out.println(Utils.getBracketedTimestamp() + "Error: Unable to clean project or dependent projects. The tools may be unable to assess this package.");
+				}
 				
 				out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
 				String pluginLoc = ich.getProjectPluginLocation();
@@ -285,6 +288,13 @@ public class SwampSubmitter {
 		job.setUser(true);
 		job.schedule();
 		
+	}
+	
+	private void cleanProjects(IProject project) throws CoreException {
+		project.build(IncrementalProjectBuilder.CLEAN_BUILD, null);
+		for (IProject p : project.getReferencedProjects()) {
+			cleanProjects(p);
+		}
 	}
 	
 	private String uploadPackage(String pkgConfPath, String archivePath, String prjUUID, boolean newPackage) {
