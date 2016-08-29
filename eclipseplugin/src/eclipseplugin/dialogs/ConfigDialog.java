@@ -232,8 +232,9 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	private String[] getPackageTypeList() {
-		List<String> pkgTypes = api.getPackageTypesList();
-		return Utils.convertStringListToArray(pkgTypes);
+		//List<String> pkgTypes = api.getPackageTypesList();
+		//return Utils.convertStringListToArray(pkgTypes);
+		return submissionInfo.getPackageTypeList();
 	}
 	
 	@Override

@@ -90,11 +90,7 @@ public class PackageInfo {
 		writer.println("package-archive-sha512=" + sha512hash);
 		writer.println("package-dir=" + pkgDir);
 		writer.println("package-language=" + "Java");
-		/*
-		if (!pkgType.equals("")) {
-			writer.println("package-language-version=" + pkgType);
-		}
-		*/
+		writer.println("package-language-version=" + pkgType);
 		writer.println("build-sys=" + buildSys);
 		if (!buildDir.equals("")) {
 			System.out.println("Build dir: " + buildDir);

@@ -54,9 +54,15 @@ public class SubmissionInfo {
 	// Other
 	private SwampApiWrapper api;
 	
+	public static final String JAVA_8_SRC = "Java 8 Source Code";
+	public static final String JAVA_7_SRC = "Java 7 Source Code";
+	public static final String JAVA_8_BYTE = "Java 8 Bytecode";
+	public static final String JAVA_7_BYTE = "Java 7 Bytecode";
+	
 	public static String NO_BUILD_STRING = "no-build";
 	public static String AUTO_GENERATE_BUILD_STRING = "Auto-generate build file";
 	private static String buildOptions[] = { "Auto-generate build file", "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", "no-build", "other" };
+	private static String pkgTypeOptions[] = { JAVA_8_SRC, JAVA_7_SRC, JAVA_8_BYTE, JAVA_7_BYTE };
 	
 	public SubmissionInfo(SwampApiWrapper api) {
 		this.api = api;
@@ -79,13 +85,10 @@ public class SubmissionInfo {
 	}
 	
 	public String getPkgConfPackageType() {
-		if (packageType.equals("Java 8 Source Code")) {
+		if (packageType.equals(JAVA_8_SRC) || packageType.equals(JAVA_8_BYTE)) {
 			return "java-8";
 		}
-		if (packageType.equals("Java 7 Source Code")) {
-			return "java-7";
-		}
-		return "";
+		return "java-7";
 	}
 	
 	public void setPackageType(String pkgType) {
@@ -109,8 +112,9 @@ public class SubmissionInfo {
 	}
 	
 	public String[] getPackageTypeList() {
-		List<String> pkgTypes = api.getPackageTypesList();
-		return Utils.convertStringListToArray(pkgTypes);
+		/*List<String> pkgTypes = api.getPackageTypesList();
+		return Utils.convertStringListToArray(pkgTypes);*/
+		return pkgTypeOptions;
 	}
 	
 	public void setSelectedPlatformIDs(List<String> platformIDs) {
