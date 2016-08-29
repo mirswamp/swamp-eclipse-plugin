@@ -110,7 +110,7 @@ public class BuildfileGenerator {
 			// properties
 			setProperties(doc, root, SWAMPBIN_REL_PATH, project.getSourceVersion(), project.getTargetVersion()); 
 			// classpath
-			setLibraryClasspath(doc, root, project.getLibraryClasspath(), project.getSourceClasspath(), project.getDependentProjects(), project.getDefaultOutputLocation().toOSString());
+			setLibraryClasspath(doc, root, project.getLibraryClasspath(), project.getExportedEntries(), project.getSourceClasspath(), project.getDependentProjects(), project.getDefaultOutputLocation().toOSString());
 			setBootClasspath(doc, root, project.getSystemLibraryClasspath());
 			setSourcepath(doc, root, project.getSourceClasspath(), project.getDependentProjects());
 			// init target (as of now just creating output directory)
@@ -210,18 +210,12 @@ public class BuildfileGenerator {
 	 * SWAMP binary directory or within the project directory)
 	 * @param projectName the projectName
 	 */
-	private static void setLibraryClasspath(Document doc, Element root, List<IClasspathEntry> entries, List<IClasspathEntry> srcEntries, List<ImprovedClasspathHandler> dependentProjects, String defaultOutputDir) {
+	private static void setLibraryClasspath(Document doc, Element root, List<IClasspathEntry> libEntries, List<IClasspathEntry> dependentProjectExports, List<IClasspathEntry> srcEntries, List<ImprovedClasspathHandler> dependentProjects, String defaultOutputDir) {
 		Element path = doc.createElement("path");
 		path.setAttribute("id", CLASSPATH_NAME);
-		// TODO Refactor duplicate code
-		for (IClasspathEntry entry : entries) {
-			System.out.println("Library entry path: " + entry);
-			String rootedPath = entry.getPath().toOSString();
-			String relativePath = rootedPath.substring(1);
-			System.out.println("Rooted path: " + rootedPath);
-			System.out.println("Relative path: " + relativePath);
-			addPathElement(doc, path, relativePath);
-		}
+		addLibraryEntries(doc, path, libEntries);
+		addLibraryEntries(doc, path, dependentProjectExports);
+
 		String relPath = defaultOutputDir.substring(1);
 		addPathElement(doc, path, relPath);
 		addSourceOutputEntries(doc, root, srcEntries);
@@ -232,6 +226,14 @@ public class BuildfileGenerator {
 			addSourceOutputEntries(doc, root, i.getSourceClasspath());
 		}
 		root.appendChild(path);
+	}
+	
+	private static void addLibraryEntries(Document doc, Element path, List<IClasspathEntry> entries) {
+		for (IClasspathEntry entry : entries) {
+			String rootedPath = entry.getPath().toOSString();
+			String relativePath = rootedPath.substring(1);
+			addPathElement(doc, path, relativePath);
+		}
 	}
 	
 	private static void addSourceOutputEntries(Document doc, Element path, List<IClasspathEntry> srcEntries) {
@@ -344,11 +346,18 @@ public class BuildfileGenerator {
 		
 		// includesfile and excludesfile attributes - http://ant.apache.org/manual/Tasks/javac.html
 		for (IClasspathEntry entry : srcEntries) {
+			IPath[] inclusionPatterns = entry.getInclusionPatterns();
+			IPath[] exclusionPatterns = entry.getExclusionPatterns();
 			Element javac = doc.createElement("javac");
 			javac.setAttribute("includeantruntime", "false");
 			javac.setAttribute("classpathref", CLASSPATH_NAME);
 			javac.setAttribute("bootclasspathref", BOOTCLASSPATH_NAME);
-			javac.setAttribute("sourcepathref", SOURCEPATH_NAME);
+			if (inclusionPatterns.length == 0 && exclusionPatterns.length == 0) {
+				javac.setAttribute("sourcepathref", SOURCEPATH_NAME);
+			}
+			else {
+				javac.setAttribute("sourcepath", getModifiedSourcePath(entry, srcEntries));
+			}
 			String encoding = getEncodingAttribute(entry);
 			if (!encoding.equals("")) {
 				javac.setAttribute("encoding", encoding);
@@ -382,6 +391,22 @@ public class BuildfileGenerator {
 			target.appendChild(javac);
 		}
 		
+	}
+	
+	// We don't want to include an entry in its own sourcepath or we'll have problems
+	private static String getModifiedSourcePath(IClasspathEntry currentEntry, List<IClasspathEntry> entries) {
+		StringBuffer sb = new StringBuffer("");
+		for (int i = 0; i < entries.size(); i++) {
+			IClasspathEntry entry = entries.get(i);
+			if (currentEntry.equals(entry)) {
+				continue;
+			}
+			String rootedPath = entry.getPath().toOSString();
+			String relativePath = rootedPath.substring(1);
+			String str = i == 0 ? relativePath : "," + relativePath;
+			sb.append(str);
+		}
+		return sb.toString();
 	}
 	
 	/**

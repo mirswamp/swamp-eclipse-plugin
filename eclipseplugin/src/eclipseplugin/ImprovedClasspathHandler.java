@@ -33,15 +33,17 @@ import static eclipseplugin.Activator.PLUGIN_ID;
 import static org.eclipse.core.runtime.Path.SEPARATOR;
 
 public class ImprovedClasspathHandler {
-	private static String SOURCE_VERSION_OPTION = "org.eclipse.jdt.core.compiler.source";
-	private static String TARGET_VERSION_OPTION = "org.eclipse.jdt.core.compiler.codegen.targetPlatform";
-	private static String SWAMPBIN_DIR = "swampbin";
-	private static char DASH = '-';
+	private static final String SOURCE_VERSION_OPTION = "org.eclipse.jdt.core.compiler.source";
+	private static final String TARGET_VERSION_OPTION = "org.eclipse.jdt.core.compiler.codegen.targetPlatform";
+	public static final String SWAMPBIN_DIR = "swampbin";
+	private static final char DASH = '-';
 	private IPath SWAMPBIN_PATH = null;
 	
+	// TODO Consider making these sets of entries instead of Lists
 	private List<IClasspathEntry> sources = null;
 	private List<IClasspathEntry> libs = null;
 	private List<IClasspathEntry> systemLibs = null;
+	private List<IClasspathEntry> exportedEntries = null; 
 	private List<ImprovedClasspathHandler> dependentProjects = null;
 	private Map<String, ImprovedClasspathHandler> visitedProjects = null;
 	private ImprovedClasspathHandler root = null;
@@ -58,6 +60,7 @@ public class ImprovedClasspathHandler {
 		libs = new ArrayList<IClasspathEntry>();
 		systemLibs = new ArrayList<IClasspathEntry>();
 		dependentProjects = new ArrayList<ImprovedClasspathHandler>();
+		exportedEntries = new ArrayList<IClasspathEntry>();
 		
 		this.project = project;
 		this.srcVersion = this.project.getOption(SOURCE_VERSION_OPTION, true);
@@ -199,19 +202,30 @@ public class ImprovedClasspathHandler {
 			IClasspathEntry newEntry = JavaCore.newLibraryEntry(destPath, entry.getSourceAttachmentPath(), entry.getSourceAttachmentRootPath());
 			System.out.println("New entry path: " + newEntry.getPath());
 			libs.add(newEntry);
+			if (entry.isExported()) {
+				exportedEntries.add(newEntry);
+			}
 		}	
 	}
 	
 	private void handleProject(IClasspathEntry entry, IWorkspaceRoot root) {
 		String path = entry.getPath().toOSString();
+		ImprovedClasspathHandler ich;
 		if (visitedProjects.containsKey(path)) {
-			dependentProjects.add(visitedProjects.get(path));
+			ich = visitedProjects.get(path);
+			dependentProjects.add(ich);
 		}
 		else {
 			IProject project = root.getProject(entry.getPath().toOSString());
-			ImprovedClasspathHandler ich = new ImprovedClasspathHandler(JavaCore.create(project), this.root, this.root.excludeSysLibs);
+			ich = new ImprovedClasspathHandler(JavaCore.create(project), this.root, this.root.excludeSysLibs);
 			dependentProjects.add(ich);
 			visitedProjects.put(path, ich);
+		}
+		for (IClasspathEntry e : ich.getExportedEntries()) {
+			this.libs.add(e);
+			if (entry.isExported()) {
+				this.exportedEntries.add(e);
+			}
 		}
 	}
 	
@@ -325,6 +339,10 @@ public class ImprovedClasspathHandler {
 	
 	public List<IClasspathEntry> getSourceClasspath() {
 		return sources;
+	}
+	
+	public List<IClasspathEntry> getExportedEntries() {
+		return exportedEntries;
 	}
 	
 	public IPath getDefaultOutputLocation() {
