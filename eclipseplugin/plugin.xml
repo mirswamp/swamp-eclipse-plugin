@@ -101,7 +101,7 @@
  	<!-- SWAMP Button and dropdown -->
  	<menuContribution locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
  		<toolbar
-  			id="eclipseplugins.toolbars.swampToolbar">
+  			id="eclipseplugin.toolbars.swampToolbar">
   			<command
   				commandId="eclipseplugin.commands.pulldownCommand"
   				label="SWAMP Button"
@@ -139,9 +139,40 @@
 		</command>
 	</menuContribution>  			
 	
-	<!-- Main menu -->
- </extension> 			
- 
+	<!-- SWAMP Main Menu -->
+	<menuContribution
+       locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+    <menu
+          id="eclipseplugin.menus.swampMenu"
+          label="SWAMP"
+          mnemonic="W">
+      	<command
+  			commandId="eclipseplugin.commands.resubmitCommand"
+  			label="Resubmit Previous Assessment"
+  			mnemonic="R"
+  			style="push">
+  		</command>
+  		<command
+  			commandId="eclipseplugin.commands.configureCommand"
+  			label="Configure Assessment Submission"
+  			mnemonic="C"
+  			style="push">
+  		</command>
+		<command
+			commandId="eclipseplugin.commands.loginCommand"
+			label="Log In"
+			mnemonic="I"
+			style="push">
+		</command>
+		<command
+			commandId="eclipseplugin.commands.logoutCommand"
+			label="Log Out"
+			mnemonic="O"
+			style="push">
+		</command> 
+    </menu>
+ </menuContribution>
+ </extension>
  
  <!-- Property tester for login/logout -->
  <extension point="org.eclipse.core.expressions.propertyTesters">
