@@ -308,6 +308,7 @@ public class SwampSubmitter {
 		if (ad.open() != Window.OK) {
 			return false;
 		}
+		Activator.setLoggedIn(true);
 		api.saveSession();
 		return true;
 	}
@@ -405,6 +406,7 @@ public class SwampSubmitter {
 	}
 	
 	public void logOutOfSwamp() {
+		Activator.setLoggedIn(false);
 		api.logout();
 	}
 	

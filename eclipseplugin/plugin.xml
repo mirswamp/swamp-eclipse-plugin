@@ -68,11 +68,21 @@
  	<handler
  		class="eclipseplugin.handlers.LoginHandler"
  		commandId="eclipseplugin.commands.loginCommand">
+ 		<enabledWhen>
+ 			<not>
+ 				<test property="eclipseplugin.properties.loggedIn">
+ 				</test>
+ 			</not>
+ 		</enabledWhen>
  	</handler>
   
   	<handler
  		class="eclipseplugin.handlers.LogoutHandler"
  		commandId="eclipseplugin.commands.logoutCommand">
+ 		<enabledWhen>
+ 			<test property="eclipseplugin.properties.loggedIn">
+ 			</test>
+ 		</enabledWhen>
  	</handler>
   	
   	<handler
@@ -131,4 +141,24 @@
 	
 	<!-- Main menu -->
  </extension> 			
+ 
+ 
+ <!-- Property tester for login/logout -->
+ <extension point="org.eclipse.core.expressions.propertyTesters">
+ 	<propertyTester
+ 		class="eclipseplugin.handlers.LoginPropertyTester"
+ 		id="eclipseplugin.loginPropertyTester"
+ 		namespace="eclipseplugin.properties"
+ 		properties="loggedIn"
+ 		type="java.lang.Object">
+ 	</propertyTester>
+ </extension>
+ 
+ 
+ <!-- Class to trigger plug-in activation -->
+ <extension point="org.eclipse.ui.startup">
+ 	<startup class="eclipseplugin.ActivationTriggerDummy">
+ 	</startup>
+ </extension>
+ 
 </plugin>     
