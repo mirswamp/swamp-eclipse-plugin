@@ -2,174 +2,133 @@
 <?eclipse version="3.4"?>
 <plugin>
   
-<!-- Declaring commands -->
-  <extension
-  	point="org.eclipse.ui.commands">
-  	<category
-  		id="eclipseplugin.commands.category"
-  		name="Eclipse Command Category">
-  	</category>
-  	<command
-  		categoryId="eclipseplugin.commands.category"
-  		id="eclipseplugin.commands.launchCommand"
-  		name="Launch Commands"
-  		defaultHandler="eclipseplugin.handlers.LaunchHandler">
-  		<commandParameter 
-  			id="eclipseplugin.internal.msg" 
-  			name="Message" 
-  			optional="true">	
-  		</commandParameter>
-  	</command>
-  	<command
+ <!-- Declaring commands -->
+ <extension point="org.eclipse.ui.commands">
+ 	<category id="eclipseplugin.commands.category" name="eclipseplugin.commands.category.name">
+ 	</category>
+ 	
+ 	<command
+ 		categoryId="eclipseplugin.commands.category"
+ 		id="eclipseplugin.commands.configureCommand"
+ 		name="Configure Command">
+ 	</command>
+ 	
+ 	<command
+ 		categoryId="eclipseplugin.commands.category"
+ 		id="eclipseplugin.commands.resubmitCommand"
+ 		name="Resubmit Command">
+ 	</command>	
+ 	
+ 	<command
+ 		categoryId="eclipseplugin.commands.category"
+ 		id="eclipseplugin.commands.loginCommand"
+ 		name="Login Command">
+ 	</command>	
+ 	
+ 	<command
+ 		categoryId="eclipseplugin.commands.category"
+ 		id="eclipseplugin.commands.logoutCommand"
+ 		name="Logout Command">
+ 	</command>	
+ 	
+ 	<command
+ 		categoryId="eclipseplugin.commands.category"
+ 		id="eclipseplugin.commands.pulldownCommand"
+ 		name="Pulldown Command">
+ 	</command>		
+ 	
+ 	<command
   		categoryId="eclipseplugin.commands.category"
   		id="eclipseplugin.commands.rightClickCommand"
-  		name="Launch Command">
+  		name="Right Click Command">
   	</command>
-  	<command
-  		id="eclipseplugin.commands.login"
-  		categoryId="eclipseplugin.commands.category"
-  		name="Log In">
-  	</command>
-  	<command
-  		id="eclipseplugin.commands.logout"
-  		categoryId="eclipseplugin.commands.category"
-  		name="Log Out">
-  	</command>
-  	<command
-  		categoryId="eclipseplugin.commands.category"
-  		id="someothercommand1"
-  		name="Ughh...">
-  	</command>
-  </extension>
-  
-  <extension point="org.eclipse.ui.commandImages">
+ 		
+ </extension>	
+
+ <!-- Adding image to pulldown command -->
+ <extension point="org.eclipse.ui.commandImages">
   	<image 
-  		commandId="eclipseplugin.commands.launchCommand"
+  		commandId="eclipseplugin.commands.pulldownCommand"
   		icon="icons/swamp-logo-square-height-20.png">
   	</image>
-  </extension>
+  </extension>  
   
-  <extension
-  	point="org.eclipse.core.expressions.propertyTesters">
-  	<propertyTester
-  		id="eclipseplugin.internal.LoginPropertyTester"
-  		namespace="eclipseplugin.tester"
-  		properties="loggedIn"
-  		class="eclipseplugin.handlers.LoginPropertyTester"
-  		type="java.lang.Object"> <!-- see if we can make this more restrictive (e.g. org.eclipse.core.runtime.IAdaptable or org.eclipse.core.resources.IResource") -->
-  	</propertyTester>
-  </extension>
-	
-  <extension
-  	point="org.eclipse.ui.handlers">
+ <!-- Associating handlers with the commands -->
+ <extension point="org.eclipse.ui.handlers">
+ 	<handler
+ 		class="eclipseplugin.handlers.ConfigureHandler"
+ 		commandId="eclipseplugin.commands.configureCommand">
+ 	</handler>
+ 	
+ 	<handler
+ 		class="eclipseplugin.handlers.ResubmitHandler"
+ 		commandId="eclipseplugin.commands.resubmitCommand">
+ 	</handler>
+ 	
+ 	<handler
+ 		class="eclipseplugin.handlers.LoginHandler"
+ 		commandId="eclipseplugin.commands.loginCommand">
+ 	</handler>
+  
   	<handler
-  		class="eclipseplugin.handlers.LaunchHandler"
-  		commandId="eclipseplugin.commands.login">
-  		<visibleWhen>
-  			<not>
-  				<test
-  					property="eclipseplugin.tester.loggedIn">
-  				</test>
-  			</not>
-  		</visibleWhen>
-  	</handler>
+ 		class="eclipseplugin.handlers.LogoutHandler"
+ 		commandId="eclipseplugin.commands.logoutCommand">
+ 	</handler>
+  	
   	<handler
-  		class="eclipseplugin.handlers.LaunchHandler"
-  		commandId="eclipseplugin.commands.logout">
-  		<visibleWhen>
-  			<test
-  				property="eclipseplugin.tester.loggedIn">
-  			</test>
-  		</visibleWhen>
+ 		class="eclipseplugin.handlers.ResubmitHandler"
+ 		commandId="eclipseplugin.commands.pulldownCommand">
+ 	</handler>
+ 	
+ 	<handler
+ 		class="eclipseplugin.handlers.RightClickHandler"
+ 		commandId="eclipseplugin.commands.rightClickCommand">
   	</handler>
-  </extension>
+ </extension>
   
-  
-  <extension
-  	point="org.eclipse.ui.menus">
-  	<menuContribution
-  		locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
-  		<command
-  			commandId="eclipseplugin.commands.launchCommand"
-  			id="eclipseplugin.menus.rightClickCommand"
-  			label="Assess Project on SWAMP"
-  			mnemonic="A">
-  			<parameter 
-  				name="eclipseplugin.internal.msg" 
-  				value="Launch Selection">
-  			</parameter>
-  			<visibleWhen
-  				checkEnabled="false">
-               	<with variable="activeMenuSelection">
-               		<iterate ifEmpty="false">
-               			<adapt type="org.eclipse.core.resources.IProject">
-               				<test property="org.eclipse.core.resources.open" value="true" />
-               			</adapt>
-               		</iterate>
-            	</with>
-  			</visibleWhen>
-  		</command>
-  	</menuContribution>
-  	<!-- Adding commands to toolbar -->
-  	<menuContribution
-  		locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
-  		<toolbar
+ <!-- Adding to menus -->
+ <extension point="org.eclipse.ui.menus">
+ 	<!-- SWAMP Button and dropdown -->
+ 	<menuContribution locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+ 		<toolbar
   			id="eclipseplugins.toolbars.swampToolbar">
   			<command
-  				commandId="eclipseplugin.commands.launchCommand"
-  				label="SWAMP Command"
-  				tooltip="SWAMP Command Tooltip"
+  				commandId="eclipseplugin.commands.pulldownCommand"
+  				label="SWAMP Button"
+  				tooltip="Resubmit Previous Assessment"
   				style="pulldown"
-  				id="eclipseplugin.toolbars.toolbarCommand">
+  				id="eclipseplugin.commands.swampButton">
   			</command>
   		</toolbar>
   	</menuContribution>
-  	<menuContribution
-  		locationURI="menu:eclipseplugin.toolbars.toolbarCommand">             
+  	
+  	<menuContribution locationURI="menu:eclipseplugin.commands.swampButton">
   		<command
-  			commandId="eclipseplugin.commands.launchCommand"
-  			id="eclipseplugin.menus.configureCommand"
-  			style="push"
-  			label="Configure Assessment Submission"
-  			mnemonic="C">
-  			  <parameter 
-  				name="eclipseplugin.internal.msg" 
-  				value="Configure">
-  			</parameter>
-  		</command>
-  		<separator name="additions1" visible="true">
-        </separator>
-  		<command
-  			commandId="eclipseplugin.commands.launchCommand"
-  			id="eclipseplugin.menus.resubmitCommand"
-  			style="push"
+  			commandId="eclipseplugin.commands.resubmitCommand"
   			label="Resubmit Previous Assessment"
-  			mnemonic="R">
-  		  	<parameter 
-  				name="eclipseplugin.internal.msg" 
-  				value="Resubmit">
-  			</parameter>
-  		</command>
-  		<separator name="additions2" visible="true">
-        </separator>
-  		<command
-  			commandId="eclipseplugin.commands.login"
-  			id="eclipseplugin.menus.loginCommand"
-  			style="push"
-  			label="Log In"
-  			tooltip="Log into the SWAMP"
-  			mnemonic="I">
+  			mnemonic="R"
+  			style="push">
   		</command>
   		<command
-  			commandId="eclipseplugin.commands.logout"
-  			id="eclipseplugin.menus.logoutCommand"
-  			label="Log Out"
-  			style="push"
-  			mnemonic="O">
+  			commandId="eclipseplugin.commands.configureCommand"
+  			label="Configure Assessment Submission"
+  			mnemonic="C"
+  			style="push">
   		</command>
-  	</menuContribution>
-  </extension>
-  <extension
-        point="org.eclipse.ui.bindings">
-  </extension>
+		<command
+			commandId="eclipseplugin.commands.loginCommand"
+			label="Log In"
+			mnemonic="I"
+			style="push">
+		</command>
+		<command
+			commandId="eclipseplugin.commands.logoutCommand"
+			label="Log Out"
+			mnemonic="O"
+			style="push">
+		</command>
+	</menuContribution>  			
+	
+	<!-- Main menu -->
+ </extension> 			
 </plugin>     
