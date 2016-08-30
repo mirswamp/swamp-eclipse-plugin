@@ -172,6 +172,27 @@
 		</command> 
     </menu>
  </menuContribution>
+ 
+ 	<!-- Right Click Package Submission -->
+ 	<menuContribution
+  		locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
+  		<command
+  			commandId="eclipseplugin.commands.rightClickCommand"
+  			id="eclipseplugin.menus.rightClickCommand"
+  			label="Assess Project on SWAMP"
+  			mnemonic="A">
+  			<visibleWhen
+  				checkEnabled="false">
+               	<with variable="activeMenuSelection">
+               		<iterate ifEmpty="false">
+               			<adapt type="org.eclipse.core.resources.IProject">
+               				<test property="org.eclipse.core.resources.open" value="true" />
+               			</adapt>
+               		</iterate>
+            	</with>
+  			</visibleWhen>
+  		</command>
+  	</menuContribution>	
  </extension>
  
  <!-- Property tester for login/logout -->
