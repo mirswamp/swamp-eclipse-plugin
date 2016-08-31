@@ -23,7 +23,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 
 public class HandlerUtils {
 
-	public static String getActiveProjectLocation(IWorkbenchWindow window) {
+	public static IProject getActiveProject(IWorkbenchWindow window) {
 		IWorkbenchPage workbenchPage = window.getActivePage();
 		if (workbenchPage == null) {
 			// TODO Add some MessageDialog to say we were unable to get the project - are you sure you have an editor open?
@@ -45,9 +45,6 @@ public class HandlerUtils {
 			return null;
 		}
 		IProject project = resource.getProject();
-		if (project == null) {
-			return null;
-		}
-		return project.getLocation().toOSString();
+		return project;
 	}
 }

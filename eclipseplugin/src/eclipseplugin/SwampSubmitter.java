@@ -14,22 +14,30 @@
 package eclipseplugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
+import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.preferences.InstanceScope;
+import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -52,9 +60,9 @@ import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.ConfigDialog;
 import eclipseplugin.dialogs.PlatformDialog;
 import eclipseplugin.dialogs.ToolDialog;
+import eclipseplugin.exceptions.CyclicDependenciesException;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.PackageVersion;
-import edu.uiuc.ncsa.swamp.api.Platform;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 import edu.wisc.cs.swamp.exceptions.IncompatibleAssessmentTupleException;
 import edu.wisc.cs.swamp.exceptions.InvalidIdentifierException;
@@ -71,9 +79,22 @@ public class SwampSubmitter {
 	private IWorkbenchWindow window;
 	private String configFilepath;
 
-	private static String SWAMP_FAMILY 		= "SWAMP_FAMILY";
-	private static String CONFIG_FILENAME 	= ".swampconfig";
+	private static String SWAMP_FAMILY 		 = "SWAMP_FAMILY";
+	private static String CONFIG_FILENAME 	 = "swampconfig.txt";
 	private static String PLUGIN_EXIT_MANUAL = "Status: Plugin exited manually.";
+	private static String SWAMP_JOB_TITLE    = "SWAMP Assessment Submission";
+	private static int UNABLE_TO_DESERIALIZE = 0;
+	private static int UNABLE_TO_GENERATE_BUILD = 1;
+	private static int CYCLICAL_DEPENDENCIES = 2;
+	private static String[] FILE_PATTERNS = { ".*\\" + BuildfileGenerator.BUILDFILE_EXT, ImprovedClasspathHandler.SWAMPBIN_DIR, PackageInfo.PACKAGE_CONF_NAME, ".*\\.zip" };
+
+	
+	private static int UPLOAD_TICKS = 80;
+	private static int SUBMISSION_TICKS = 10;
+	private static int PKG_CONF_TICKS = 10;
+	private static int ZIP_TICKS = 40;
+	private static int CLEAN_PROJECTS_TICKS = 10;
+	public static int CLASSPATH_ENTRY_TICKS = 5;
 	
 	public SwampSubmitter(IWorkbenchWindow window) {
 		this.window = window;
@@ -100,10 +121,101 @@ public class SwampSubmitter {
 		return stream;
 	}
 
-	private void runBackgroundJob(SubmissionInfo si, boolean fromFile) {
-		int UNABLE_TO_DESERIALIZE = 0;
-		int UNABLE_TO_GENERATE_BUILD = 1;
-		Job job = new Job("SWAMP Assessment Submission") {
+	private void submitPreConfiguredJob(SubmissionInfo si) {
+		Job job = new Job(SWAMP_JOB_TITLE) {
+			
+			@Override public boolean belongsTo(Object family) {
+				return family == SWAMP_FAMILY;
+			}
+			
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				
+				int total = calculateTotalTicks(true, 0, si.getSelectedToolIDs().size());
+				SubMonitor subMonitor = SubMonitor.convert(monitor, total);
+				
+				out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
+				String pluginLoc = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
+				Date date = new Date();
+				String timestamp = date.toString();
+				String filename = timestamp + "-" + si.getPackageName() + ".zip";
+				String archiveName = filename.replace(" ", "-").replace(":", "").toLowerCase(); 
+				Set<String> files = new HashSet<String>();
+				files.add(si.getProjectPath());
+				
+				/* Note: for some reason split's cancel wasn't working */
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+
+				subMonitor.split(ZIP_TICKS);
+				Path archivePath = Utils.zipFiles(files, pluginLoc, archiveName);
+				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+				
+				subMonitor.split(PKG_CONF_TICKS);
+				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
+				
+				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
+				String prjUUID = si.getSelectedProjectID();
+				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+				
+				subMonitor.split(UPLOAD_TICKS);
+				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
+				
+				// Delete archive
+				// Delete package.conf
+				/*
+				try {
+					// TODO Uncomment these before release
+					//FileUtils.forceDelete(pkgConf);
+					//FileUtils.forceDelete(archivePath.toFile());
+				} catch (IOException e) {
+					// This isn't really a problem but why?
+					e.printStackTrace();
+				}
+				*/
+
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+				
+				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
+				
+				for (String toolUUID : si.getSelectedToolIDs()) {
+					for (String platformUUID : si.getSelectedPlatformIDs()) {
+						subMonitor.split(SUBMISSION_TICKS);
+						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
+					}
+				}
+
+				IStatus status = Status.OK_STATUS;
+				done(status);
+				return status;
+			}
+		};
+		String pluginLocation = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
+		job.addJobChangeListener(new JobCancellationListener(pluginLocation, SwampSubmitter.FILE_PATTERNS, out));
+		job.setRule(si.getProject()); // we have to lock just the project
+		job.setUser(true);
+		job.schedule();
+	}
+	
+	private void submitAutoGenJob(SubmissionInfo si) {
+		Job job = new Job(SWAMP_JOB_TITLE) {
 			
 			@Override
 			public boolean belongsTo(Object family) {
@@ -112,145 +224,172 @@ public class SwampSubmitter {
 			
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				if (fromFile) {
-					if (!FileSerializer.deserializeSubmissionInfo(configFilepath, si)) {
-						// TODO Strengthen error here
-						File f = new File(configFilepath);
-						f.delete();
-						out.println(Utils.getBracketedTimestamp() + "ERROR: Error in loading from previous assessment found. Please relaunch plugin.");
-						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_DESERIALIZE ,"Unable to deserialize previous assessment", null);
-						done(status);
-						return status;
-					}
+				IJavaProject jp = JavaCore.create(si.getProject());
+				int total = 0;
+				int numClasspathEntries = 0;
+				IClasspathEntry[] entries = null;
+				try {
+					entries = jp.getRawClasspath();
+					numClasspathEntries = entries.length;
+				} catch (Exception e) {
+					out.println(Utils.getBracketedTimestamp() + "Error: Unable to parse classpath.");
+					Status status = new Status(IStatus.ERROR, "eclipsepluin", UNABLE_TO_GENERATE_BUILD, "Unable to generate build for this project", null);
+					done(status);
+					return status;
 				}
-				ClasspathHandler classpathHandler = null;
-				String pathToArchive = null;
-				String pkgDir = null;
-				if (si.needsBuildFile()) {
-					out.println(Utils.getBracketedTimestamp() + "Status: Generating build file");
-					classpathHandler = generateBuildFiles(si.getProject(), si.packageSystemLibraries());
-					if (classpathHandler == null) {
-						// TODO Handle this error better
-						out.println(Utils.getBracketedTimestamp() + "ERROR: Error in generating build file. Please review your project configuration and build path.");
-						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_GENERATE_BUILD , "Unable to generate build files from this project setup", null);
-						done(status);
-						return status; 
-					}
-					pkgDir = "package";
-					pathToArchive = ResourcesPlugin.getWorkspace().getRoot().getLocation().toOSString() + SEPARATOR + "package";
+				
+				total = calculateTotalTicks(false, numClasspathEntries, si.getSelectedToolIDs().size());
+				SubMonitor subMonitor = SubMonitor.convert(monitor, total);
+				System.out.println("Total ticks: " + total);
+				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
 				}
-				else {
-					pkgDir = "."; // In top level directory
-					pathToArchive = si.getProjectPath();
-					// create archive from actual location
+				
+				if (jp.hasClasspathCycle(entries)) {
+					out.println(Utils.getBracketedTimestamp() + "Error: Classpath has cyclical dependencies. Please resolve these issues and resubmit.");
+					Status status = new Status(IStatus.ERROR, "eclipseplugin", CYCLICAL_DEPENDENCIES, "Project has cyclical dependencies", null);
+					done(status);
+					return status;
 				}
+				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+				
+				out.println(Utils.getBracketedTimestamp() + "Status: Generating build file");
+				SubMonitor childSubMonitor = subMonitor.split(numClasspathEntries * CLASSPATH_ENTRY_TICKS);
+				ImprovedClasspathHandler ich = new ImprovedClasspathHandler(jp, null, !si.packageSystemLibraries(), childSubMonitor);
+				Set<String> files = ich.getFilesToArchive();
+				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+				
+				BuildfileGenerator.generateBuildFile(ich, files);
+				
+				try {
+					cleanProjects(si.getProject());
+				} catch (CoreException e) {
+					out.println(Utils.getBracketedTimestamp() + "Error: Unable to clean project or dependent projects. The tools may be unable to assess this package.");
+				}
+				
+				subMonitor.split(ZIP_TICKS);
 				out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
-				PackageInfo pkgInfo = packageProject(si.getPackageName(), si.getPackageVersion(), pkgDir, pathToArchive, si.getBuildSystem() , si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
+				String pluginLoc = ich.getProjectPluginLocation();
+				Date date = new Date();
+				String timestamp = date.toString();
+				String filename = timestamp + "-" + si.getPackageName() + ".zip";
+				String archiveName = filename.replace(" ", "-").replace(":", "").toLowerCase(); 
+				Path archivePath = Utils.zipFiles(files, ich.getProjectPluginLocation(), archiveName);
+				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+				
+				subMonitor.split(PKG_CONF_TICKS);
+				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
+				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
 				
 				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
-				String pkgVersUUID = uploadPackage(pkgInfo.getParentPath(), prjUUID, pkgInfo.getArchiveFilename(), si.isNewPackage());
+				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
 				
-				// TODO Can we move this up?
-				if (classpathHandler != null) {
-					classpathHandler.revertClasspath(ResourcesPlugin.getWorkspace().getRoot(), new HashSet<ClasspathHandler>());
-				}
-				
-				// Deletion code - uncomment for release
 				/*
-				pkg.deleteFiles();
-				if (autoGenBuild) {
-					System.out.println("Auto-generated build file at " + path + "/build.xml");
-					File f = new File(path + "/build.xml");
-					if (f != null) {
-						if (!f.delete()) {
-							System.err.println("Unable to delete auto-generated build file");
-						}
-					}
+				// Delete ant buildfile
+				// Delete swampbin
+				// Delete archive
+				// Delete package.conf
+				try {
+					// TODO Uncomment these before release, also delete build file
+					//FileUtils.forceDelete(pkgConf);
+					//FileUtils.forceDelete(archivePath.toFile());
+					ich.deleteSwampBin();
+				} catch (IOException e) {
+					// This isn't really a problem but why?
+					e.printStackTrace();
 				}
 				*/
+
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+				
 				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
+				
 				for (String toolUUID : si.getSelectedToolIDs()) {
-					List<Platform> platforms = api.getSupportedPlatforms(toolUUID, prjUUID);
-					Set<String> platformSet = new HashSet<>();
-					for (Platform p : platforms) {
-						platformSet.add(p.getUUIDString());
-					}
 					for (String platformUUID : si.getSelectedPlatformIDs()) {
-						if (platformSet.contains(platformUUID)) {
-							submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
-						}
+						subMonitor.split(SUBMISSION_TICKS);
+						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
 					}
 				}
+			
 				IStatus status = Status.OK_STATUS;
 				done(status);
 				return status;
 			}
 		};
-		//job.setRule(new MutexRule());
+		String pluginLocation = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
+		job.addJobChangeListener(new JobCancellationListener(pluginLocation, SwampSubmitter.FILE_PATTERNS, out)); 
+		job.setRule(ResourcesPlugin.getWorkspace().getRoot()); // we have to lock the root for building projects (i.e. cleaning them). We could potentially get the set of projects, clean the set of projects, and then get a lesser project-scoped rule?
 		job.setUser(true);
 		job.schedule();
 		
 	}
 	
-	private ClasspathHandler generateBuildFiles(IProject proj, boolean includeSysLibs) {
-		ClasspathHandler classpathHandler = null;
-		// Generating Buildfile
-		IJavaProject javaProj = JavaCore.create(proj);
-		IWorkspace workspace = ResourcesPlugin.getWorkspace();
-		IWorkspaceRoot root = workspace.getRoot();
-		String rootPath = root.getLocation().toString();
-		classpathHandler = new ClasspathHandler(null, javaProj, rootPath, includeSysLibs);// cd.getPkgPath()); // TODO replace this w/ workspace path
-		System.out.println(classpathHandler.getProjectName());
+	private int calculateTotalTicks(boolean autoGen, int numClasspathEntries, int numSubmissions) {
+		int total = 0;
 		
-		if (classpathHandler.hasCycles()) {
-			out.println(Utils.getBracketedTimestamp() + "Error: There are cyclic dependencies in this project. Please remove all cycles before resubmitting.");
-			System.err.println("Huge error. Cyclic dependencies!");
-			classpathHandler = null;
-			return null;
+		// zip ticks
+		total += ZIP_TICKS;
+		
+		// generate package conf
+		total += PKG_CONF_TICKS;
+		
+		// upload
+		total += UPLOAD_TICKS;
+				
+		// submissions
+		total += (numSubmissions * SUBMISSION_TICKS);
+		
+		if (autoGen) {
+			total += CLEAN_PROJECTS_TICKS;
+			total += (numClasspathEntries * CLASSPATH_ENTRY_TICKS);
 		}
-		BuildfileGenerator.generateBuildFile(classpathHandler);
-		System.out.println("Build file generated");
-		return classpathHandler;
+		return total;
 	}
 	
-	private PackageInfo packageProject(String packageName, String packageVersion, String pkgDir, String path, String buildSystem, String buildDir, String buildFile, String buildTarget) {
-		// Zipping and generating package.conf
-		Date date = new Date();
-		String timestamp = date.toString();
-		//String path = cd.getPkgPath();
-		String workspacePath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString();
-		//String path =  workspacePath + Path.SEPARATOR  + "package";
-		String filename = timestamp + "-" + packageName + ".zip";
-		String filenameNoSpaces = filename.replace(" ", "-").replace(":", "").toLowerCase(); // PackageVersionHandler mangles the name for some reason if there are colons or uppercase letters
-		System.out.println("Package Name: " + packageName);
-		System.out.println("Path: " + path);
-		System.out.println("Filename: " + filenameNoSpaces);
-		// output name should be some combination of pkg name, version, timestamp, extension (.zip)
-		
-		PackageInfo pkg = new PackageInfo(path, filenameNoSpaces, packageName, workspacePath); // pass in path and output zip file name
-		
-		pkg.setPkgShortName(packageName);
-		pkg.setVersion(packageVersion);
-		pkg.setBuildSys(buildSystem);
-		pkg.setBuildDir(buildDir);
-		pkg.setBuildFile(buildFile);
-		pkg.setBuildTarget(buildTarget);
-		
-		pkg.writePkgConfFile(pkgDir);
-
-		return pkg;
+	private void cleanProjects(IProject project) throws CoreException {
+		project.build(IncrementalProjectBuilder.CLEAN_BUILD, null);
+		for (IProject p : project.getReferencedProjects()) {
+			cleanProjects(p);
+		}
 	}
-
-	private String uploadPackage(String parentDir, String prjUUID, String filename, boolean newPackage) {
+	
+	private String uploadPackage(String pkgConfPath, String archivePath, String prjUUID, boolean newPackage) {
 		// Upload package
 		System.out.println("Uploading package");
-		System.out.println("Package-conf directory: " + parentDir + SEPARATOR +"package.conf");
-		System.out.println("Archive directory: " + parentDir + SEPARATOR + filename);
+		System.out.println("Package-conf directory: " + pkgConfPath);
+		System.out.println("Archive directory: " + archivePath);
 		System.out.println("Project UUID: " + prjUUID);
 		String pkgVersUUID = null;
 		try {
-			pkgVersUUID = api.uploadPackage(parentDir + SEPARATOR + "package.conf", parentDir + SEPARATOR + filename, prjUUID, newPackage);
+			pkgVersUUID = api.uploadPackage(pkgConfPath, archivePath, prjUUID, newPackage);
 		} catch (InvalidIdentifierException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -268,6 +407,7 @@ public class SwampSubmitter {
 			return true;
 		}
 		try {
+			System.out.println("Initialized SWAMP API");
 			api = new SwampApiWrapper(SwampApiWrapper.HostType.DEVELOPMENT);
 		} catch (Exception e) {
 			out.println(Utils.getBracketedTimestamp() + "Error: Unable to initialize SWAMP API.");
@@ -289,7 +429,7 @@ public class SwampSubmitter {
 		out.println(Utils.getBracketedTimestamp() + "Status: Launched SWAMP plugin - running on " + versionStr + ".");
 	}
 	
-	public void launchBackgroundAssessment(String configPath) {
+	public void launchBackgroundAssessment(IProject project) {
 		initializeSwampApi();
 		out = initializeConsole("SWAMP Plugin");
 		try {
@@ -305,20 +445,28 @@ public class SwampSubmitter {
 				return;
 			}
 		}
-		if (configPath == null || configPath.equals("")) {
-			configFilepath = null;
-		}
-		else {
-			configFilepath = configPath + SEPARATOR + CONFIG_FILENAME;
-		}
+	
+		configFilepath = project.getWorkingLocation(PLUGIN_ID).toOSString() + SEPARATOR + CONFIG_FILENAME;
 		SubmissionInfo si = new SubmissionInfo(this.api);
 		if ((configFilepath == null) || (!new File(configFilepath).exists())) {
 			out.println(Utils.getBracketedTimestamp() + "Error: No previous assessment found.");
 			System.out.println("No previous assessment found at " + configFilepath);
+			si.initializeProject(project.getName(), project.getLocation().toOSString());
 			launchConfiguration(si);
 		}
+		else if (!FileSerializer.deserializeSubmissionInfo(configFilepath, si)) {
+			File f = new File(configFilepath);
+			f.delete();
+			out.println(Utils.getBracketedTimestamp() + "Warning: Unable to reload previous assesment. Configuration dialog will popup now.");
+			
+		}
 		else {
-			runBackgroundJob(si, true);
+			if (si.needsBuildFile()) {
+				submitAutoGenJob(si);
+			}
+			else {
+				submitPreConfiguredJob(si);
+			}
 		}
 	}
 	
@@ -372,14 +520,18 @@ public class SwampSubmitter {
 		
 		// save plug-in preferences
 		si.savePluginSettings();
-		
-		configFilepath = si.getProjectPath() + SEPARATOR + CONFIG_FILENAME;
+		configFilepath = si.getProjectWorkingLocation() + SEPARATOR + CONFIG_FILENAME;
 		FileSerializer.serializeSubmissionInfo(configFilepath, si);
-		runBackgroundJob(si, false);
+		if (si.needsBuildFile()) {
+			submitAutoGenJob(si);
+		}
+		else {
+			submitPreConfiguredJob(si);
+		}
 		
 	}
 	
-	public void launch(String configPath) {
+	public void launch(IProject project) {
 		initializeSwampApi();
 		
 		out = initializeConsole("SWAMP Plugin");
@@ -398,14 +550,9 @@ public class SwampSubmitter {
 		}
 		// TODO we can fail here, i.e. by not connecting and we're not handling it as of now
 		SubmissionInfo si = new SubmissionInfo(this.api);
-		if (configPath == null || configPath.equals("")) {
-			configFilepath = null;
-		}
-		else {
-			configFilepath = configPath + SEPARATOR + CONFIG_FILENAME;
-		}
-		if ((configFilepath != null) && (new File(configFilepath).exists())) {
-			boolean returnCode = FileSerializer.deserializeSubmissionInfo(configFilepath, si);
+		configFilepath = project.getWorkingLocation(PLUGIN_ID).toOSString() + SEPARATOR + CONFIG_FILENAME;
+		if ((configFilepath == null) || ((!(new File(configFilepath).exists()))) || (!FileSerializer.deserializeSubmissionInfo(configFilepath, si))) {
+			si.initializeProject(project.getName(), project.getLocation().toOSString());
 		}
 		launchConfiguration(si);
 	}
@@ -480,6 +627,76 @@ public class SwampSubmitter {
 		}
 		else {
 			out.println(Utils.getBracketedTimestamp() + "Status: Successfully submitted assessment with tool {" + toolName + "} on platform {" + platformName +"}");
+		}
+	}
+	
+	private class JobCancellationListener implements IJobChangeListener {
+
+		private String[] filePatterns;
+		private String pluginLocation;
+		private MessageConsoleStream out;
+
+		public JobCancellationListener(String location, String[] patterns, MessageConsoleStream stream) {
+			filePatterns = patterns;
+			pluginLocation = location;
+			out = stream;
+		}
+
+		@Override
+		public void aboutToRun(IJobChangeEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void awake(IJobChangeEvent arg0) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void done(IJobChangeEvent event) {
+			System.out.println("Done!!");
+			System.out.println("Event results: " + event.getResult());
+
+			if (event.getResult().getSeverity() == IStatus.CANCEL) {
+				out.println(Utils.getBracketedTimestamp() + "Status: Submission cancelled by user");
+				File f = new File(pluginLocation);
+				File[] files = f.listFiles();
+				for (File file : files) {
+					String fileName = file.getName();
+					for (String pattern : filePatterns) {
+						if (fileName.matches(pattern)) {
+							System.out.println("Deleted file name: " + fileName);
+							try {
+								if (file.isDirectory()) {
+									FileUtils.deleteDirectory(file);
+								}
+								else {
+									FileUtils.forceDelete(file);
+								}
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		@Override
+		public void running(IJobChangeEvent arg0) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void scheduled(IJobChangeEvent arg0) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void sleeping(IJobChangeEvent arg0) {
+			// TODO Auto-generated method stub	
 		}
 	}
 	

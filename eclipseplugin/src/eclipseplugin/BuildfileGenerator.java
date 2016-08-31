@@ -14,7 +14,9 @@
 package eclipseplugin;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -29,6 +31,7 @@ import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.OutputKeys;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
@@ -47,6 +50,10 @@ public class BuildfileGenerator {
 	 */
 	private static String 	CLASSPATH_NAME 		= "project.classpath";
 	
+	private static String 	BOOTCLASSPATH_NAME	= "project.bootclasspath";
+	
+	private static String	SOURCEPATH_NAME		= "project.sourcepath";
+	
 	/**
 	 * The name used for referencing the SWAMP binary directory.
 	 */
@@ -55,12 +62,12 @@ public class BuildfileGenerator {
 	/**
 	 * The relative path of the SWAMP binary directory.
 	 */
-	private static String 	SWAMPBIN_REL_PATH 	= ".." + SEPARATOR + ".swampbin";
+	private static String 	SWAMPBIN_REL_PATH 	= "swampbin";
 	
 	/**
 	 * The name of the generated build file.
 	 */
-	private static String 	BUILDFILE_NAME		= "build.xml";
+	public static String 	BUILDFILE_EXT		= ".xml";
 	
 	/**
 	 * The number of spaces to indent per level in the generated XML 
@@ -74,11 +81,13 @@ public class BuildfileGenerator {
 	 *
 	 * @param projects a set of ClasspathHandler objects
 	 */
+	/*
 	public static void generateBuildFiles(Set<ClasspathHandler> projects) {
 		for (ClasspathHandler c : projects) {
 			generateBuildFile(c);
 		}
 	}
+	*/
 	
 	/**
 	 * Generates a build file for the passed in project and saves the
@@ -86,7 +95,7 @@ public class BuildfileGenerator {
 	 *
 	 * @param project a ClasspathHandler object for a project
 	 */
-	public static void generateBuildFile(ClasspathHandler project) {
+	public static void generateBuildFile(ImprovedClasspathHandler project, Set<String> filePaths) {
 		// Here's how to write XML in Java
 		/* Adapted from www.mkyong.com/java/how-to-create-xml-file-in-java-dom */
 		try {
@@ -101,27 +110,41 @@ public class BuildfileGenerator {
 			// properties
 			setProperties(doc, root, SWAMPBIN_REL_PATH, project.getSourceVersion(), project.getTargetVersion()); 
 			// classpath
-			setLibraryClasspath(doc, root, project.getLibraryClasspath(), project.getProjectName());
+			setLibraryClasspath(doc, root, project.getLibraryClasspath(), project.getExportedEntries(), project.getSourceClasspath(), project.getDependentProjects(), project.getDefaultOutputLocation().toOSString());
+			setBootClasspath(doc, root, project.getSystemLibraryClasspath());
+			setSourcepath(doc, root, project.getSourceClasspath(), project.getDependentProjects());
 			// init target (as of now just creating output directory)
 			String prjName = project.getProjectName();
 			// build target
-			setBuildTarget(doc, root, project.getOutputLocation(), project.getDependentProjects(), project.getSourceClasspath(), prjName, project.isRoot());	
+			setBuildTarget(doc, root, project.getDefaultOutputLocation().toOSString(), project.getDependentProjects(), project.getSourceClasspath(), prjName, filePaths);	
 			
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			transformerFactory.setAttribute("indent-number", INDENT_SPACES);
 			Transformer transformer = transformerFactory.newTransformer();
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 			DOMSource source = new DOMSource(doc);
-			System.out.println("File written to: " + project.getProjectPath() + SEPARATOR + BUILDFILE_NAME);
-			StreamResult result = new StreamResult(new File(project.getProjectPath() + SEPARATOR + BUILDFILE_NAME));
+			String buildFilePath = project.getProjectPluginLocation() + SEPARATOR + project.getProjectName() + BUILDFILE_EXT;
+			File buildFile = new File(buildFilePath);
+			if (buildFile.exists()) {
+				System.out.println("Build file exists");
+				buildFile.delete();
+				try {
+					buildFile.createNewFile();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+			System.out.println("File written to: " + buildFilePath);
+			StreamResult result = new StreamResult(buildFile);
 			transformer.transform(source, result);
+			filePaths.add(buildFilePath);
 			
 		} catch (ParserConfigurationException p) {
 			p.printStackTrace();
 		} catch (TransformerException t) {
 			t.printStackTrace();
 		}
-		
 	}
 	
 	/**
@@ -179,7 +202,7 @@ public class BuildfileGenerator {
 	}
 	
 	/**
-	 * Adds library entries to the classpath
+	 * Adds library entries to the classpath or bootclasspath
 	 *
 	 * @param doc the document
 	 * @param root the root element
@@ -187,31 +210,82 @@ public class BuildfileGenerator {
 	 * SWAMP binary directory or within the project directory)
 	 * @param projectName the projectName
 	 */
-	private static void setLibraryClasspath(Document doc, Element root, List<IClasspathEntry> entries, String projectName) {
+	private static void setLibraryClasspath(Document doc, Element root, List<IClasspathEntry> libEntries, List<IClasspathEntry> dependentProjectExports, List<IClasspathEntry> srcEntries, List<ImprovedClasspathHandler> dependentProjects, String defaultOutputDir) {
 		Element path = doc.createElement("path");
 		path.setAttribute("id", CLASSPATH_NAME);
-		// TODO Maybe change name of classpath doc for different projects (?)
-		//Element pathElement = doc.createElement("pathelement");
-		String swampbin = "${" + SWAMPBIN_NAME + "}";
-		for (IClasspathEntry entry : entries) {
-			System.out.println("Library entry path: " + entry);
-			// TODO get the actual filename (I don't think entry.toString() will do it
-			Element pathElement = doc.createElement("pathelement");
-			if (entry.getPath().toOSString().contains(SWAMPBIN_NAME)) {
-				String name = entry.getPath().lastSegment();
-				pathElement.setAttribute("location", swampbin + SEPARATOR + name);
-			}
-			else { // not in swampbin
-				String relDir = relativizeDirectory(entry.getPath().toOSString(), projectName);
-				System.out.println("Non-SWAMPBIN directory location: " + relDir);
-				pathElement.setAttribute("location", relDir);
-			}
-			
-			path.appendChild(pathElement);
+		addLibraryEntries(doc, path, libEntries);
+		addLibraryEntries(doc, path, dependentProjectExports);
+
+		String relPath = defaultOutputDir.substring(1);
+		addPathElement(doc, path, relPath);
+		addSourceOutputEntries(doc, root, srcEntries);
+		// add dependent project sources to this
+		for (ImprovedClasspathHandler i : dependentProjects) {
+			relPath = i.getDefaultOutputLocation().toOSString().substring(1);
+			addPathElement(doc, path, relPath);
+			addSourceOutputEntries(doc, root, i.getSourceClasspath());
 		}
 		root.appendChild(path);
-			
-		// TODO Add handling for bootclasspath (?)
+	}
+	
+	private static void addLibraryEntries(Document doc, Element path, List<IClasspathEntry> entries) {
+		for (IClasspathEntry entry : entries) {
+			String rootedPath = entry.getPath().toOSString();
+			String relativePath = rootedPath.substring(1);
+			addPathElement(doc, path, relativePath);
+		}
+	}
+	
+	private static void addSourceOutputEntries(Document doc, Element path, List<IClasspathEntry> srcEntries) {
+		Set<String> dirs = new HashSet<>();
+		if (srcEntries != null) {
+			for (IClasspathEntry entry : srcEntries) {
+				IPath outputPath = entry.getOutputLocation();
+				if (outputPath != null) {
+					String relativePath = outputPath.toOSString().substring(1);
+					if (!dirs.contains(relativePath)) {
+						dirs.add(relativePath);
+						addPathElement(doc, path, relativePath);
+					}
+				}
+			}
+		}
+	}
+	
+	private static void setBootClasspath(Document doc, Element root, List<IClasspathEntry> entries) {
+		Element path = doc.createElement("path");
+		path.setAttribute("id", BOOTCLASSPATH_NAME);
+		for (IClasspathEntry entry : entries) {
+			String rootedPath = entry.getPath().toOSString();
+			String relativePath = rootedPath.substring(1);
+			addPathElement(doc, path, relativePath);
+		}
+		root.appendChild(path);
+	}
+	
+	private static void setSourcepath(Document doc, Element root, List<IClasspathEntry> entries, List<ImprovedClasspathHandler> dependentProjects) {
+		// TODO Get rid of duplicate code
+		Element path = doc.createElement("path");
+		path.setAttribute("id", SOURCEPATH_NAME);
+		addSourceEntries(doc, path, entries);
+		for (ImprovedClasspathHandler i : dependentProjects) {
+			addSourceEntries(doc, path, i.getSourceClasspath());
+		}
+		root.appendChild(path);
+	}
+	
+	private static void addSourceEntries(Document doc, Element path, List<IClasspathEntry> entries) {
+		for (IClasspathEntry entry : entries) {
+			String rootedPath = entry.getPath().toOSString();
+			String relativePath = rootedPath.substring(1);
+			addPathElement(doc, path, relativePath);
+		}
+	}
+	
+	private static void addPathElement(Document doc, Element path, String strPath) {
+		Element pe = doc.createElement("pathelement");
+		pe.setAttribute("location", strPath);
+		path.appendChild(pe);
 	}
 	
 	/**
@@ -236,38 +310,6 @@ public class BuildfileGenerator {
 	}
 	
 	/**
-	 * Returns the relative path of a directory. 
-	 *
-	 * @param dir the path of the directory. The directory will
-	 * either be within the project (in which case getting the
-	 * relative path is trivial) or outside of the project (in which
-	 * case we just need to move up one level)
-	 * @param projectName the name of the project that we are
-	 * currently generating a build file for
-	 * @return the relative path of the directory
-	 */
-	private static String relativizeDirectory(String dir, String projectName) {
-		System.out.println("\n\nRelativizeDirectory");
-		System.out.println("Original path: " + dir);
-		System.out.println("Project name: " + projectName);
-
-		int index = dir.indexOf(projectName);
-		if (index > -1) {
-			System.out.println("Relative path: " + dir.substring(index+1));
-			return dir.substring(index + projectName.length() + 1);
-		}
-		index = dir.indexOf("package" + SEPARATOR);
-		if (index > -1) {
-			// this is an absolute path
-			System.out.println(".." + dir.substring(index + "package".length()));
-			return ".." + dir.substring(index + "package".length());
-		}
-
-		System.out.println("Relative path: " + ".." + dir);
-		return ".." + dir;
-	}
-	
-	/**
 	 * Returns an image descriptor for the image file at the given
 	 * plug-in relative path
 	 *
@@ -280,9 +322,9 @@ public class BuildfileGenerator {
 	 * @param isRoot is this project the root  
 	 * @return the image descriptor
 	 */
-	private static void setBuildTarget(Document doc, Element root, String prjOutputDirectory, List<ClasspathHandler> list, List<IClasspathEntry> srcEntries, String projectName, boolean isRoot) {
+	private static void setBuildTarget(Document doc, Element root, String prjOutputDirectory, List<ImprovedClasspathHandler> dependentProjects, List<IClasspathEntry> srcEntries, String projectName, Set<String> filePaths) {
 		
-		prjOutputDirectory = relativizeDirectory(prjOutputDirectory, projectName);
+		prjOutputDirectory = prjOutputDirectory.substring(1); // unroot it
 		System.out.println("Relative output directory: " + prjOutputDirectory);
 		Element target = doc.createElement("target");
 		target.setAttribute("name", "build");
@@ -293,53 +335,78 @@ public class BuildfileGenerator {
 		
 		root.appendChild(target);
 		
-		for (ClasspathHandler c : list) {
-			String filepath = c.getProjectPath() + SEPARATOR + BUILDFILE_NAME;
-			if (!new File(filepath).exists()) {
-				BuildfileGenerator.generateBuildFile(c);
-			}
-			String relPath = ".." + SEPARATOR + c.getProjectName() + SEPARATOR + BUILDFILE_NAME;
+		for (ImprovedClasspathHandler ich : dependentProjects) {
+			BuildfileGenerator.generateBuildFile(ich, filePaths);
+			String buildFilePath = ich.getProjectName() + BUILDFILE_EXT; // this will be in the same directory
 			Element ant = doc.createElement("ant");
-			ant.setAttribute("antfile", relPath); 
-			ant.setAttribute("dir", ".." + SEPARATOR + c.getProjectName());
+			ant.setAttribute("antfile", buildFilePath); 
 			ant.setAttribute("target", "build");
 			target.appendChild(ant);
 		}
 		
 		// includesfile and excludesfile attributes - http://ant.apache.org/manual/Tasks/javac.html
 		for (IClasspathEntry entry : srcEntries) {
+			IPath[] inclusionPatterns = entry.getInclusionPatterns();
+			IPath[] exclusionPatterns = entry.getExclusionPatterns();
 			Element javac = doc.createElement("javac");
 			javac.setAttribute("includeantruntime", "false");
 			javac.setAttribute("classpathref", CLASSPATH_NAME);
+			javac.setAttribute("bootclasspathref", BOOTCLASSPATH_NAME);
+			if (inclusionPatterns.length == 0 && exclusionPatterns.length == 0) {
+				javac.setAttribute("sourcepathref", SOURCEPATH_NAME);
+			}
+			else {
+				javac.setAttribute("sourcepath", getModifiedSourcePath(entry, srcEntries));
+			}
+			String encoding = getEncodingAttribute(entry);
+			if (!encoding.equals("")) {
+				javac.setAttribute("encoding", encoding);
+			}
 			// Source entries may have a specific output location associated with them, otherwise, we use the project's default location
 			IPath destPath = entry.getOutputLocation();
 			String destDir = null;
 			if (destPath != null) {
-				destDir = relativizeDirectory(destPath.toString(), projectName);
+				String strPath = destPath.toOSString();
+				destDir = strPath.substring(1);
 			}
 			else {
 				destDir = prjOutputDirectory;
 			}
 			Element mkdir = doc.createElement("mkdir");
-			mkdir.setAttribute("dir", destDir);
+			mkdir.setAttribute("dir", destDir); // TODO Become smarter about when we actually need this
 			init.appendChild(mkdir);
 			javac.setAttribute("destdir", destDir);
 			javac.setAttribute("source", "${source}");
 			javac.setAttribute("target", "${target}");
 			
 			Element src = doc.createElement("src");
-			String absPath = entry.getPath().makeAbsolute().toOSString();
-
 			addInclusionExclusionPatterns(doc, javac, "include", entry.getInclusionPatterns());
 			addInclusionExclusionPatterns(doc, javac, "exclude", entry.getExclusionPatterns());
-	
-			String strRelPath = relativizeDirectory(absPath, projectName);
-			System.out.println("Made relative: " + strRelPath);
+			
+			String absPath = entry.getPath().toOSString();
+			String strRelPath = absPath.substring(1);
+			System.out.println("Relative path: " + strRelPath);
 			src.setAttribute("path", strRelPath);
 			javac.appendChild(src);
 			target.appendChild(javac);
 		}
 		
+	}
+	
+	// We don't want to include an entry in its own sourcepath or we'll have problems
+	private static String getModifiedSourcePath(IClasspathEntry currentEntry, List<IClasspathEntry> entries) {
+		StringBuffer sb = new StringBuffer("");
+		for (int i = 0; i < entries.size(); i++) {
+			IClasspathEntry entry = entries.get(i);
+			if (currentEntry.equals(entry)) {
+				continue;
+			}
+			String rootedPath = entry.getPath().toOSString();
+			String relativePath = rootedPath.substring(1);
+			String str = i == 0 ? relativePath : "," + relativePath;
+			sb.append(str);
+		}
+		return sb.toString();
 	}
 	
 	/**
@@ -359,6 +426,16 @@ public class BuildfileGenerator {
 			include.setAttribute("name", pattern.toString());
 			parent.appendChild(include);
 		}
+	}
+	
+	private static String getEncodingAttribute(IClasspathEntry entry) {
+		IClasspathAttribute[] attributes = entry.getExtraAttributes();
+		for (IClasspathAttribute attr : attributes) {
+			if (attr.getName().equals(IClasspathAttribute.SOURCE_ATTACHMENT_ENCODING)) {
+				return attr.getValue();
+			}
+		}
+		return "";
 	}
 	
 }

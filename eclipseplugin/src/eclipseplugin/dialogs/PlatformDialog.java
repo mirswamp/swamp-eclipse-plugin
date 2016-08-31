@@ -35,16 +35,49 @@ import eclipseplugin.SubmissionInfo;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 import edu.uiuc.ncsa.swamp.api.Platform;
 
+/**
+ * This class creates a dialog for SWAMP Platform selection
+ * @author Malcolm Reid Jr. (reid-jr@cs.wisc.edu)
+ * @since 07/2016 
+ */
 public class PlatformDialog extends TitleAreaDialog {
+	/**
+	 * The List of SWAMP Platforms
+	 */
 	private List<Platform> platforms;
+	/**
+	 * The List widget for selecting Platforms
+	 */
 	private org.eclipse.swt.widgets.List swtPlatformList;
+	/**
+	 * Reference to SwampApiWrapper for communicating with the SWAMP
+	 */
 	private SwampApiWrapper api;
+	/**
+	 * Reference to SubmissionInfo object for storing the selections
+	 */
 	private SubmissionInfo submissionInfo;
+	/**
+	 * Reference to Shell object
+	 */
 	private Shell shell;
 	
+	/**
+	 * The title for the dialog
+	 */
 	private static final String PLATFORM_TITLE	= "Platform Selection";
+	/**
+	 * The help text for the List widget
+	 */
 	private static final String PLATFORM_HELP 	= "Select one or more platforms to run your assessment on.";
 	
+	/**
+	 * Constructor for PlatformDialog
+	 *
+	 * @param shell the shell that this dialog will be in
+	 * @param si the SubmissionInfo object that stores the selections on the
+	 * back-end
+	 */
 	public PlatformDialog(Shell parentShell, SubmissionInfo si) {
 		super(parentShell);
 		shell = parentShell;
@@ -52,6 +85,13 @@ public class PlatformDialog extends TitleAreaDialog {
 		api = submissionInfo.getApi();
 	}
 	
+	/**
+	 * Creates dialog area of window and places widgets on it
+	 *
+	 * @param parent the parent Composite that the widgets will be placed on 
+	 * top of
+	 * @return Control with widgets on it
+	 */
 	@Override protected Control createDialogArea(Composite parent) {
 		System.out.println("We're redrawing the platform dialog");
 		Composite area = (Composite) super.createDialogArea(parent);
@@ -67,7 +107,7 @@ public class PlatformDialog extends TitleAreaDialog {
 		container.setLayout(new GridLayout(2, false));
 
 		DialogUtil.initializeLabelWidget("Platforms: ", SWT.NONE, container);
-		platforms = getPlatforms(submissionInfo.getSelectedToolIDs(), submissionInfo.getSelectedProjectID());
+		platforms = getPlatforms(submissionInfo.getPackageType());
 		swtPlatformList = DialogUtil.initializeListWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), convertPlatformListToStringArray());
 		swtPlatformList.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PLATFORM_HELP));
 		
@@ -84,31 +124,41 @@ public class PlatformDialog extends TitleAreaDialog {
 		return area;
 	}
 	
-	private List<Platform> getPlatforms(List<String> toolUUIDs, String prjUUID) {
-		Set<Platform> platformSet = new HashSet<Platform>();
-		for (String toolUUID : toolUUIDs) {
-			List<Platform> list = api.getSupportedPlatforms(toolUUID, prjUUID);
-			for (Platform p : list) {
-				platformSet.add(p);
-			}
-		}
-		List<Platform> platformList = new ArrayList<Platform>(platformSet.size());
-		for (Platform p : platformSet) {
-			platformList.add(p);
-		}
+	/**
+	 * Gets java.util.List of Platforms from the SWAMP given the selected Tools
+	 * and SWAMP project
+	 *
+	 * @param pkgType the package type of the package being assessed
+	 * @return List of SWAMP Platforms
+	 */
+	private List<Platform> getPlatforms(String pkgType) {
+		
+		Platform p = api.getDefaultPlatform(pkgType);
+		List<Platform> platformList = new ArrayList<Platform>();
+		platformList.add(p);
 		return platformList;
 	}
 	
+	/**
+	 * Converts the list of platforms into an array of platform names
+	 *
+	 * @return String array of SWAMP Platform names
+	 */
 	private String[] convertPlatformListToStringArray() {
 		int numPlatforms = platforms.size();
 		String[] platformArray = new String[numPlatforms];
 		for (int i = 0; i < numPlatforms; i++) {
 			platformArray[i] = platforms.get(i).getName();
 		}
-		//Arrays.sort(platformArray);
 		return platformArray;
 	}
 	
+	/**
+	 * This selects items in the dialog's List widget based on the IDs of
+	 * platforms that should be selected by default
+	 *
+	 * @param platformUUIDs list of the UUIDs of the selected SWAMP Platforms
+	 */
 	private void setSelectedPlatforms(List<String> platformUUIDs) {
 		int count = 0;
 		int numIDs = platformUUIDs.size();
@@ -121,6 +171,12 @@ public class PlatformDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Creates buttons for the window's button bar
+	 *
+	 * @param parent the parent Composite that the buttons will be placed on 
+	 * top of
+	 */
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		parent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
@@ -131,6 +187,11 @@ public class PlatformDialog extends TitleAreaDialog {
 		createButton(parent, IDialogConstants.CANCEL_ID, DialogUtil.CANCEL_CAPTION, false);
 	}
 	
+	/**
+	 * Method for handling button presses on this dialog
+	 *
+	 * @param buttonID the ID of the button that was selected
+	 */
 	@Override
 	public void buttonPressed(int buttonID) {
 		switch (buttonID) {
@@ -144,7 +205,10 @@ public class PlatformDialog extends TitleAreaDialog {
 			super.cancelPressed();
 		}
 	}
-		
+	
+	/**
+	 * Method for handling back button being pressed 
+	 */
 	protected void backPressed() {
 		//submissionInfo.setSelectedPlatformIDs(null);
 		submissionInfo.setSelectedPlatformIDs(getSelectedIDs());
@@ -152,6 +216,10 @@ public class PlatformDialog extends TitleAreaDialog {
 		super.close();
 	}
 
+	/**
+	 * Method for handling OK button being pressed. Tests that at least one
+	 * tool was selected and then advances
+	 */
 	@Override
 	protected void okPressed() {
 		if (swtPlatformList.getSelectionCount() < 1) {
@@ -175,6 +243,12 @@ public class PlatformDialog extends TitleAreaDialog {
 		return selectedPlatformIDs;
 	}
 
+/**
+* This class clears the List (widget) of Platforms when the button this 
+* listener is added to is selected
+* @author Malcolm Reid Jr. (reid-jr@cs.wisc.edu)
+* @since 07/2016 
+*/
 private class ClearButtonSelectionListener implements SelectionListener {
 		
 		public ClearButtonSelectionListener() {

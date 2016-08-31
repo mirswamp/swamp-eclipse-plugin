@@ -28,6 +28,9 @@ import org.eclipse.ui.IWorkbenchWindowActionDelegate;
 import org.eclipse.ui.IWorkbenchWindowPulldownDelegate;
 import eclipseplugin.SwampSubmitter;
 import org.eclipse.ui.IFileEditorInput;
+
+import static eclipseplugin.Activator.PLUGIN_ID;
+
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 
@@ -55,7 +58,8 @@ public class LaunchAction implements IWorkbenchWindowPulldownDelegate {
 	 * @see IWorkbenchWindowActionDelegate#run
 	 */
 	public void run(IAction action) {
-		submitter.launchBackgroundAssessment(HandlerUtils.getActiveProjectLocation(window));
+		IProject project = HandlerUtils.getActiveProject(window);
+		submitter.launchBackgroundAssessment(project);
 	}
 
 	/**
@@ -88,13 +92,12 @@ public class LaunchAction implements IWorkbenchWindowPulldownDelegate {
 
 	@Override
 	public Menu getMenu(Control parent) {
-		System.out.println("Active project location: " + HandlerUtils.getActiveProjectLocation(window));
 		Menu menu = new Menu(parent);
 		int index = 0;
 		MenuItem configLaunch = makeMenuItem(menu, "&Configure Assessment Submission", index++);
-		configLaunch.addListener(SWT.Selection, e -> submitter.launch(HandlerUtils.getActiveProjectLocation(window)));
+		configLaunch.addListener(SWT.Selection, e -> submitter.launch(HandlerUtils.getActiveProject(window)));
 		MenuItem resubmit = makeMenuItem(menu, "&Resubmit Previous Assessment", index++);
-		resubmit.addListener(SWT.Selection, e -> submitter.launchBackgroundAssessment(HandlerUtils.getActiveProjectLocation(window)));
+		resubmit.addListener(SWT.Selection, e -> submitter.launchBackgroundAssessment(HandlerUtils.getActiveProject(window)));
 		MenuItem logIn = makeMenuItem(menu, "Log &In", index++);
 		MenuItem logOut = makeMenuItem(menu, "Log &Out", index++);
 		boolean loggedIn = submitter.loggedIntoSwamp();

@@ -92,8 +92,6 @@ public class ToolDialog extends TitleAreaDialog {
 	@Override protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
-		System.out.println("Redrawing tools");
-		
 		this.setTitle(TOOL_TITLE);
 		
 		/* Note: From GridData JavaDoc, "Do not reuse GridData objects. Every control in a composite
@@ -227,8 +225,8 @@ public class ToolDialog extends TitleAreaDialog {
 	}
 
 /**
-* This class clears the List of Tools when the button this listener is added to
-* is selected
+* This class clears the List (widget) of Tools when the button this listener is 
+* added to is selected
 * @author Malcolm Reid Jr. (reid-jr@cs.wisc.edu)
 * @since 07/2016 
 */

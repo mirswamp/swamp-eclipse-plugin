@@ -31,7 +31,7 @@ public class ResubmitAction implements IWorkbenchWindowActionDelegate {
 	}
 	
 	public void run(IAction action) {
-		ss.launchBackgroundAssessment(HandlerUtils.getActiveProjectLocation(window));
+		ss.launchBackgroundAssessment(HandlerUtils.getActiveProject(window));
 	}
 
 	@Override

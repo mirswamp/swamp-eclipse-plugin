@@ -22,6 +22,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
+import org.eclipse.core.runtime.IPath;
 
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.wisc.cs.swamp.SwampApiWrapper;
@@ -55,11 +56,17 @@ public class SubmissionInfo {
 	// Other
 	private SwampApiWrapper api;
 	
+	public static final String JAVA_8_SRC = "Java 8 Source Code";
+	public static final String JAVA_7_SRC = "Java 7 Source Code";
+	public static final String JAVA_8_BYTE = "Java 8 Bytecode";
+	public static final String JAVA_7_BYTE = "Java 7 Bytecode";
+	
 	public static String NO_BUILD_STRING = "no-build";
 	public static String AUTO_GENERATE_BUILD_STRING = "Auto-generate build file";
 	private static String buildOptions[] = { "Auto-generate build file", "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", "no-build", "other" };
 	private static String PROJECT_KEY = "PROJECT";
 	private static String DELIMITER = ",";
+	private static String pkgTypeOptions[] = { JAVA_8_SRC, JAVA_7_SRC, JAVA_8_BYTE, JAVA_7_BYTE };
 	
 	public SubmissionInfo(SwampApiWrapper api) {
 		this.api = api;
@@ -79,6 +86,14 @@ public class SubmissionInfo {
 	
 	public String getPackageType() {
 		return packageType;
+	}
+	
+
+	public String getPkgConfPackageType() {
+		if (packageType.equals(JAVA_8_SRC) || packageType.equals(JAVA_8_BYTE)) {
+			return "java-8";
+		}
+		return "java-7";
 	}
 	
 	public void setPackageType(String pkgType, boolean fromFile) {
@@ -116,8 +131,9 @@ public class SubmissionInfo {
 	}
 	
 	public String[] getPackageTypeList() {
-		List<String> pkgTypes = api.getPackageTypesList();
-		return Utils.convertStringListToArray(pkgTypes);
+		/*List<String> pkgTypes = api.getPackageTypesList();
+		return Utils.convertStringListToArray(pkgTypes);*/
+		return pkgTypeOptions;
 	}
 	
 	public void setSelectedPlatformIDs(List<String> platformIDs) {
@@ -206,6 +222,10 @@ public class SubmissionInfo {
 		return false;
 	}
 	
+	public boolean isProjectInitialized() {
+		return project != null;
+	}
+	
 	public void setProject(IProject p) {
 		this.project = p;
 	}
@@ -219,8 +239,8 @@ public class SubmissionInfo {
 			createBuildFile = true;
 			buildSystem = "ant";
 			buildTarget = "build";
-			buildDirectory = "." + project.getName();
-			this.buildFile = "build.xml";
+			buildDirectory = "."; // Top-level directory
+			this.buildFile = getProjectName() + BuildfileGenerator.BUILDFILE_EXT;
 			packageSystemLibs = packageRTLibs;
 		}
 		else if (buildSys.equals(NO_BUILD_STRING)) {
@@ -244,6 +264,10 @@ public class SubmissionInfo {
 	
 	public String getProjectPath() {
 		return project.getLocation().toOSString();
+	}
+	
+	public String getProjectWorkingLocation() {
+		return project.getWorkingLocation(PLUGIN_ID).toOSString();
 	}
 	
 	public boolean needsBuildFile() {

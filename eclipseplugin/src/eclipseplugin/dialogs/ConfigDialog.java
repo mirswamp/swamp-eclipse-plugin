@@ -62,7 +62,6 @@ public class ConfigDialog extends TitleAreaDialog {
 	private Button packageRTButton;
 	private Button selectFileButton;
 	private Text buildPathText;
-	private String fullPath;
 	
 	private Shell shell;
 	
@@ -130,7 +129,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	private void setEclipseProjectDefault() {
 		if (eclipsePrjCombo.getItemCount() == 1) {
 			eclipsePrjCombo.select(0);
-			handleEclipseProjectSelection(0, false);
+			handleEclipseProjectSelection(0);
 		}
 	}
 	
@@ -233,8 +232,9 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	private String[] getPackageTypeList() {
-		List<String> pkgTypes = api.getPackageTypesList();
-		return Utils.convertStringListToArray(pkgTypes);
+		//List<String> pkgTypes = api.getPackageTypesList();
+		//return Utils.convertStringListToArray(pkgTypes);
+		return submissionInfo.getPackageTypeList();
 	}
 	
 	@Override
@@ -320,6 +320,9 @@ public class ConfigDialog extends TitleAreaDialog {
 			setupPackageType();
 			setupBuild();
 		}
+		else if (submissionInfo.isProjectInitialized()) {
+			setupEclipseProject();
+		}
 		else {
 			setDefaults();
 		}
@@ -392,12 +395,7 @@ public class ConfigDialog extends TitleAreaDialog {
 				buildPathText.setText(filepath);
 				return;
 			}
-			if (filename.equals(MAKE_UPPERCASE)) {
-				setBuildSystem("make");
-				buildPathText.setText(filepath);
-				return;
-			}
-			if (filename.equals(MAKE_LOWERCASE)) {
+			if ((filename.equals(MAKE_UPPERCASE)) || (filename.equals(MAKE_LOWERCASE))) {
 				setBuildSystem("make");
 				buildPathText.setText(filepath);
 				return;
@@ -432,14 +430,14 @@ public class ConfigDialog extends TitleAreaDialog {
 		for (int i = 0; i < eclipseProjects.length; i++) {
 			if (project.equals(eclipseProjects[i])) {
 				eclipsePrjCombo.select(i);
-				handleEclipseProjectSelection(i, true);
+				handleEclipseProjectSelection(i);
 				return;
 			}
 		}
-		handleEclipseProjectSelection(-1, true);
+		handleEclipseProjectSelection(-1);
 	}
 	
-	private void handleEclipseProjectSelection(int index, boolean fromFile) {
+	private void handleEclipseProjectSelection(int index) {
 		if (index < 0) {
 			prjFilePathText.setText("");
 		}
@@ -449,18 +447,21 @@ public class ConfigDialog extends TitleAreaDialog {
 			String complianceVersion = jp.getOption("org.eclipse.jdt.core.compiler.compliance", true);
 			if (complianceVersion != null) {
 				if (complianceVersion.equals("1.7")) {
+					System.out.println("Java 7 package");
 					// set package type to Java 7
-					setPackageType(api.getPkgTypeString("Java", "java7", "", null));
+					// This API doesn't really make sense for our purposes
+					//setPackageType(api.getPkgTypeString("Java", "java-7", "", null));
+					setPackageType("Java 7 Source Code");
 				}
 				else if (complianceVersion.equals("1.8")) {
+					System.out.println("Java 8 package");
 					// set package type to Java 8
-					setPackageType(api.getPkgTypeString("Java", "java8", "", null));
+					//setPackageType(api.getPkgTypeString("Java", "java-8", "", null));
+					setPackageType("Java 8 Source Code");
 				}
 			}
 			prjFilePathText.setText(project.getLocation().toOSString());
-			if (!fromFile) {
-				setPredictedBuildSys(project);
-			}
+			setPredictedBuildSys(project);
 		}
 	}
 	
@@ -541,6 +542,12 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		else {
 			buildSys = submissionInfo.getBuildSystem();
+			String prjLocation = eclipseProjects[eclipsePrjCombo.getSelectionIndex()].getLocation().toOSString();
+			String buildDir = submissionInfo.getBuildDirectory();
+			String buildFile = submissionInfo.getBuildFile();
+			String path = prjLocation + SEPARATOR + (buildDir.equals(".") ? buildFile : buildDir + SEPARATOR + buildFile);
+			buildPathText.setText(path);
+			buildTargetText.setText(submissionInfo.getBuildTarget());
 		}
 		for (int i = 0; i < buildSysCombo.getItemCount(); i++) {
 			if (buildSys.equals(buildSysCombo.getItem(i))) {
@@ -676,33 +683,29 @@ public class ConfigDialog extends TitleAreaDialog {
 			// build system (build system info -- including for create_new...)
 			index = buildSysCombo.getSelectionIndex();
 			String buildSysStr = buildSysCombo.getItem(index);
-			String relativeDir = "";
-			String buildFile = "";
+			String relBuildDir = "";
+			String buildFileName = "";
 			boolean createBuildFile = false;
 			if (buildSysStr.equals(AUTO_GENERATE_BUILD_STRING)) {
 				createBuildFile = true;
 			}
 			else {
-				relativeDir = getRelativeBuildDir(project.getLocation().toOSString(), fullPath);
-				buildFile = buildPathText.getText();
-				System.out.println("Relative Directory: " + relativeDir);
-				System.out.println("Build file: " + buildFile);
+				String prjDir = project.getLocation().toOSString();
+				String buildPath = buildPathText.getText();
+				int prjIndex = prjDir.lastIndexOf(SEPARATOR);
+				int fileIndex = buildPath.lastIndexOf(SEPARATOR);
+				relBuildDir = buildPath.substring(prjIndex+1, fileIndex);
+				if (relBuildDir.equals("")) {
+					relBuildDir = ".";
+				}
+				buildFileName = buildPath.substring(fileIndex+1);
+				System.out.println("Relative Directory: " + relBuildDir);
+				System.out.println("Build file: " + buildFileName);
 			}
-			submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relativeDir, buildFile, buildTargetText.getText(), packageRTButton.getSelection());
+			submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relBuildDir, buildFileName, buildTargetText.getText(), packageRTButton.getSelection());
 			submissionInfo.setConfigInitialized(true);
 			super.okPressed();
 		}
-	}
-	
-	private String getRelativeBuildDir(String projectDir, String buildPath) {
-		int index = projectDir.lastIndexOf(SEPARATOR);
-		int fileIndex = buildPath.lastIndexOf(SEPARATOR);
-		String relPath = buildPath.substring(index+1, fileIndex);
-		System.out.println("Rel path: " + relPath);
-		if (relPath.equals("")) {
-			relPath = ".";
-		}
-		return relPath;
 	}
 	
 	private class ComboSelectionListener implements SelectionListener {
@@ -724,7 +727,7 @@ public class ConfigDialog extends TitleAreaDialog {
 				handleSwampProjectSelection(selection);
 			}
 			else if (type == Type.ECLIPSE_PROJECT) {
-				handleEclipseProjectSelection(selection, false);
+				handleEclipseProjectSelection(selection);
 			}
 			else if (type == Type.PACKAGE){ 
 				handlePackageSelection(selection);
@@ -764,10 +767,11 @@ public class ConfigDialog extends TitleAreaDialog {
 			}
 			dialog.setFilterPath(path);
 			String rc = dialog.open();
-			fullPath = rc;
+			//fullPath = rc;
 			if (rc != null) {
-				String lastSegment = rc.substring(rc.lastIndexOf(SEPARATOR)+1);
-				buildPathText.setText(lastSegment);
+				//String lastSegment = rc.substring(rc.lastIndexOf(SEPARATOR)+1);
+				//buildPathText.setText(lastSegment);
+				buildPathText.setText(rc);
 			}
 		}
 		

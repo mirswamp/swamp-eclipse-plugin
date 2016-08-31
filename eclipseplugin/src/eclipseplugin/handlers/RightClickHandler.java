@@ -24,7 +24,6 @@ import org.eclipse.ui.handlers.HandlerUtil;
 
 import eclipseplugin.SwampSubmitter;
 
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
 /**
@@ -59,11 +58,9 @@ public class RightClickHandler extends AbstractHandler {
 			return null;
 		}
 		
-		// TODO (1) Make this project-specific
 		SwampSubmitter ss = new SwampSubmitter(window);
-		String configDir = project.getProject().getLocation().toOSString();
-		
-		ss.launchBackgroundAssessment(configDir);
+		IProject prj = project.getProject();
+		ss.launchBackgroundAssessment(prj);
 		
 		return null;
 	}
