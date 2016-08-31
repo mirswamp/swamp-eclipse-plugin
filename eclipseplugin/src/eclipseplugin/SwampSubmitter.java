@@ -17,11 +17,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
@@ -35,13 +33,12 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubMonitor;
-import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.core.runtime.jobs.IJobChangeEvent;
+import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.core.runtime.jobs.MultiRule;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.window.Window;
@@ -64,7 +61,6 @@ import eclipseplugin.dialogs.ToolDialog;
 import eclipseplugin.exceptions.CyclicDependenciesException;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.PackageVersion;
-import edu.uiuc.ncsa.swamp.api.Platform;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 import edu.wisc.cs.swamp.exceptions.IncompatibleAssessmentTupleException;
 import edu.wisc.cs.swamp.exceptions.InvalidIdentifierException;
@@ -88,13 +84,15 @@ public class SwampSubmitter {
 	private static int UNABLE_TO_DESERIALIZE = 0;
 	private static int UNABLE_TO_GENERATE_BUILD = 1;
 	private static int CYCLICAL_DEPENDENCIES = 2;
+	private static String[] FILE_PATTERNS = { ".*\\" + BuildfileGenerator.BUILDFILE_EXT, ImprovedClasspathHandler.SWAMPBIN_DIR, PackageInfo.PACKAGE_CONF_NAME, ".*\\.zip" };
+
 	
 	private static int UPLOAD_TICKS = 80;
 	private static int SUBMISSION_TICKS = 10;
 	private static int PKG_CONF_TICKS = 10;
 	private static int ZIP_TICKS = 40;
 	private static int CLEAN_PROJECTS_TICKS = 10;
-	private static int CLASSPATH_ENTRY_TICKS = 5;
+	public static int CLASSPATH_ENTRY_TICKS = 5;
 	
 	public SwampSubmitter(IWorkbenchWindow window) {
 		this.window = window;
@@ -121,7 +119,7 @@ public class SwampSubmitter {
 		return stream;
 	}
 
-	private void submitPreConfiguredJob(SubmissionInfo si, boolean fromFile) {
+	private void submitPreConfiguredJob(SubmissionInfo si) {
 		Job job = new Job(SWAMP_JOB_TITLE) {
 			
 			@Override public boolean belongsTo(Object family) {
@@ -130,18 +128,6 @@ public class SwampSubmitter {
 			
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				
-				if (fromFile) {
-					if (!FileSerializer.deserializeSubmissionInfo(configFilepath, si)) {
-						// TODO Strengthen error here
-						File f = new File(configFilepath);
-						f.delete();
-						out.println(Utils.getBracketedTimestamp() + "Error: Error in loading from previous assessment found. Please relaunch plugin.");
-						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_DESERIALIZE, "Unable to deserialize previous assessment", null);
-						done(status);
-						return status;
-					}
-				}
 				
 				int total = calculateTotalTicks(true, 0, si.getSelectedToolIDs().size());
 				SubMonitor subMonitor = SubMonitor.convert(monitor, total);
@@ -155,14 +141,33 @@ public class SwampSubmitter {
 				Set<String> files = new HashSet<String>();
 				files.add(si.getProjectPath());
 				
+				/* Note: for some reason split's cancel wasn't working */
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+
 				subMonitor.split(ZIP_TICKS);
 				Path archivePath = Utils.zipFiles(files, pluginLoc, archiveName);
+				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
 				
 				subMonitor.split(PKG_CONF_TICKS);
 				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
 				
 				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
+				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
 				
 				subMonitor.split(UPLOAD_TICKS);
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
@@ -180,6 +185,12 @@ public class SwampSubmitter {
 				}
 				*/
 
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+				
 				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
 				
 				for (String toolUUID : si.getSelectedToolIDs()) {
@@ -194,12 +205,14 @@ public class SwampSubmitter {
 				return status;
 			}
 		};
+		String pluginLocation = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
+		job.addJobChangeListener(new JobCancellationListener(pluginLocation, SwampSubmitter.FILE_PATTERNS, out));
 		job.setRule(si.getProject()); // we have to lock just the project
 		job.setUser(true);
 		job.schedule();
 	}
 	
-	private void submitAutoGenJob(SubmissionInfo si, boolean fromFile) {
+	private void submitAutoGenJob(SubmissionInfo si) {
 		Job job = new Job(SWAMP_JOB_TITLE) {
 			
 			@Override
@@ -222,19 +235,15 @@ public class SwampSubmitter {
 					done(status);
 					return status;
 				}
-				SubMonitor subMonitor = SubMonitor.convert(monitor, total);
-				total = calculateTotalTicks(false, numClasspathEntries, si.getSelectedToolIDs().size());
 				
-				if (fromFile) {
-					if (!FileSerializer.deserializeSubmissionInfo(configFilepath, si)) {
-						// TODO Strengthen error here
-						File f = new File(configFilepath);
-						f.delete();
-						out.println(Utils.getBracketedTimestamp() + "Error: Error in loading from previous assessment found. Please relaunch plugin.");
-						Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_DESERIALIZE, "Unable to deserialize previous assessment", null);
-						done(status);
-						return status;
-					}
+				total = calculateTotalTicks(false, numClasspathEntries, si.getSelectedToolIDs().size());
+				SubMonitor subMonitor = SubMonitor.convert(monitor, total);
+				System.out.println("Total ticks: " + total);
+				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
 				}
 				
 				if (jp.hasClasspathCycle(entries)) {
@@ -244,10 +253,22 @@ public class SwampSubmitter {
 					return status;
 				}
 				
-				subMonitor.split(numClasspathEntries * CLASSPATH_ENTRY_TICKS);
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+				
 				out.println(Utils.getBracketedTimestamp() + "Status: Generating build file");
-				ImprovedClasspathHandler ich = new ImprovedClasspathHandler(jp, null, !si.packageSystemLibraries());
+				SubMonitor childSubMonitor = subMonitor.split(numClasspathEntries * CLASSPATH_ENTRY_TICKS);
+				ImprovedClasspathHandler ich = new ImprovedClasspathHandler(jp, null, !si.packageSystemLibraries(), childSubMonitor);
 				Set<String> files = ich.getFilesToArchive();
+				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
 				
 				BuildfileGenerator.generateBuildFile(ich, files);
 				
@@ -266,13 +287,26 @@ public class SwampSubmitter {
 				String archiveName = filename.replace(" ", "-").replace(":", "").toLowerCase(); 
 				Path archivePath = Utils.zipFiles(files, ich.getProjectPluginLocation(), archiveName);
 				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+				
 				subMonitor.split(PKG_CONF_TICKS);
 				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
+				
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
 				
 				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
 				
+				/*
 				// Delete ant buildfile
 				// Delete swampbin
 				// Delete archive
@@ -286,7 +320,14 @@ public class SwampSubmitter {
 					// This isn't really a problem but why?
 					e.printStackTrace();
 				}
+				*/
 
+				if (subMonitor.isCanceled()) {
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
+				
 				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
 				
 				for (String toolUUID : si.getSelectedToolIDs()) {
@@ -301,6 +342,8 @@ public class SwampSubmitter {
 				return status;
 			}
 		};
+		String pluginLocation = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
+		job.addJobChangeListener(new JobCancellationListener(pluginLocation, SwampSubmitter.FILE_PATTERNS, out)); 
 		job.setRule(ResourcesPlugin.getWorkspace().getRoot()); // we have to lock the root for building projects (i.e. cleaning them). We could potentially get the set of projects, clean the set of projects, and then get a lesser project-scoped rule?
 		job.setUser(true);
 		job.schedule();
@@ -409,12 +452,18 @@ public class SwampSubmitter {
 			si.initializeProject(project.getName(), project.getLocation().toOSString());
 			launchConfiguration(si);
 		}
+		else if (!FileSerializer.deserializeSubmissionInfo(configFilepath, si)) {
+			File f = new File(configFilepath);
+			f.delete();
+			out.println(Utils.getBracketedTimestamp() + "Warning: Unable to reload previous assesment. Configuration dialog will popup now.");
+			
+		}
 		else {
 			if (si.needsBuildFile()) {
-				submitAutoGenJob(si, true);
+				submitAutoGenJob(si);
 			}
 			else {
-				submitPreConfiguredJob(si, true);
+				submitPreConfiguredJob(si);
 			}
 		}
 	}
@@ -466,10 +515,10 @@ public class SwampSubmitter {
 		configFilepath = si.getProjectWorkingLocation() + SEPARATOR + CONFIG_FILENAME;
 		FileSerializer.serializeSubmissionInfo(configFilepath, si);
 		if (si.needsBuildFile()) {
-			submitAutoGenJob(si, false);
+			submitAutoGenJob(si);
 		}
 		else {
-			submitPreConfiguredJob(si, false);
+			submitPreConfiguredJob(si);
 		}
 		
 	}
@@ -569,6 +618,76 @@ public class SwampSubmitter {
 		}
 		else {
 			out.println(Utils.getBracketedTimestamp() + "Status: Successfully submitted assessment with tool {" + toolName + "} on platform {" + platformName +"}");
+		}
+	}
+	
+	private class JobCancellationListener implements IJobChangeListener {
+
+		private String[] filePatterns;
+		private String pluginLocation;
+		private MessageConsoleStream out;
+
+		public JobCancellationListener(String location, String[] patterns, MessageConsoleStream stream) {
+			filePatterns = patterns;
+			pluginLocation = location;
+			out = stream;
+		}
+
+		@Override
+		public void aboutToRun(IJobChangeEvent arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void awake(IJobChangeEvent arg0) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void done(IJobChangeEvent event) {
+			System.out.println("Done!!");
+			System.out.println("Event results: " + event.getResult());
+
+			if (event.getResult().getSeverity() == IStatus.CANCEL) {
+				out.println(Utils.getBracketedTimestamp() + "Status: Submission cancelled by user");
+				File f = new File(pluginLocation);
+				File[] files = f.listFiles();
+				for (File file : files) {
+					String fileName = file.getName();
+					for (String pattern : filePatterns) {
+						if (fileName.matches(pattern)) {
+							System.out.println("Deleted file name: " + fileName);
+							try {
+								if (file.isDirectory()) {
+									FileUtils.deleteDirectory(file);
+								}
+								else {
+									FileUtils.forceDelete(file);
+								}
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		@Override
+		public void running(IJobChangeEvent arg0) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void scheduled(IJobChangeEvent arg0) {
+			// TODO Auto-generated method stub
+		}
+
+		@Override
+		public void sleeping(IJobChangeEvent arg0) {
+			// TODO Auto-generated method stub	
 		}
 	}
 	

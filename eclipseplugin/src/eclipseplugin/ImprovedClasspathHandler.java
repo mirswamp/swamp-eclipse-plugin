@@ -24,6 +24,7 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.jdt.core.IClasspathContainer;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
@@ -53,8 +54,9 @@ public class ImprovedClasspathHandler {
 	private IJavaProject project;
 	private String srcVersion;
 	private String targetVersion;
+	private SubMonitor subMonitor;
 	
-	public  ImprovedClasspathHandler(IJavaProject project, ImprovedClasspathHandler root, boolean exclSysLibs) {
+	public  ImprovedClasspathHandler(IJavaProject project, ImprovedClasspathHandler root, boolean exclSysLibs, SubMonitor subMonitor) {
 		this.excludeSysLibs = exclSysLibs;
 		sources = new ArrayList<IClasspathEntry>();
 		libs = new ArrayList<IClasspathEntry>();
@@ -68,6 +70,8 @@ public class ImprovedClasspathHandler {
 		
 		if (root == null) {
 			this.root = this;
+			this.subMonitor = subMonitor;
+			this.subMonitor.setWorkRemaining(100);
 			visitedProjects = new HashMap<String, ImprovedClasspathHandler>();
 			SWAMPBIN_PATH = setupBinDir(project.getProject());
 			filesToArchive = new HashSet<String>();
@@ -98,6 +102,12 @@ public class ImprovedClasspathHandler {
 		try {
 		for (IClasspathEntry entry : entries) {
 			int kind = entry.getEntryKind();
+			if (this.subMonitor != null) {
+				if (this.subMonitor.isCanceled()) {
+					System.out.println("Sub monitor got cancelled!");
+				}
+				this.subMonitor.split(100 / SwampSubmitter.CLASSPATH_ENTRY_TICKS);
+			}
 			if (kind == IClasspathEntry.CPE_SOURCE) {
 				handleSource(entry, wsRoot);
 			}
@@ -217,7 +227,7 @@ public class ImprovedClasspathHandler {
 		}
 		else {
 			IProject project = root.getProject(entry.getPath().toOSString());
-			ich = new ImprovedClasspathHandler(JavaCore.create(project), this.root, this.root.excludeSysLibs);
+			ich = new ImprovedClasspathHandler(JavaCore.create(project), this.root, this.root.excludeSysLibs, null);
 			dependentProjects.add(ich);
 			visitedProjects.put(path, ich);
 		}
