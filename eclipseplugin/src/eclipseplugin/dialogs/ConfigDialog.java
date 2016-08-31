@@ -554,7 +554,6 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	private void handleBuildSelection(int index) {
-		// TODO There is a more elegant way of handling build than hard coding these strings in multiple places
 		String buildSys =  buildSysCombo.getItem(index);
 		if (buildSys.equals(AUTO_GENERATE_BUILD_STRING) || buildSys.equals(NO_BUILD_STRING)) {
 			selectFileButton.setEnabled(false);

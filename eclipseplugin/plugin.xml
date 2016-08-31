@@ -1,116 +1,184 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-
-<!-- TODO: Action sets are deprecated - replace this with commands at some time -->
-   <extension
-         point="org.eclipse.ui.actionSets">
-      <actionSet
-            label="Display Plugin"
-            visible="true"
-            id="eclipseplugin.actionSet"
-            path="additions"
-            name="SWAMP Name">
-         <menu
-               label="SWAMP"
-               id="eclipseplugin.actionSet.SWAMPMenu">
-            <separator
-                  name="sampleGroup">
-            </separator>
-         </menu>
-         <action
-               label="Launch SWAMP"
-               style="pulldown"
-               icon="icons/swamp-logo-new-square-height-20.png"
-               class="eclipseplugin.actions.LaunchAction"
-               tooltip="Upload and assess projects in the SWAMP"
-               toolbarPath="sampleGroup"
-               id="eclipseplugin.actions.LaunchAction">
-         </action>
-         <action
-         		id="eclipseplugin.actions.menubar.Logout"
-         		label="Log Out"
-         		mnemonic="O"
-         		class="eclipseplugin.actions.menubar.LogoutAction"
-         		menubarPath="eclipseplugin.actionSet.SWAMPMenu/sampleGroup">
-         </action>
-         <action
-         		id="eclipseplugin.actions.menubar.Login"
-         		label="Log In"
-         		mnemonic="I"
-         		class="eclipseplugin.actions.menubar.LoginAction"
-         		menubarPath="eclipseplugin.actionSet.SWAMPMenu/sampleGroup">
-         </action>
-         <action
-         		id="eclipseplugin.actions.menubar.Resubmit"
-         		label="Resubmit Previous Assessment"
-         		mnemonic="R"
-         		class="eclipseplugin.actions.menubar.ResubmitAction"
-         		menubarPath="eclipseplugin.actionSet.SWAMPMenu/sampleGroup">
-         </action>
-         <action
-         		id="eclipseplugin.actions.menubar.Configure"
-         		label="Configure Submission"
-         		mnemonic="C"
-         		class="eclipseplugin.actions.menubar.ConfigureAction"
-         		menubarPath="eclipseplugin.actionSet.SWAMPMenu/sampleGroup">
-         </action>
-      </actionSet>
-   </extension>
-   
-   <!--
-       menubarPath="eclipseplugin.actionSet.SWAMPMenu/sampleGroup"
-   
-   
-   menubarPath="SWAMPMenu/sampleGroup"
-               toolbarPath="sampleGroup" -->
-   
-  <!-- 
-  org.eclipse.ui.popupMenus is deprecated, we'll do it using commands instead
-   <extension 
-   		point="org.eclipse.ui.popupMenus">
-   	  	<objectContribution
-   	  		id="org.eclipse.ui.articles.action.contribution.popup.object"
-   	  		objectClass="org.eclipse.core.resources.IFile">
-   	  		<filter
-   	  			name="projectNature"
-   	  			value="org.eclipse.jdt.core.javanature">
-   	  		</filter>
-   	  		<action
-   	  			id="eclipseplugin.actions.RightClickAction"
-   	  			label="Upload and assess project"
-   	  			icon="icons/swamp-logo-new-square-height-20.png"
-   	  			menubarPath="additions"
-   	  			class="eclipseplugin.actions.LaunchAction">
-   	  		</action>
-   	  	</objectContribution>
-   </extension>
-  -->
   
-  <extension
-  	point="org.eclipse.ui.commands">
-  	<command
+ <!-- Declaring commands -->
+ <extension point="org.eclipse.ui.commands">
+ 	<category id="eclipseplugin.commands.category" name="eclipseplugin.commands.category.name">
+ 	</category>
+ 	
+ 	<command
+ 		categoryId="eclipseplugin.commands.category"
+ 		id="eclipseplugin.commands.configureCommand"
+ 		name="Configure Command">
+ 	</command>
+ 	
+ 	<command
+ 		categoryId="eclipseplugin.commands.category"
+ 		id="eclipseplugin.commands.resubmitCommand"
+ 		name="Resubmit Command">
+ 	</command>	
+ 	
+ 	<command
+ 		categoryId="eclipseplugin.commands.category"
+ 		id="eclipseplugin.commands.loginCommand"
+ 		name="Login Command">
+ 	</command>	
+ 	
+ 	<command
+ 		categoryId="eclipseplugin.commands.category"
+ 		id="eclipseplugin.commands.logoutCommand"
+ 		name="Logout Command">
+ 	</command>	
+ 	
+ 	<command
+ 		categoryId="eclipseplugin.commands.category"
+ 		id="eclipseplugin.commands.pulldownCommand"
+ 		name="Pulldown Command">
+ 	</command>		
+ 	
+ 	<command
   		categoryId="eclipseplugin.commands.category"
-  		id="eclipseplugin.commands.launchCommand"
-  		name="Launch Command">
+  		id="eclipseplugin.commands.rightClickCommand"
+  		name="Right Click Command">
   	</command>
-  </extension>
+ 		
+ </extension>	
+
+ <!-- Adding image to pulldown command -->
+ <extension point="org.eclipse.ui.commandImages">
+  	<image 
+  		commandId="eclipseplugin.commands.pulldownCommand"
+  		icon="icons/swamp-logo-square-height-20.png">
+  	</image>
+  </extension>  
   
-  <extension
-  	point="org.eclipse.ui.handlers">
+ <!-- Associating handlers with the commands -->
+ <extension point="org.eclipse.ui.handlers">
+ 	<handler
+ 		class="eclipseplugin.handlers.ConfigureHandler"
+ 		commandId="eclipseplugin.commands.configureCommand">
+ 	</handler>
+ 	
+ 	<handler
+ 		class="eclipseplugin.handlers.ResubmitHandler"
+ 		commandId="eclipseplugin.commands.resubmitCommand">
+ 	</handler>
+ 	
+ 	<handler
+ 		class="eclipseplugin.handlers.LoginHandler"
+ 		commandId="eclipseplugin.commands.loginCommand">
+ 		<enabledWhen>
+ 			<not>
+ 				<test property="eclipseplugin.properties.loggedIn">
+ 				</test>
+ 			</not>
+ 		</enabledWhen>
+ 	</handler>
+  
   	<handler
-  		class="eclipseplugin.handlers.CommandHandler"
-  		commandId="eclipseplugin.commands.launchCommand">
+ 		class="eclipseplugin.handlers.LogoutHandler"
+ 		commandId="eclipseplugin.commands.logoutCommand">
+ 		<enabledWhen>
+ 			<test property="eclipseplugin.properties.loggedIn">
+ 			</test>
+ 		</enabledWhen>
+ 	</handler>
+  	
+  	<handler
+ 		class="eclipseplugin.handlers.ResubmitHandler"
+ 		commandId="eclipseplugin.commands.pulldownCommand">
+ 	</handler>
+ 	
+ 	<handler
+ 		class="eclipseplugin.handlers.RightClickHandler"
+ 		commandId="eclipseplugin.commands.rightClickCommand">
   	</handler>
-  </extension>
-  		 
-  <extension
-  	point="org.eclipse.ui.menus">
-  	<menuContribution
+ </extension>
+  
+ <!-- Adding to menus -->
+ <extension point="org.eclipse.ui.menus">
+ 	<!-- SWAMP Button and dropdown -->
+ 	<menuContribution locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+ 		<toolbar
+  			id="eclipseplugin.toolbars.swampToolbar">
+  			<command
+  				commandId="eclipseplugin.commands.pulldownCommand"
+  				label="SWAMP Button"
+  				tooltip="Resubmit Previous Assessment"
+  				style="pulldown"
+  				id="eclipseplugin.commands.swampButton">
+  			</command>
+  		</toolbar>
+  	</menuContribution>
+  	
+  	<menuContribution locationURI="menu:eclipseplugin.commands.swampButton">
+  		<command
+  			commandId="eclipseplugin.commands.resubmitCommand"
+  			label="Resubmit Previous Assessment"
+  			mnemonic="R"
+  			style="push">
+  		</command>
+  		<command
+  			commandId="eclipseplugin.commands.configureCommand"
+  			label="Configure Assessment Submission"
+  			mnemonic="C"
+  			style="push">
+  		</command>
+		<command
+			commandId="eclipseplugin.commands.loginCommand"
+			label="Log In"
+			mnemonic="I"
+			style="push">
+		</command>
+		<command
+			commandId="eclipseplugin.commands.logoutCommand"
+			label="Log Out"
+			mnemonic="O"
+			style="push">
+		</command>
+	</menuContribution>  			
+	
+	<!-- SWAMP Main Menu -->
+	<menuContribution
+       locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+    <menu
+          id="eclipseplugin.menus.swampMenu"
+          label="SWAMP"
+          mnemonic="W">
+      	<command
+  			commandId="eclipseplugin.commands.resubmitCommand"
+  			label="Resubmit Previous Assessment"
+  			mnemonic="R"
+  			style="push">
+  		</command>
+  		<command
+  			commandId="eclipseplugin.commands.configureCommand"
+  			label="Configure Assessment Submission"
+  			mnemonic="C"
+  			style="push">
+  		</command>
+		<command
+			commandId="eclipseplugin.commands.loginCommand"
+			label="Log In"
+			mnemonic="I"
+			style="push">
+		</command>
+		<command
+			commandId="eclipseplugin.commands.logoutCommand"
+			label="Log Out"
+			mnemonic="O"
+			style="push">
+		</command> 
+    </menu>
+ </menuContribution>
+ 
+ 	<!-- Right Click Package Submission -->
+ 	<menuContribution
   		locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
   		<command
-  			commandId="eclipseplugin.commands.launchCommand"
-  			id="eclipseplugin.menus.launchCommand"
+  			commandId="eclipseplugin.commands.rightClickCommand"
+  			id="eclipseplugin.menus.rightClickCommand"
   			label="Assess Project on SWAMP"
   			mnemonic="A">
   			<visibleWhen
@@ -124,11 +192,25 @@
             	</with>
   			</visibleWhen>
   		</command>
-  	</menuContribution>
-  </extension>
-
-  <extension
-        point="org.eclipse.ui.bindings">
-  </extension>
-
+  	</menuContribution>	
+ </extension>
+ 
+ <!-- Property tester for login/logout -->
+ <extension point="org.eclipse.core.expressions.propertyTesters">
+ 	<propertyTester
+ 		class="eclipseplugin.handlers.LoginPropertyTester"
+ 		id="eclipseplugin.loginPropertyTester"
+ 		namespace="eclipseplugin.properties"
+ 		properties="loggedIn"
+ 		type="java.lang.Object">
+ 	</propertyTester>
+ </extension>
+ 
+ 
+ <!-- Class to trigger plug-in activation -->
+ <extension point="org.eclipse.ui.startup">
+ 	<startup class="eclipseplugin.ActivationTriggerDummy">
+ 	</startup>
+ </extension>
+ 
 </plugin>     
