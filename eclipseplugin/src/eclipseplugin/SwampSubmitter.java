@@ -34,6 +34,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.MultiRule;
@@ -88,6 +89,13 @@ public class SwampSubmitter {
 	private static int UNABLE_TO_GENERATE_BUILD = 1;
 	private static int CYCLICAL_DEPENDENCIES = 2;
 	
+	private static int UPLOAD_TICKS = 80;
+	private static int SUBMISSION_TICKS = 10;
+	private static int PKG_CONF_TICKS = 10;
+	private static int ZIP_TICKS = 40;
+	private static int CLEAN_PROJECTS_TICKS = 10;
+	private static int CLASSPATH_ENTRY_TICKS = 5;
+	
 	public SwampSubmitter(IWorkbenchWindow window) {
 		this.window = window;
 		//configFilepath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + CONFIG_FILENAME;
@@ -135,6 +143,9 @@ public class SwampSubmitter {
 					}
 				}
 				
+				int total = calculateTotalTicks(true, 0, si.getSelectedToolIDs().size());
+				SubMonitor subMonitor = SubMonitor.convert(monitor, total);
+				
 				out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
 				String pluginLoc = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
 				Date date = new Date();
@@ -143,12 +154,17 @@ public class SwampSubmitter {
 				String archiveName = filename.replace(" ", "-").replace(":", "").toLowerCase(); 
 				Set<String> files = new HashSet<String>();
 				files.add(si.getProjectPath());
+				
+				subMonitor.split(ZIP_TICKS);
 				Path archivePath = Utils.zipFiles(files, pluginLoc, archiveName);
 				
+				subMonitor.split(PKG_CONF_TICKS);
 				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
 				
 				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
+				
+				subMonitor.split(UPLOAD_TICKS);
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
 				
 				// Delete archive
@@ -165,18 +181,14 @@ public class SwampSubmitter {
 				*/
 
 				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
+				
 				for (String toolUUID : si.getSelectedToolIDs()) {
-					List<Platform> platforms = api.getSupportedPlatforms(toolUUID, prjUUID);
-					Set<String> platformSet = new HashSet<>();
-					for (Platform p : platforms) {
-						platformSet.add(p.getUUIDString());
-					}
 					for (String platformUUID : si.getSelectedPlatformIDs()) {
-						if (platformSet.contains(platformUUID)) {
-							submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
-						}
+						subMonitor.split(SUBMISSION_TICKS);
+						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
 					}
 				}
+
 				IStatus status = Status.OK_STATUS;
 				done(status);
 				return status;
@@ -197,6 +209,21 @@ public class SwampSubmitter {
 			
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+				IJavaProject jp = JavaCore.create(si.getProject());
+				int total = 0;
+				int numClasspathEntries = 0;
+				IClasspathEntry[] entries = null;
+				try {
+					entries = jp.getRawClasspath();
+					numClasspathEntries = entries.length;
+				} catch (Exception e) {
+					out.println(Utils.getBracketedTimestamp() + "Error: Unable to parse classpath.");
+					Status status = new Status(IStatus.ERROR, "eclipsepluin", UNABLE_TO_GENERATE_BUILD, "Unable to generate build for this project", null);
+					done(status);
+					return status;
+				}
+				SubMonitor subMonitor = SubMonitor.convert(monitor, total);
+				total = calculateTotalTicks(false, numClasspathEntries, si.getSelectedToolIDs().size());
 				
 				if (fromFile) {
 					if (!FileSerializer.deserializeSubmissionInfo(configFilepath, si)) {
@@ -210,22 +237,14 @@ public class SwampSubmitter {
 					}
 				}
 				
-				IJavaProject jp = JavaCore.create(si.getProject());
-				try {
-					if (jp.hasClasspathCycle(jp.getRawClasspath())) {
-						out.println(Utils.getBracketedTimestamp() + "Error: Classpath has cyclical dependencies. Please resolve these issues and resubmit.");
-						Status status = new Status(IStatus.ERROR, "eclipseplugin", CYCLICAL_DEPENDENCIES, "Project has cyclical dependencies", null);
-						done(status);
-						return status;
-					}
-				} catch (JavaModelException e1) {
-					// TODO Auto-generated catch block
-					out.println(Utils.getBracketedTimestamp() + "Error: Unable to access classpath. Please resolve any issues in the project's build path and resubmit.");
-					e1.printStackTrace();
-					Status status = new Status(IStatus.ERROR, "eclipseplugin", UNABLE_TO_GENERATE_BUILD, "Unable to generate build for this project", null);
+				if (jp.hasClasspathCycle(entries)) {
+					out.println(Utils.getBracketedTimestamp() + "Error: Classpath has cyclical dependencies. Please resolve these issues and resubmit.");
+					Status status = new Status(IStatus.ERROR, "eclipseplugin", CYCLICAL_DEPENDENCIES, "Project has cyclical dependencies", null);
 					done(status);
 					return status;
 				}
+				
+				subMonitor.split(numClasspathEntries * CLASSPATH_ENTRY_TICKS);
 				out.println(Utils.getBracketedTimestamp() + "Status: Generating build file");
 				ImprovedClasspathHandler ich = new ImprovedClasspathHandler(jp, null, !si.packageSystemLibraries());
 				Set<String> files = ich.getFilesToArchive();
@@ -238,6 +257,7 @@ public class SwampSubmitter {
 					out.println(Utils.getBracketedTimestamp() + "Error: Unable to clean project or dependent projects. The tools may be unable to assess this package.");
 				}
 				
+				subMonitor.split(ZIP_TICKS);
 				out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
 				String pluginLoc = ich.getProjectPluginLocation();
 				Date date = new Date();
@@ -246,6 +266,7 @@ public class SwampSubmitter {
 				String archiveName = filename.replace(" ", "-").replace(":", "").toLowerCase(); 
 				Path archivePath = Utils.zipFiles(files, ich.getProjectPluginLocation(), archiveName);
 				
+				subMonitor.split(PKG_CONF_TICKS);
 				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
 				
 				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
@@ -267,18 +288,14 @@ public class SwampSubmitter {
 				}
 
 				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
+				
 				for (String toolUUID : si.getSelectedToolIDs()) {
-					List<Platform> platforms = api.getSupportedPlatforms(toolUUID, prjUUID);
-					Set<String> platformSet = new HashSet<>();
-					for (Platform p : platforms) {
-						platformSet.add(p.getUUIDString());
-					}
 					for (String platformUUID : si.getSelectedPlatformIDs()) {
-						if (platformSet.contains(platformUUID)) {
-							submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
-						}
+						subMonitor.split(SUBMISSION_TICKS);
+						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
 					}
 				}
+			
 				IStatus status = Status.OK_STATUS;
 				done(status);
 				return status;
@@ -288,6 +305,28 @@ public class SwampSubmitter {
 		job.setUser(true);
 		job.schedule();
 		
+	}
+	
+	private int calculateTotalTicks(boolean autoGen, int numClasspathEntries, int numSubmissions) {
+		int total = 0;
+		
+		// zip ticks
+		total += ZIP_TICKS;
+		
+		// generate package conf
+		total += PKG_CONF_TICKS;
+		
+		// upload
+		total += UPLOAD_TICKS;
+				
+		// submissions
+		total += (numSubmissions * SUBMISSION_TICKS);
+		
+		if (autoGen) {
+			total += CLEAN_PROJECTS_TICKS;
+			total += (numClasspathEntries * CLASSPATH_ENTRY_TICKS);
+		}
+		return total;
 	}
 	
 	private void cleanProjects(IProject project) throws CoreException {
