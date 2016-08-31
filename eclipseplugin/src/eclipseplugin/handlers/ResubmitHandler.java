@@ -30,7 +30,7 @@ public class ResubmitHandler extends AbstractHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		window = HandlerUtil.getActiveWorkbenchWindow(event);
 		submitter = new SwampSubmitter(window);
-		submitter.launchBackgroundAssessment(HandlerUtilityMethods.getActiveProjectLocation(window));
+		submitter.launchBackgroundAssessment(HandlerUtilityMethods.getActiveProject(window));
 		return null;
 	}
 	

@@ -23,7 +23,7 @@ public class ConfigureHandler extends AbstractHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		window = HandlerUtil.getActiveWorkbenchWindow(event);
 		submitter = new SwampSubmitter(window);
-		submitter.launch(HandlerUtilityMethods.getActiveProjectLocation(window));
+		submitter.launch(HandlerUtilityMethods.getActiveProject(window));
 		return null;
 	}
 
