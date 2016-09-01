@@ -18,6 +18,9 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.console.MessageConsoleStream;
+
+import eclipseplugin.Activator;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -175,6 +178,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 			setInvalidMsgAndClearPrompts();
 			return;
 		}
+		Activator.setLoggedIn(true);
 		super.okPressed();
 	}
 	
