@@ -208,13 +208,17 @@ public class FileSerializer {
 			char c = str.charAt(0);
 			if (c == '\t') {
 				pkgUUID = str.substring(1, str.length());
-				si.setSelectedPackageID(pkgUUID);
+				if (!si.setSelectedPackageID(pkgUUID)) {
+					reader.close();
+					System.out.println("We were unable to find the last SWAMP Package. This package must have been deleted.");
+					return false;
+				}
 			}
 			else {
 				String name = str;
 				if (!si.setPackageIDFromName(name)) {
 					reader.close();
-					System.out.println("We were unable to find the last SWAMP Package");
+					System.out.println("We were unable to find the last SWAMP Package. This package was probably deleted.");
 					return false;
 				}
 			}

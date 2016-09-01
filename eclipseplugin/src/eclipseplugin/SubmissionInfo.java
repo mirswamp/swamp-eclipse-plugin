@@ -176,7 +176,7 @@ public class SubmissionInfo {
 		return selectedPackageThingID;
 	}
 	
-	public void setSelectedPackageID(String pkgUUID) {
+	public boolean setSelectedPackageID(String pkgUUID) {
 		selectedPackageThingID = pkgUUID;
 		if (packages == null) {
 			packages = api.getPackagesList(selectedProjectID);
@@ -185,9 +185,10 @@ public class SubmissionInfo {
 			PackageThing pt = packages.get(i);
 			if (pt.getIdentifierString().equals(pkgUUID)) {
 				packageName = pt.getName();
-				return;
+				return true;
 			}
 		}
+		return false;
 		// Need to get a package thing here, should be able to do it in O(1) rather than O(N)
 		// TODO Talk to Vamshi about this
 	}

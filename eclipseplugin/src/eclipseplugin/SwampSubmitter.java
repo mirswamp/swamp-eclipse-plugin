@@ -458,7 +458,8 @@ public class SwampSubmitter {
 			File f = new File(configFilepath);
 			f.delete();
 			out.println(Utils.getBracketedTimestamp() + "Warning: Unable to reload previous assesment. Configuration dialog will popup now.");
-			
+			si.initializeProject(project.getName(), project.getLocation().toOSString());
+			launchConfiguration(si);
 		}
 		else {
 			if (si.needsBuildFile()) {
