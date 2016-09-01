@@ -511,15 +511,23 @@ public class ConfigDialog extends TitleAreaDialog {
 	private void setupSwampPackage() {
 		// get the appropriate UUID from submissionInfo
 		// disable the text box
-		String pkgThingUUID = submissionInfo.getSelectedPackageID();
-		for (int i = 0; i < swampPackages.size(); i++) {
-			if (swampPackages.get(i).getUUIDString().equals(pkgThingUUID)) {
-				pkgCombo.select(i+1);
-				handlePackageSelection(i+1);
-				return;
-			}
+		if (submissionInfo.isNewPackage()) {
+			// this only happens if we came back from a later dialog
+			pkgCombo.select(CREATE_NEW_PACKAGE);
+			handlePackageSelection(CREATE_NEW_PACKAGE);
+			pkgNameText.setText(submissionInfo.getPackageName());
 		}
-		handlePackageSelection(-1);
+		else {
+			String pkgThingUUID = submissionInfo.getSelectedPackageID();
+			for (int i = 0; i < swampPackages.size(); i++) {
+				if (swampPackages.get(i).getUUIDString().equals(pkgThingUUID)) {
+					pkgCombo.select(i+1);
+					handlePackageSelection(i+1);
+					return;
+				}
+			}
+			handlePackageSelection(-1);
+		}
 	}
 	
 	private void handlePackageSelection(int index) {
