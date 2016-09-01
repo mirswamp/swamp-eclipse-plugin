@@ -445,6 +445,11 @@ public class SwampSubmitter {
 				return;
 			}
 		}
+		
+		if (project == null) {
+			out.println(Utils.getBracketedTimestamp() + "Error: No Eclipse project open.");
+			return;
+		}
 	
 		configFilepath = project.getWorkingLocation(PLUGIN_ID).toOSString() + SEPARATOR + CONFIG_FILENAME;
 		SubmissionInfo si = new SubmissionInfo(this.api);
@@ -549,6 +554,12 @@ public class SwampSubmitter {
 				return;
 			}
 		}
+		
+		if (project == null) {
+			out.println(Utils.getBracketedTimestamp() + "Error: No Eclipse project open.");
+			return;
+		}
+		
 		// TODO we can fail here, i.e. by not connecting and we're not handling it as of now
 		SubmissionInfo si = new SubmissionInfo(this.api);
 		configFilepath = project.getWorkingLocation(PLUGIN_ID).toOSString() + SEPARATOR + CONFIG_FILENAME;
