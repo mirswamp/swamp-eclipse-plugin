@@ -19,10 +19,20 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.ui.ISelectionService;
+import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.console.ConsolePlugin;
+import org.eclipse.ui.console.IConsole;
+import org.eclipse.ui.console.IConsoleConstants;
+import org.eclipse.ui.console.IConsoleManager;
+import org.eclipse.ui.console.IConsoleView;
+import org.eclipse.ui.console.MessageConsole;
+import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import eclipseplugin.SwampSubmitter;
+import eclipseplugin.Utils;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
 
@@ -54,7 +64,20 @@ public class RightClickHandler extends AbstractHandler {
 		IJavaProject project = (IJavaProject)structured.getFirstElement();
 		System.out.println("Project is open? " + project.isOpen());
 		if (!project.isOpen()) {
-			// TODO Try to open project here
+			ConsolePlugin plugin = ConsolePlugin.getDefault();
+			IConsoleManager conMgr = plugin.getConsoleManager();
+			MessageConsole console = new MessageConsole("SWAMP Plugin", null);
+			conMgr.addConsoles(new IConsole[]{console});
+			IWorkbenchPage page = window.getActivePage();
+			try {
+				IConsoleView view = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
+				view.display(console);
+			} catch (PartInitException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			MessageConsoleStream stream = console.newMessageStream();
+			stream.println(Utils.getBracketedTimestamp() + "Error: Project is not open");
 			return null;
 		}
 		
