@@ -10,37 +10,37 @@
  	<command
  		categoryId="eclipseplugin.commands.category"
  		id="eclipseplugin.commands.configureCommand"
- 		name="Configure Command">
+ 		name="Modify configuration options and submit">
  	</command>
  	
  	<command
  		categoryId="eclipseplugin.commands.category"
  		id="eclipseplugin.commands.resubmitCommand"
- 		name="Resubmit Command">
+ 		name="Resubmit most recent assessment for active project">
  	</command>	
  	
  	<command
  		categoryId="eclipseplugin.commands.category"
  		id="eclipseplugin.commands.loginCommand"
- 		name="Login Command">
+ 		name="Log in to SWAMP">
  	</command>	
  	
  	<command
  		categoryId="eclipseplugin.commands.category"
  		id="eclipseplugin.commands.logoutCommand"
- 		name="Logout Command">
+ 		name="Log out of SWAMP">
  	</command>	
  	
  	<command
  		categoryId="eclipseplugin.commands.category"
  		id="eclipseplugin.commands.pulldownCommand"
- 		name="Pulldown Command">
+ 		name="Pulldown">
  	</command>		
  	
  	<command
   		categoryId="eclipseplugin.commands.category"
   		id="eclipseplugin.commands.rightClickCommand"
-  		name="Resubmit Assessment">
+  		name="Resubmit most recent assessment of this project">
   	</command>
  		
  </extension>	
