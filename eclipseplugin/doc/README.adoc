@@ -24,13 +24,13 @@ As of now, an end user may only install the plug-in by importing it. To import, 
 ==== **login**
 A user must be logged into his or her SWAMP account to use the plug-in. To log in, a user selects "Log In" from the SWAMP dropdown menu. In the dialog, a user enters his or her username and password. These are the same credentials used for www.mir-swamp.org. The plug-in stores cookies with the user's session information for 24 hours. Similarly, to log out, the user selects "Log Out" instead.
 
-image:./authenticationDialog.png[Authentication Dialog]
+image:images/authenticationDialog.png[Authentication Dialog]
 
 ==== **assessment configuration**
 
 Any of the open Java projects in a user's Eclipse workspace may be submitted to the SWAMP. To configure a project, a user simply needs to have some file from the project (e.g. a source code file) active in his or her editor and to select "Configure Assessment Submission" from the SWAMP dropdown menu. If the user is not logged in, the authentication popup will come first allowing the user to authenticate. Once the user is logged in, a dialog with configuration information for the assessment pops up.
 
-image:./BuildConfiguration.png[Configuration Dialog]
+image:images/BuildConfiguration.png[Configuration Dialog]
 
 ==== **configuration options**
 	a. SWAMP Project - this is the SWAMP project to which the package belongs (or if it's a new package, the project to which the package will be added). A user can only select from projects he or she has access to
@@ -48,12 +48,12 @@ image:./BuildConfiguration.png[Configuration Dialog]
 ==== **tool selection**
 Next, a user must select the tools he or she wishes to run the assessments on
 
-image:./ToolDialog.png[Tool Dialog]
+image:images/ToolDialog.png[Tool Dialog]
 
 ==== **platform selection**
 Finally, a user must select the platforms he or she wishes to run the assessments on
 
-image:./PlatformDialog.png[Platform Dialog]
+image:images/PlatformDialog.png[Platform Dialog]
 
 ==== **submission**
 
@@ -64,7 +64,7 @@ The plug-in saves previous assessment information about each Eclipse project. In
 	2. Right-click on the project on Package Explorer and click "Assess Project on SWAMP"
 	3. Have a file from the project open and select "Resubmit Previous Assessment" from either the dropdown menu or the SWAMP menu in the main menubar
 
-image:./RightClickMenu.png[Right Click Submission]
+image:images/RightClickMenu.png[Right Click Submission]
 
 [[appendix-a]]
 === **Appendix A: Eclipse Installation**
