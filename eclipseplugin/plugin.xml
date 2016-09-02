@@ -40,7 +40,7 @@
  	<command
   		categoryId="eclipseplugin.commands.category"
   		id="eclipseplugin.commands.rightClickCommand"
-  		name="Right Click Command">
+  		name="Resubmit Assessment">
   	</command>
  		
  </extension>	
