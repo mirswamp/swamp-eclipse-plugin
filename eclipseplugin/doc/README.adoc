@@ -15,7 +15,8 @@ This document describes the SWAMP Eclipse plug-in, an extension to the Eclipse I
 === **plug-in installation**
 As of now, an end user may only install the plug-in by importing it. To import, follow these steps:
 	1. Download the archive from the SWAMP releases page
-	TODO: Determine how to import it
+	2. In your Eclipse installation directory, copy the plug-in archive (".jar") into the "dropins" directory.
+	3. Launch Eclipse
 
 [[configuration-and-submission]]
 === **configuration and submission**
