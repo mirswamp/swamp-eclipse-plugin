@@ -430,8 +430,10 @@ public class SwampSubmitter {
 	}
 	
 	public void launchBackgroundAssessment(IProject project) {
-		initializeSwampApi();
 		out = initializeConsole("SWAMP Plugin");
+		if (!initializeSwampApi()) {
+			return;
+		}
 		try {
 			if (!api.restoreSession()) {
 				// launch authentication dialog
@@ -476,10 +478,19 @@ public class SwampSubmitter {
 		}
 	}
 	
+	public void logIntoSwamp() {
+		out = initializeConsole("SWAMP Plugin");
+		if (!initializeSwampApi()) {
+			return;
+		}
+		authenticateUser();
+	}
+	
 	private boolean authenticateUser() {
 		AuthenticationDialog ad = new AuthenticationDialog(window.getShell(), this.api, this.out);
 		ad.create();
 		if (ad.open() != Window.OK) {
+			out.println(Utils.getBracketedTimestamp() + "Status: User manually exited login dialog.");
 			return false;
 		}
 		Activator.setLoggedIn(true);
@@ -538,9 +549,11 @@ public class SwampSubmitter {
 	}
 	
 	public void launch(IProject project) {
-		initializeSwampApi();
-		
 		out = initializeConsole("SWAMP Plugin");
+
+		if (!initializeSwampApi()) {
+			return;
+		}
 		
 		try {
 			if (!api.restoreSession()) {
@@ -586,20 +599,11 @@ public class SwampSubmitter {
 		return true;
 	}
 	
-	public void logIntoSwamp() {
-		out = initializeConsole("SWAMP Plugin");
-		AuthenticationDialog ad = new AuthenticationDialog(this.window.getShell(), api, out);
-		ad.create();
-		if (ad.open() != Window.OK) {
-			out.println(Utils.getBracketedTimestamp() + "Status: User manually exited login dialog.");
-		}
-		else {
-			api.saveSession();
-		}
-	}
-	
 	public void logOutOfSwamp() {
 		Activator.setLoggedIn(false);
+		if (!initializeSwampApi()) {
+			return;
+		}
 		api.logout();
 	}
 	
