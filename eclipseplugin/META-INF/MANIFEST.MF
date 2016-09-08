@@ -38,6 +38,7 @@ Bundle-ClassPath: .,
  lib/commons-logging-1.1.3.jar,
  lib/commons-io-2.5.jar
 Import-Package: org.eclipse.jdt.core,
+ org.eclipse.jdt.internal.core,
  org.eclipse.ui.console
 Export-Package: eclipseplugin;
   uses:="org.eclipse.jdt.core,

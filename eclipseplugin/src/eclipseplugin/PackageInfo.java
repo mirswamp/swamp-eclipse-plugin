@@ -69,6 +69,11 @@ public class PackageInfo {
 			e.printStackTrace();
 			return null;
 		}
+		
+		if (zipBytes == null) {
+			return null;
+		}
+		
 		String md5hash = getDigest(zipBytes, md5);
 		String sha512hash = getDigest(zipBytes, sha512);
 		

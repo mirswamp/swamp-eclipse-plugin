@@ -13,6 +13,8 @@
 
 package eclipseplugin.dialogs;
 
+import org.eclipse.cdt.core.CCorePlugin;
+import org.eclipse.cdt.core.model.CoreModel;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -38,6 +40,7 @@ import org.eclipse.swt.widgets.Text;
 import eclipseplugin.SubmissionInfo;
 import static eclipseplugin.SubmissionInfo.AUTO_GENERATE_BUILD_STRING;
 import static eclipseplugin.SubmissionInfo.NO_BUILD_STRING;
+import static eclipseplugin.SubmissionInfo.ECLIPSE_GENERATED_STRING;
 import eclipseplugin.Utils;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.Project;
@@ -113,8 +116,13 @@ public class ConfigDialog extends TitleAreaDialog {
 		swampPrjCombo.deselectAll();
 		eclipsePrjCombo.deselectAll();
 		pkgCombo.setItems("");
-		pkgTypeCombo.deselectAll();
-		buildSysCombo.deselectAll();
+		pkgCombo.setItems("");
+		pkgTypeCombo.setItems("");
+		pkgTypeCombo.setEnabled(false);
+		buildSysCombo.setItems("");
+		buildSysCombo.setEnabled(false);
+		packageRTButton.setSelection(false);
+		packageRTButton.setEnabled(false);
 		setDefaults();	
 	}
 	
@@ -171,15 +179,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			return getSwampProjectList();
 			
 		}
-		if (type == Type.BUILD) {
-			return getBuildSystemList();
-		}
-		if (type == Type.PACKAGE) {
-			// SWAMP Package
-			return getSwampPackageList();
-		}
-		// Package Type
-		return getPackageTypeList();
+		return getSwampPackageList();
 	}
 	
 	private String[] getEclipseProjectList() {
@@ -212,10 +212,6 @@ public class ConfigDialog extends TitleAreaDialog {
 		return array;
 	}
 	
-	private String[] getBuildSystemList() {
-		return submissionInfo.getBuildSystemList();
-	}
-	
 	private String[] getSwampPackageList() {
 		if (prjUUID == null) {
 			String[] array = {""};
@@ -229,12 +225,6 @@ public class ConfigDialog extends TitleAreaDialog {
 			pkgNames[i] = swampPackages.get(i-1).getName();
 		}
 		return pkgNames; 
-	}
-	
-	private String[] getPackageTypeList() {
-		//List<String> pkgTypes = api.getPackageTypesList();
-		//return Utils.convertStringListToArray(pkgTypes);
-		return submissionInfo.getPackageTypeList();
 	}
 	
 	@Override
@@ -286,8 +276,8 @@ public class ConfigDialog extends TitleAreaDialog {
 		prjFilePathText.setEditable(false);
 		DialogUtil.initializeLabelWidget("Package Type: ", SWT.NONE, container, horizontalSpan);
 
-		String pkgTypes[] = getSelectionElements(Type.PACKAGE_TYPE);
-		pkgTypeCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgTypes, horizontalSpan);
+		//String pkgTypes[] = getSelectionElements(Type.PACKAGE_TYPE);
+		pkgTypeCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), new String[0], horizontalSpan);
 		pkgTypeCombo.setEnabled(false);
 		pkgTypeCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_TYPE_HELP));
 		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container, horizontalSpan);
@@ -329,7 +319,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		
 		return area;
 	}
-	
+
 	private void setupPackageType() {
 		// get the appropriate pkgType String, not the index
 		String pkgType = submissionInfo.getPackageType();
@@ -341,7 +331,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
-	private void setPredictedBuildSys(IProject project) {
+	private void setPredictedJavaBuildSys(IProject project) {
 		String GRADLE_NATURE = "org.eclipse.buildship.core.gradleprojectnature";
 		String MAVEN_NATURE = "org.eclipse.m2e.core.maven2Nature";
 		String ANT_BUILD = "build.xml"; // this could be ant or ant+Ivy
@@ -402,6 +392,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			}
 		}
 		// default to auto-generate
+		packageRTButton.setEnabled(true);
 		setBuildSystem(AUTO_GENERATE_BUILD_STRING);
 	}
 	
@@ -440,29 +431,74 @@ public class ConfigDialog extends TitleAreaDialog {
 	private void handleEclipseProjectSelection(int index) {
 		if (index < 0) {
 			prjFilePathText.setText("");
+			pkgTypeCombo.setItems("");
+			buildSysCombo.setItems("");
+			packageRTButton.setSelection(false);
+			packageRTButton.setEnabled(false);
 		}
 		else {
-			IProject project = eclipseProjects[index];	
-			IJavaProject jp = JavaCore.create(project);
-			String complianceVersion = jp.getOption("org.eclipse.jdt.core.compiler.compliance", true);
-			if (complianceVersion != null) {
-				if (complianceVersion.equals("1.7")) {
-					System.out.println("Java 7 package");
-					// set package type to Java 7
-					// This API doesn't really make sense for our purposes
-					//setPackageType(api.getPkgTypeString("Java", "java-7", "", null));
-					setPackageType("Java 7 Source Code");
+			pkgTypeCombo.setEnabled(true);
+			buildSysCombo.setEnabled(true);
+			IProject project = eclipseProjects[index];
+			String lang = getProjectLanguage(project);
+			if (lang.equals("Java")) {
+				IJavaProject jp = JavaCore.create(project);
+				// JavaCore.COMPILER_COMPLIANCE
+				String complianceVersion = jp.getOption("org.eclipse.jdt.core.compiler.compliance", true);
+				if (complianceVersion != null) {
+					if (complianceVersion.equals("1.7")) {
+						System.out.println("Java 7 package");
+						// set package type to Java 7
+						// This API doesn't really make sense for our purposes
+						//setPackageType(api.getPkgTypeString("Java", "java-7", "", null));
+						setPkgTypeOptions("Java");
+						setPackageType("Java 7 Source Code");
+						setBuildSysOptions("Java");
+					}
+					else if (complianceVersion.equals("1.8")) {
+						System.out.println("Java 8 package");
+						// set package type to Java 8
+						//setPackageType(api.getPkgTypeString("Java", "java-8", "", null));
+						setPkgTypeOptions("Java");
+						setPackageType("Java 8 Source Code");
+						setBuildSysOptions("Java");
+					}
 				}
-				else if (complianceVersion.equals("1.8")) {
-					System.out.println("Java 8 package");
-					// set package type to Java 8
-					//setPackageType(api.getPkgTypeString("Java", "java-8", "", null));
-					setPackageType("Java 8 Source Code");
-				}
+				setPredictedJavaBuildSys(project);
+			}
+			else if (lang.equals("C/C++")) {
+				packageRTButton.setEnabled(false);
+				setPkgTypeOptions("C/C++");
+				setPackageType("C/C++");
+				setBuildSysOptions("C/C++");
+				setBuildSystem(ECLIPSE_GENERATED_STRING);
 			}
 			prjFilePathText.setText(project.getLocation().toOSString());
-			setPredictedBuildSys(project);
 		}
+	}
+	
+	private void setBuildSysOptions(String lang) { 
+		String[] buildOptions = submissionInfo.getBuildSystemList(lang);
+		buildSysCombo.setItems(buildOptions);
+	}
+	
+	private void setPkgTypeOptions(String lang) {
+		String[] pkgTypes = submissionInfo.getPackageTypeList(lang);
+		pkgTypeCombo.setItems(pkgTypes);
+	}
+	
+	private String getProjectLanguage(IProject project) {
+		if (CoreModel.hasCCNature(project) || CoreModel.hasCNature(project)) {
+			return "C/C++";
+		}
+		else {
+			try {
+				if (project.hasNature(JavaCore.NATURE_ID)) {
+					return "Java";
+				}
+			} catch (CoreException e) { }
+		}
+		return "";
 	}
 	
 	private void setPackageType(String versionString) {
@@ -494,15 +530,12 @@ public class ConfigDialog extends TitleAreaDialog {
 			pkgCombo.deselectAll();
 			pkgCombo.setEnabled(false);
 			pkgVersionText.setEnabled(false);
-			pkgTypeCombo.deselectAll();
-			pkgTypeCombo.setEnabled(false);
 			pkgCombo.setItems("");
 		}
 		else {
 			prjUUID = swampProjects.get(index).getUUIDString();
 			pkgCombo.setEnabled(true);
 			pkgVersionText.setEnabled(true);
-			pkgTypeCombo.setEnabled(true);
 			pkgCombo.setItems(getSelectionElements(Type.PACKAGE));
 			setPackageDefault();
 		}
@@ -570,7 +603,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	
 	private void handleBuildSelection(int index) {
 		String buildSys =  buildSysCombo.getItem(index);
-		if (buildSys.equals(AUTO_GENERATE_BUILD_STRING) || buildSys.equals(NO_BUILD_STRING)) {
+		if (buildSys.equals(AUTO_GENERATE_BUILD_STRING) || buildSys.equals(NO_BUILD_STRING) || buildSys.equals(ECLIPSE_GENERATED_STRING)) {
 			selectFileButton.setEnabled(false);
 			buildTargetText.setText("");
 			buildTargetText.setEnabled(false);
@@ -613,13 +646,13 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		
 		if (pkgIndex == CREATE_NEW_PACKAGE) {
-			if (pkgNameText.equals("")) {
+			if (pkgNameText.getText().equals("")) {
 				this.setMessage("Please add a name for your new package.");
 				return false;
 			}
 		}
 		
-		if (pkgVersionText.equals("")) {
+		if (pkgVersionText.getText().equals("")) {
 			this.setMessage("Please add a descriptor for your package version.");
 			return false;
 		}
@@ -642,7 +675,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			return false;
 		}
 		String buildSysString = buildSysCombo.getItem(buildIndex);
-		if (buildSysString.equals(NO_BUILD_STRING) || buildSysString.equals(AUTO_GENERATE_BUILD_STRING)) {
+		if (buildSysString.equals(NO_BUILD_STRING) || buildSysString.equals(AUTO_GENERATE_BUILD_STRING) || buildSysString.equals(ECLIPSE_GENERATED_STRING)) {
 			return true;
 		}
 		if (buildPathText.getText().equals("")) { // TODO Add check to make sure build file is within project directory
@@ -696,6 +729,13 @@ public class ConfigDialog extends TitleAreaDialog {
 			boolean createBuildFile = false;
 			if (buildSysStr.equals(AUTO_GENERATE_BUILD_STRING)) {
 				createBuildFile = true;
+			}
+			else if (buildSysStr.equals(ECLIPSE_GENERATED_STRING)) {
+				String prjDir = project.getLocation().toOSString();
+				java.util.Map<String, String> map = org.eclipse.cdt.core.CCorePlugin.getOptions();
+				for (String s : map.keySet()) {
+					System.out.println(s + ":" + map.get(s));
+				}
 			}
 			else {
 				String prjDir = project.getLocation().toOSString();

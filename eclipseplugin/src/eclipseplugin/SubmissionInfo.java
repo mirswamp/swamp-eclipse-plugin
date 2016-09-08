@@ -22,7 +22,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
-import org.eclipse.core.runtime.IPath;
 
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.wisc.cs.swamp.SwampApiWrapper;
@@ -56,17 +55,21 @@ public class SubmissionInfo {
 	// Other
 	private SwampApiWrapper api;
 	
-	public static final String JAVA_8_SRC = "Java 8 Source Code";
-	public static final String JAVA_7_SRC = "Java 7 Source Code";
-	public static final String JAVA_8_BYTE = "Java 8 Bytecode";
-	public static final String JAVA_7_BYTE = "Java 7 Bytecode";
+	public static final String JAVA_8_SRC 	= "Java 8 Source Code";
+	public static final String JAVA_7_SRC 	= "Java 7 Source Code";
+	public static final String JAVA_8_BYTE 	= "Java 8 Bytecode";
+	public static final String JAVA_7_BYTE 	= "Java 7 Bytecode";
+	public static final String C_CPP		= "C/C++";
 	
 	public static String NO_BUILD_STRING = "no-build";
 	public static String AUTO_GENERATE_BUILD_STRING = "Auto-generate build file";
-	private static String buildOptions[] = { "Auto-generate build file", "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", "no-build", "other" };
+	public static String ECLIPSE_GENERATED_STRING = "Eclipse-generated makefile";
+	private static String javaBuildOptions[] = { AUTO_GENERATE_BUILD_STRING, "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", NO_BUILD_STRING, "other" };
+	private static String cppBuildOptions[] = { ECLIPSE_GENERATED_STRING, "cmake+make", "configure+make", "make", NO_BUILD_STRING, "other" };
 	private static String PROJECT_KEY = "PROJECT";
 	private static String DELIMITER = ",";
-	private static String pkgTypeOptions[] = { JAVA_8_SRC, JAVA_7_SRC, JAVA_8_BYTE, JAVA_7_BYTE };
+	private static String javaPkgTypeOptions[] = { JAVA_8_SRC, JAVA_7_SRC, JAVA_8_BYTE, JAVA_7_BYTE };
+	private static String cppPkgTypeOptions[] = { C_CPP };
 	
 	public SubmissionInfo(SwampApiWrapper api) {
 		this.api = api;
@@ -126,14 +129,24 @@ public class SubmissionInfo {
 		return (selectedPlatformIDs != null);
 	}
 	
-	public String[] getBuildSystemList() {
-		return buildOptions;
+	public String[] getBuildSystemList(String lang) {
+		switch(lang.toUpperCase()) {
+			case "JAVA":
+				return javaBuildOptions;
+			case "C/C++":
+				return cppBuildOptions;
+		}
+		return new String[0];
 	}
 	
-	public String[] getPackageTypeList() {
-		/*List<String> pkgTypes = api.getPackageTypesList();
-		return Utils.convertStringListToArray(pkgTypes);*/
-		return pkgTypeOptions;
+	public String[] getPackageTypeList(String lang) {
+		switch(lang.toUpperCase()) {
+			case "JAVA":
+				return javaPkgTypeOptions;
+			case "C/C++":
+				return cppPkgTypeOptions;
+		}
+		return new String[0];
 	}
 	
 	public void setSelectedPlatformIDs(List<String> platformIDs) {
