@@ -5,7 +5,8 @@
 
 This document describes the SWAMP Eclipse plug-in, an extension to the Eclipse IDE that allows users with SWAMP accounts to submit Java code to the SWAMP. Working with the plug-in involves the following steps:
 
-	1. <<appendix-a, Install Eclipse (see Appendix A)>>
+    1. <<appendix-a, Get a SWAMP account (see Appendix A)>>
+	2. <<appendix-b, Install Eclipse (see Appendix B)>>
 	2. <<plug-in-installation, Install the plug-in>>
 	3. <<configuration-and-submission, Configure and submit package assessments>>
 
@@ -67,6 +68,9 @@ The plug-in saves previous assessment information about each Eclipse project. In
 image:images/RightClickMenu.png[Right Click Submission]
 
 [[appendix-a]]
-=== **Appendix A: Eclipse Installation**
-Installing Eclipse
+=== **Appendix A: SWAMP account setup**
+A user must have a SWAMP account to use this plug-in. To set up an account, follow the instructions at https://www.mir-swamp.org/.
+
+[[appendix-b]]
+=== **Appendix B: Eclipse Installation**
 This plugin requires Eclipse Neon (4.6) or later to run. To install Eclipse, select either Eclipse IDE for Java EE Developers or Eclipse IDE for Java Developers from https://eclipse.org/downloads/eclipse-packages/.
