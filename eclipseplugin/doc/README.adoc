@@ -1,62 +1,74 @@
 == `SWAMP Eclipse Plug-in User Guide`
 
-**September 1, 2016** +
+**September 15, 2016** +
 **Authors:** __Malcolm Reid Jr., James A. Kupsch__ +
 
 This document describes the SWAMP Eclipse plug-in, an extension to the Eclipse IDE that allows users with SWAMP accounts to submit Java code to the SWAMP. Working with the plug-in involves the following steps:
 
-    1. <<appendix-a, Get a SWAMP account (see Appendix A)>>
-	2. <<appendix-b, Install Eclipse (see Appendix B)>>
-	2. <<plug-in-installation, Install the plug-in>>
-	3. <<configuration-and-submission, Configure and submit package assessments>>
+    . <<appendix-a, Get a SWAMP account (see Appendix A)>>
+	. <<appendix-b, Install Eclipse (see Appendix B)>>
+	. <<plug-in-installation, Install the plug-in>>
+	. <<configuration-and-submission, Configure and submit package assessments>>
 
 :numbered:
 
+[[overview]]
+== overview
+The Software Assurance Marketplace (SWAMP) hosts a collection of static analysis tools, which look for security vulnerabilities and other bugs in source code. A user can upload code to the SWAMP and get results from having that code assessed on different tools and operating systems. The purpose of this plug-in is to allow users to submit code quickly and easily from the Eclipse Integrated Development Environment.
+
 [[plug-in-installation]]
-=== **plug-in installation**
-As of now, an end user may only install the plug-in by importing it. To import, follow these steps:
-	1. Download the archive from the SWAMP releases page
-	2. In your Eclipse installation directory, copy the plug-in archive (".jar") into the "dropins" directory.
-	3. Launch Eclipse
+== **plug-in installation**
+To install the Eclipse plug-in, a user may either download the plug-in archive and import it into Eclipse or download the plug-in directly from the Eclipse Marketplace.
+
+=== **import plug-in**
+To import, follow these steps:
+
+	. Download the archive from the SWAMP releases page
+	. In your Eclipse installation directory, copy the plug-in archive (".jar") into the "dropins" directory.
+	. Launch Eclipse. You should see the SWAMP icon in the toolbar and the SWAMP menu in the menubar.
+
+=== **Eclipse Marketplace**
+The Eclipse Marketplace hosts plug-ins and features. To access the Eclipse Marketplace, select "Eclipse Marketplace..." from the Help menu. Search for "SWAMP" and click the install button. When the installation is finished, you should see the SWAMP icon in the toolbar and the SWAMP menu in the menubar.
+
+image:images/menuAndToolbar.png[Menubar and Toolbar]
 
 [[configuration-and-submission]]
-=== **configuration and submission**
+== **configuration and submission**
 
-==== **login**
+=== **login**
 A user must be logged into his or her SWAMP account to use the plug-in. To log in, a user selects "Log In" from the SWAMP dropdown menu. In the dialog, a user enters his or her username and password. These are the same credentials used for www.mir-swamp.org. The plug-in stores cookies with the user's session information for 24 hours. Similarly, to log out, the user selects "Log Out" instead.
 
 image:images/authenticationDialog.png[Authentication Dialog]
 
-==== **assessment configuration**
+=== **assessment configuration**
 
 Any of the open Java projects in a user's Eclipse workspace may be submitted to the SWAMP. To configure a project, a user simply needs to have some file from the project (e.g. a source code file) active in his or her editor and to select "Configure Assessment Submission" from the SWAMP dropdown menu. If the user is not logged in, the authentication popup will come first allowing the user to authenticate. Once the user is logged in, a dialog with configuration information for the assessment pops up.
 
 image:images/BuildConfiguration.png[Configuration Dialog]
 
-==== **configuration options**
-	a. SWAMP Project - this is the SWAMP project to which the package belongs (or if it's a new package, the project to which the package will be added). A user can only select from projects he or she has access to
-	b. SWAMP Package - this is the SWAMP package of which a version will be uploaded. This also offers the option to "Create new package"
-	c. New Package Name - this is the name of the new package that will be uploaded
-	d. Package Version - this is the version of the package that will be uploaded. It defaults to a timestamp of the time at which this dialog was opened
-	e. Eclipse Project - this is the Java project in the user's workspace whose source will be uploaded
-	f. Filepath - this is the filepath of the project directory
-	g. Package Type - this is the SWAMP package type of the package
-	h. Build System - this is the build system of the project. If a user selects "Auto-generate build file", the plug-in will create a build file for building the project.
-	i. Package System Libraries? - this option allows users to upload the system libraries that Eclipse uses for this project to the SWAMP along with the package. This sets the bootclasspath for the Java compiler
-	j. Build File - this is the path of the build file to be used (in the case that the plug-in is not auto-generating the build file)
-	k. Build Target - this is the target to build the project (in the case that the plug-in is not auto-generating the build file)
+=== **configuration options**
+	a. *SWAMP Project* - this is the SWAMP project to which the package belongs (or if it's a new package, the project to which the package will be added). A user can only select from projects he or she has access to
+	b. *SWAMP Package* - this is the SWAMP package of which a version will be uploaded. This also offers the option to "Create new package"
+	c. *New Package Name* - this is the name of the new package that will be uploaded
+	d. *Package Version* - this is the version of the package that will be uploaded. It defaults to a timestamp of the time at which this dialog was opened
+	e. *Eclipse Project* - this is the Java project in the user's workspace whose source will be uploaded
+	f. *Package Type* - this is the SWAMP package type of the package. A user may think of the package type as the language version. The valid package types for the Eclipse plug-in are "Java 7, Java 8, and C/C++." In most cases, this will be set automatically based on how the Eclipse project to be assessed is configured.
+	g. *Build System* - this is the build system of the project. If a user selects "Auto-generate build file", the plug-in will create a build file for building the project.
+	h. *Package System Libraries?* - this option allows users to upload the system libraries that Eclipse uses for this project to the SWAMP along with the package. This sets the bootclasspath for the Java compiler. In most cases, this should not be checked as uploading system libraries is time consuming and only provides benefits in certain cases. If a project builds in Eclipse but fails to build in the SWAMP, a user should try uploading system libraries.
+	i. *Build File* - this is the path of the build file to be used (in the case that the plug-in is not auto-generating the build file)
+	j. *Build Target* - this is the target to build the project (in the case that the plug-in is not auto-generating the build file)
 
-==== **tool selection**
+=== **tool selection**
 Next, a user must select the tools he or she wishes to run the assessments on
 
 image:images/ToolDialog.png[Tool Dialog]
 
-==== **platform selection**
-Finally, a user must select the platforms he or she wishes to run the assessments on
+=== **platform selection**
+Finally, a user must select the platforms he or she wishes to run the assessments on. A platform is the operating system that runs on an assessment's virtual machine. For interpreted languages or languages that run on a VM there will only be one option.
 
 image:images/PlatformDialog.png[Platform Dialog]
 
-==== **submission**
+=== **submission**
 
 After a user clicks "OK" in the dialog for selecting platforms, a background job is launched. The user's console will have messages from the plug-in's execution.
 
@@ -68,9 +80,9 @@ The plug-in saves previous assessment information about each Eclipse project. In
 image:images/RightClickMenu.png[Right Click Submission]
 
 [[appendix-a]]
-=== **Appendix A: SWAMP account setup**
+== **Appendix A: SWAMP account setup**
 A user must have a SWAMP account to use this plug-in. To set up an account, follow the instructions at https://www.mir-swamp.org/.
 
 [[appendix-b]]
-=== **Appendix B: Eclipse Installation**
+== **Appendix B: Eclipse Installation**
 This plugin requires Eclipse Neon (4.6) or later to run. To install Eclipse, select either Eclipse IDE for Java EE Developers or Eclipse IDE for Java Developers from https://eclipse.org/downloads/eclipse-packages/.
