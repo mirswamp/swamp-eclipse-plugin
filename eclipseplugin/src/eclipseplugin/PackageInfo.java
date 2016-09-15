@@ -95,8 +95,11 @@ public class PackageInfo {
 		writer.println("package-archive-sha512=" + sha512hash);
 		writer.println("package-dir=" + pkgDir);
 		writer.println("package-language=" + language);
-		if (!pkgType.equals("")) {
+		if (pkgType.equals("java-7") || pkgType.equals("java-8")) {
 			writer.println("package-language-version=" + pkgType);
+		}
+		else {
+			writer.println("package-type=" + pkgType);
 		}
 		writer.println("build-sys=" + buildSys);
 		if (!buildDir.equals("")) {

@@ -171,7 +171,7 @@ public class SwampSubmitter {
 				}
 				
 				subMonitor.split(PKG_CONF_TICKS);
-				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.isCProject() ? "C/C++" : "Java" , si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
+				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPackageLanguage(), si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
 				
 				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
@@ -419,7 +419,7 @@ public class SwampSubmitter {
 		}
 		try {
 			System.out.println("Initialized SWAMP API");
-			api = new SwampApiWrapper(SwampApiWrapper.HostType.DEVELOPMENT);
+			api = new SwampApiWrapper(SwampApiWrapper.HostType.PRODUCTION);
 		} catch (Exception e) {
 			out.println(Utils.getBracketedTimestamp() + "Error: Unable to initialize SWAMP API.");
 			e.printStackTrace();
@@ -641,7 +641,7 @@ public class SwampSubmitter {
 		} catch (InvalidIdentifierException e1) {
 			toolName = "Invalid tool";
 		}
-		PackageVersion pkg = api.getPackage(pkgUUID, prjUUID);
+		PackageVersion pkg = api.getPackageVersion(pkgUUID, prjUUID);
 		assert(pkg != null);
 		PackageThing pkgThing = pkg.getPackageThing();
 		assert (pkgThing != null);

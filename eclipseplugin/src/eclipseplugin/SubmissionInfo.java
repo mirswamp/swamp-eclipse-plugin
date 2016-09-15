@@ -100,7 +100,17 @@ public class SubmissionInfo {
 		if (packageType.equals(JAVA_7_SRC) || packageType.equals(JAVA_7_SRC)) {
 			return "java-7";
 		}
-		return "";
+		return "C/C++";
+	}
+	
+	public String getPackageLanguage() {
+		if (CoreModel.hasCCNature(project)) {
+			return "C++";
+		}
+		if (CoreModel.hasCNature(project)) {
+			return "C";
+		}
+		return "Java";
 	}
 	
 	public void setPackageType(String pkgType, boolean fromFile) {
