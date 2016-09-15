@@ -15,10 +15,19 @@ package eclipseplugin.dialogs;
 
 import org.eclipse.cdt.core.CCorePlugin;
 import org.eclipse.cdt.core.model.CoreModel;
+import org.eclipse.cdt.make.core.IMakeBuilderInfo;
+import org.eclipse.cdt.make.core.MakeBuilder;
+import org.eclipse.cdt.make.core.MakeBuilderUtil;
+import org.eclipse.cdt.make.core.MakeCorePlugin;
+import org.eclipse.cdt.managedbuilder.core.IManagedBuildInfo;
+import org.eclipse.cdt.managedbuilder.core.ManagedBuildManager;
+import org.eclipse.cdt.managedbuilder.makegen.IManagedBuilderMakefileGenerator;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -727,33 +736,75 @@ public class ConfigDialog extends TitleAreaDialog {
 			String relBuildDir = "";
 			String buildFileName = "";
 			boolean createBuildFile = false;
-			if (buildSysStr.equals(AUTO_GENERATE_BUILD_STRING)) {
-				createBuildFile = true;
-			}
-			else if (buildSysStr.equals(ECLIPSE_GENERATED_STRING)) {
-				String prjDir = project.getLocation().toOSString();
-				java.util.Map<String, String> map = org.eclipse.cdt.core.CCorePlugin.getOptions();
-				for (String s : map.keySet()) {
-					System.out.println(s + ":" + map.get(s));
+			
+			if (buildSysStr.equals(ECLIPSE_GENERATED_STRING)) {
+				// TODO Fill this in
+				IManagedBuildInfo buildInfo = ManagedBuildManager.getBuildInfo(project);
+				IPath path = MakeBuilderUtil.getBuildDirectory(project, MakeBuilder.BUILDER_ID);
+				IMakeBuilderInfo makeBuildInfo = null;
+				try {
+					makeBuildInfo = MakeCorePlugin.createBuildInfo(project, MakeBuilder.BUILDER_ID);
+				} catch (CoreException e) {
+					// TODO Auto-generated catch block
+					System.out.println(Utils.getBracketedTimestamp() + "Error: Problem getting build information");
+					e.printStackTrace();
+					return;
 				}
+				IFile file = project.getFile("makefile");
+				if (file == null) {
+					System.out.println(Utils.getBracketedTimestamp() + "Error: Unable to find makefile for project");
+					return;
+				}
+				String cleanTarget = makeBuildInfo.getCleanBuildTarget();
+				String buildTarget = makeBuildInfo.getAutoBuildTarget();
+				if (buildTarget == null) {
+					buildTarget = makeBuildInfo.getFullBuildTarget();
+					if (buildTarget == null) {
+						buildTarget = makeBuildInfo.getIncrementalBuildTarget();
+					}
+					if (buildTarget == null) {
+						// TODO Add error reporting
+					}
+				}
+				if (cleanTarget == null) {
+					// TODO Add warning
+				}
+				relBuildDir = getBuildDir(project.getLocation().toOSString(), path.toOSString(), false);
+				System.out.println("Build system: " + buildSysStr);
+				System.out.println("Create build file: " + false);
+				System.out.println("Relative build directory: " + relBuildDir);
+				System.out.println("Build file name: " + IManagedBuilderMakefileGenerator.MAKEFILE_NAME);
+				System.out.println("Build targets: " + cleanTarget + " " + buildTarget);
+				System.out.println("Package Run-time libs: " + false);
+				submissionInfo.setBuildInfo(buildSysStr, false, relBuildDir, IManagedBuilderMakefileGenerator.MAKEFILE_NAME, cleanTarget + " " + buildTarget, false);
 			}
 			else {
-				String prjDir = project.getLocation().toOSString();
-				String buildPath = buildPathText.getText();
-				int prjIndex = prjDir.lastIndexOf(SEPARATOR);
-				int fileIndex = buildPath.lastIndexOf(SEPARATOR);
-				relBuildDir = buildPath.substring(prjIndex+1, fileIndex);
-				if (relBuildDir.equals("")) {
-					relBuildDir = ".";
+				if (buildSysStr.equals(AUTO_GENERATE_BUILD_STRING)) {
+					createBuildFile = true;
 				}
-				buildFileName = buildPath.substring(fileIndex+1);
-				System.out.println("Relative Directory: " + relBuildDir);
-				System.out.println("Build file: " + buildFileName);
+				else {
+					String prjDir = project.getLocation().toOSString();
+					String buildPath = buildPathText.getText();
+					relBuildDir = getBuildDir(prjDir, buildPath, true);
+					buildFileName = buildPath.substring(buildPath.lastIndexOf(SEPARATOR)+1);
+					System.out.println("Relative Directory: " + relBuildDir);
+					System.out.println("Build file: " + buildFileName);
+				}
+				submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relBuildDir, buildFileName, buildTargetText.getText(), packageRTButton.getSelection());
 			}
-			submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relBuildDir, buildFileName, buildTargetText.getText(), packageRTButton.getSelection());
 			submissionInfo.setConfigInitialized(true);
 			super.okPressed();
 		}
+	}
+	
+	private String getBuildDir(String projectDir, String path, boolean isFilePath) {
+		int prjIndex = projectDir.lastIndexOf(SEPARATOR);
+		int fileIndex = isFilePath ? path.lastIndexOf(SEPARATOR) : path.length();
+		String relBuildDir = path.substring(prjIndex+1, fileIndex);
+		if (relBuildDir.equals("")) {
+			return ".";
+		}
+		return relBuildDir;
 	}
 	
 	private class ComboSelectionListener implements SelectionListener {

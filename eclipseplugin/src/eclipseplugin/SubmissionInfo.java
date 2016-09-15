@@ -17,6 +17,7 @@ import static eclipseplugin.Activator.PLUGIN_ID;
 
 import java.util.List;
 
+import org.eclipse.cdt.core.model.CoreModel;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.preferences.InstanceScope;
@@ -96,7 +97,10 @@ public class SubmissionInfo {
 		if (packageType.equals(JAVA_8_SRC) || packageType.equals(JAVA_8_BYTE)) {
 			return "java-8";
 		}
-		return "java-7";
+		if (packageType.equals(JAVA_7_SRC) || packageType.equals(JAVA_7_SRC)) {
+			return "java-7";
+		}
+		return "";
 	}
 	
 	public void setPackageType(String pkgType, boolean fromFile) {
@@ -179,6 +183,10 @@ public class SubmissionInfo {
 	
 	public boolean isNewPackage() {
 		return newPackage;
+	}
+	
+	public boolean isCProject() {
+		return (CoreModel.hasCCNature(project) || CoreModel.hasCNature(project));
 	}
 	
 	public void setNewPackage(boolean b) {
@@ -264,7 +272,7 @@ public class SubmissionInfo {
 			this.buildFile = "";
 		}
 		else {
-			buildSystem = buildSys;
+			buildSystem = buildSys.equals(ECLIPSE_GENERATED_STRING) ? "make" : buildSys;
 			buildDirectory = buildDir;
 			this.buildFile = buildFile;
 			buildTarget = target;

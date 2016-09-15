@@ -49,7 +49,7 @@ public class PackageInfo {
 		return Hex.encodeHexString(retArray);
 	}
 	
-	public static File generatePkgConfFile(Path archivePath, String outputDir, String shortName, String version, String pkgDir, String pkgType, String buildSys, String buildDir, String buildFile, String buildTarget) {
+	public static File generatePkgConfFile(Path archivePath, String outputDir, String shortName, String version, String pkgDir, String language, String pkgType, String buildSys, String buildDir, String buildFile, String buildTarget) {
 		MessageDigest md5 = null;
 		MessageDigest sha512 = null;
 		try {
@@ -94,8 +94,10 @@ public class PackageInfo {
 		writer.println("package-archive-md5=" + md5hash);
 		writer.println("package-archive-sha512=" + sha512hash);
 		writer.println("package-dir=" + pkgDir);
-		writer.println("package-language=" + "Java");
-		writer.println("package-language-version=" + pkgType);
+		writer.println("package-language=" + language);
+		if (!pkgType.equals("")) {
+			writer.println("package-language-version=" + pkgType);
+		}
 		writer.println("build-sys=" + buildSys);
 		if (!buildDir.equals("")) {
 			System.out.println("Build dir: " + buildDir);
