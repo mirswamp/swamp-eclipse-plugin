@@ -408,7 +408,7 @@ public class SwampSubmitter {
 		}
 		try {
 			System.out.println("Initialized SWAMP API");
-			api = new SwampApiWrapper(SwampApiWrapper.HostType.DEVELOPMENT);
+			api = new SwampApiWrapper(SwampApiWrapper.HostType.PRODUCTION);
 		} catch (Exception e) {
 			out.println(Utils.getBracketedTimestamp() + "Error: Unable to initialize SWAMP API.");
 			e.printStackTrace();
@@ -620,7 +620,7 @@ public class SwampSubmitter {
 		} catch (InvalidIdentifierException e1) {
 			toolName = "Invalid tool";
 		}
-		PackageVersion pkg = api.getPackage(pkgUUID, prjUUID);
+		PackageVersion pkg = api.getPackageVersion(pkgUUID, prjUUID);
 		assert(pkg != null);
 		PackageThing pkgThing = pkg.getPackageThing();
 		assert (pkgThing != null);
