@@ -49,6 +49,11 @@ public class SubmissionInfo {
 	private String buildFile;
 	private String buildTarget;
 	private IProject project;
+	
+	private String buildOpts;
+	private String configOpts;
+	private String configCmd;
+	private String configDir;
 
 	private List<? extends PackageThing> packages;
 	private String selectedPackageThingID;
@@ -78,6 +83,11 @@ public class SubmissionInfo {
 		selectedProjectID = null;
 		selectedToolIDs = null;
 		selectedPlatformIDs = null;
+		
+		buildOpts = "";
+		configOpts = "";
+		configCmd = "";
+		configDir = "";
 	}
 	
 	public boolean isConfigInitialized() {
@@ -376,5 +386,37 @@ public class SubmissionInfo {
 	
 	private String getPlatformKey() {
 		return packageType + "-PLATFORMS";
+	}
+	
+	public void setBuildOpts(String opts) {
+		buildOpts = opts;
+	}
+	
+	public void setConfigOpts(String opts) {
+		configOpts = opts;
+	}
+	
+	public void setConfigCmd(String cmd) {
+		configCmd = cmd;
+	}
+	
+	public void setConfigDir(String dir) {
+		configDir = dir;
+	}
+	
+	public String getBuildOpts() {
+		return buildOpts;
+	}
+	
+	public String getConfigOpts() {
+		return configOpts;
+	}
+	
+	public String getConfigCmd() {
+		return configCmd;
+	}
+	
+	public String getConfigDir() {
+		return configDir;
 	}
 }

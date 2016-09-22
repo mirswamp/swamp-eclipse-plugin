@@ -33,6 +33,7 @@ import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -100,6 +101,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	private static final String BUILD_TARGET_HELP				= "Select the build target in the build file.";
 	private static final String SELECT_FILE_HELP				= "Select the build file for this project.";
 	private static final String PACKAGE_SYSTEM_LIBRARIES_HELP 	= "Select this option to upload system libraries (e.g. JDK) to the SWAMP. By default, they will not be uploaded.";
+	private static final String ADVANCED_SETTINGS				= "Advanced Settings...";
 	
 	private enum Type {
 		PACKAGE_TYPE, ECLIPSE_PROJECT, BUILD, PACKAGE, SWAMP_PROJECT
@@ -636,8 +638,11 @@ public class ConfigDialog extends TitleAreaDialog {
 		
 		parent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
 		
-		Button button = createButton(parent, IDialogConstants.NO_ID, DialogUtil.CLEAR_CAPTION, false);
-		button.addSelectionListener(new ClearButtonSelectionListener());
+		Button advancedButton = createButton(parent, IDialogConstants.NO_ID, ADVANCED_SETTINGS, false);
+		advancedButton.addSelectionListener(new AdvancedButtonSelectionListener());
+		
+		Button clearButton = createButton(parent, IDialogConstants.NO_ID, DialogUtil.CLEAR_CAPTION, false);
+		clearButton.addSelectionListener(new ClearButtonSelectionListener());
 		createButton(parent, IDialogConstants.OK_ID, DialogUtil.OK_CAPTION, true);
 		createButton(parent, IDialogConstants.CANCEL_ID, DialogUtil.CANCEL_CAPTION, false);
 	}
@@ -835,6 +840,23 @@ public class ConfigDialog extends TitleAreaDialog {
 		
 		@Override
 		public void widgetDefaultSelected(SelectionEvent e) {
+		}
+	}
+	
+	private class AdvancedButtonSelectionListener implements SelectionListener {
+		public AdvancedButtonSelectionListener() {
+			
+		}
+		
+		@Override
+		public void widgetSelected(SelectionEvent e) {
+			AdvancedSettingsDialog ad = new AdvancedSettingsDialog(shell, submissionInfo);
+			ad.create();
+			ad.open();
+		}
+		
+		@Override
+		public void widgetDefaultSelected(SelectionEvent e) { 
 		}
 	}
 	
