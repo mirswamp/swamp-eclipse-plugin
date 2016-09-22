@@ -30,7 +30,7 @@ To import, follow these steps:
 === **Eclipse Marketplace**
 The Eclipse Marketplace hosts plug-ins and features. To access the Eclipse Marketplace, select "Eclipse Marketplace..." from the Help menu. Search for "SWAMP" and click the install button. When the installation is finished, you should see the SWAMP icon in the toolbar and the SWAMP menu in the menubar.
 
-image:images/menuAndToolbar.png[Menubar and Toolbar]
+image:images/menuAndToolbar.png[Menubar and Toolbar, 600, 600]
 
 [[configuration-and-submission]]
 == **configuration and submission**
@@ -77,7 +77,7 @@ The plug-in saves previous assessment information about each Eclipse project. In
 	2. Right-click on the project on Package Explorer and click "Assess Project on SWAMP"
 	3. Have a file from the project open and select "Resubmit Previous Assessment" from either the dropdown menu or the SWAMP menu in the main menubar
 
-image:images/RightClickMenu.png[Right Click Submission]
+image:images/RightClickMenu.png[Right Click Submission, 600, 600]
 
 [[appendix-a]]
 == **Appendix A: SWAMP account setup**
