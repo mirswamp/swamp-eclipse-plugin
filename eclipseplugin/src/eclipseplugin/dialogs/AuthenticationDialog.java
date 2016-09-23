@@ -20,6 +20,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.console.MessageConsoleStream;
 
 import eclipseplugin.Activator;
+import eclipseplugin.Utils;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -28,6 +29,7 @@ import org.eclipse.swt.widgets.*;
 
 import edu.uiuc.ncsa.swamp.session.HTTPException;
 import edu.wisc.cs.swamp.*;
+import edu.wisc.cs.swamp.SwampApiWrapper.HostType;
 
 /**
  * This class creates a dialog for SWAMP authentication
@@ -35,6 +37,8 @@ import edu.wisc.cs.swamp.*;
  * @since 07/2016 
  */
 public class AuthenticationDialog extends TitleAreaDialog {
+	
+	private Text hostnameText;
 	/**
 	 * The Text widget for username
 	 */
@@ -55,6 +59,9 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	 * Message for invalid username or password
 	 */
 	private static final String INVALID_MESSAGE = "Invalid username or password.";
+	
+	private static final String HOSTNAME_HELP = "Enter the SWAMP host that you want to connect to.";
+	
 	/**
 	 * Help message for username Text
 	 */
@@ -67,6 +74,9 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	 * Caption for login button
 	 */
 	private static final String LOGIN_CAPTION = "Login";
+	
+	private static final String DEFAULT_HOST = "https://www.mir-swamp.org";
+	
 	/**
 	 * Reference to SwampApiWrapper object. This facilitates interaction with
 	 * the SWAMP
@@ -117,6 +127,11 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		GridData griddata = new GridData();
 		griddata.grabExcessHorizontalSpace = true;
 		griddata.horizontalAlignment = GridData.FILL;
+		
+		DialogUtil.initializeLabelWidget("Hostname: ", SWT.NONE, container);
+		hostnameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, griddata);
+		hostnameText.setText(DEFAULT_HOST);
+		hostnameText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, HOSTNAME_HELP));
 
 		DialogUtil.initializeLabelWidget("Username: ", SWT.NONE, container);
 		usernameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, griddata);
@@ -146,7 +161,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	 * prompts
 	 */
 	private void setInvalidMsgAndClearPrompts() {
-		out.println("Error: Invalid username and/or password entered.");
+		out.println(Utils.getBracketedTimestamp() + "Error: Invalid username and/or password entered.");
 		this.setMessage(INVALID_MESSAGE + "\n" + AUTHENTICATION_PROMPT);
 		usernameText.setText("");
 		usernameText.setFocus();
@@ -160,7 +175,21 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	protected void okPressed() {
 		String username = usernameText.getText();
 		String password = passwordText.getText();
+		String hostname = hostnameText.getText();
+		HostType ht;
 		String id;
+		
+		if ((hostname.length() == 0)) {
+			out.println(Utils.getBracketedTimestamp() + "Error: No host specified.");
+			return;
+		}
+		
+		if (hostname.equals(DEFAULT_HOST)) {
+			ht = HostType.PRODUCTION;
+		}
+		else {
+			ht = HostType.CUSTOM;
+		}
 		
 		if ((username.length() == 0) || (password.length() == 0)) {
 			setInvalidMsgAndClearPrompts();
@@ -168,7 +197,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		}
 	
 		try {
-			id = api.login(username, password);
+			id = api.login(username, password, ht, hostname);
 		}
 		catch (HTTPException h) {
 			setInvalidMsgAndClearPrompts();
