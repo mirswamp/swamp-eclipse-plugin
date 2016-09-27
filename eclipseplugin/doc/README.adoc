@@ -13,7 +13,7 @@ This document describes the SWAMP Eclipse plug-in, an extension to the Eclipse I
 :numbered:
 
 [[overview]]
-== overview
+== **overview**
 The Software Assurance Marketplace (SWAMP) hosts a collection of static analysis tools, which look for security vulnerabilities and other bugs in source code. A user can upload code to the SWAMP and get results from having that code assessed on different tools and operating systems. The purpose of this plug-in is to allow users to submit code quickly and easily from the Eclipse Integrated Development Environment.
 
 [[plug-in-installation]]
@@ -23,9 +23,13 @@ To install the Eclipse plug-in, a user may either download the plug-in archive a
 === **import plug-in**
 To import, follow these steps:
 
-	. Download the archive from the SWAMP releases page
-	. In your Eclipse installation directory, copy the plug-in archive (".jar") into the "dropins" directory.
-	. Launch Eclipse. You should see the SWAMP icon in the toolbar and the SWAMP menu in the menubar.
+	. Download the archive from the SWAMP releases page and unzip it.
+    . Open Eclipse Neon (or any version after it).
+    . In the menu bar, select "Help > Install New Software".
+    . In the "Install" dialog that comes up, click "Add...".
+    . In the "Add Repository" dialog that comes up select "Local..." and select the directory created from unzipping the archive.
+    . Back in the "Install" dialog, uncheck the "Group items by category" checkbox. The Eclipse plug-in should show up as an option now. Check that checkbox.
+    . Click "Next" and finish the installation. Eclipse will restart and when it reopens, the plug-in should be installed
 
 === **Eclipse Marketplace**
 The Eclipse Marketplace hosts plug-ins and features. To access the Eclipse Marketplace, select "Eclipse Marketplace..." from the Help menu. Search for "SWAMP" and click the install button. When the installation is finished, you should see the SWAMP icon in the toolbar and the SWAMP menu in the menubar.
@@ -36,7 +40,7 @@ image:images/menuAndToolbar.png[Menubar and Toolbar, 600, 600]
 == **configuration and submission**
 
 === **login**
-A user must be logged into his or her SWAMP account to use the plug-in. To log in, a user selects "Log In" from the SWAMP dropdown menu. In the dialog, a user enters his or her username and password. These are the same credentials used for www.mir-swamp.org. The plug-in stores cookies with the user's session information for 24 hours. Similarly, to log out, the user selects "Log Out" instead.
+A user must be logged into his or her SWAMP account to use the plug-in. To log in, select "Log In" from the SWAMP dropdown menu. The hostname field specifies what SWAMP instance a user logs into. By default, the Morgridge Institute for Research's hostname is entered. The next two fields are username and password. If logging onto the default SWAMP instance, these are the same credentials used for www.mir-swamp.org. The plug-in stores cookies with the user's session information for 24 hours. To log out, select "Log Out" from the SWAMP dropdown menu.
 
 image:images/authenticationDialog.png[Authentication Dialog]
 
