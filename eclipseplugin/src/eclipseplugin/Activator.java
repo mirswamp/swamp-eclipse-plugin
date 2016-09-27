@@ -13,6 +13,13 @@
 
 package eclipseplugin;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -28,11 +35,18 @@ public class Activator extends AbstractUIPlugin {
 
 	// The plug-in ID
 	public static final String PLUGIN_ID = "eclipseplugin"; //$NON-NLS-1$
+	
+	private static String hostname;
+	
 	// Logged into SWAMP
 	private static boolean loggedIn;
 
 	// The shared instance
 	private static Activator plugin;
+	
+	private static final String DEFAULT_HOST = "https://www.mir-swamp.org";
+	
+	private static final String HOST_FILENAME = ".host";
 	
 	/**
 	 * The constructor
@@ -47,12 +61,64 @@ public class Activator extends AbstractUIPlugin {
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
-		SwampApiWrapper api = new SwampApiWrapper(SwampApiWrapper.HostType.DEVELOPMENT);
-		try {
-			loggedIn = api.restoreSession();
-		} catch (Exception e) {
-			loggedIn = false;
+		// (1) get last hostname from file
+		String hostnamePath = getHostnamePath();
+		File file = new File(hostnamePath);
+		SwampApiWrapper api;
+		loggedIn = false;
+		hostname = DEFAULT_HOST;
+
+		if (file.exists()) {
+			FileReader filereader = null;
+			BufferedReader reader = null;
+		
+			try {
+				filereader = new FileReader(file);
+				reader = new BufferedReader(filereader);
+				String host = reader.readLine();
+				reader.close();
+				if (!host.equals("")) {
+					api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, host);
+					if (api != null) {
+						hostname = host;
+						loggedIn = api.restoreSession();
+					}
+				}
+			} catch (Exception e) {
+			}
 		}
+	}
+	
+	public static void setHostname(String name) {
+		hostname = name;
+		File f = new File(getHostnamePath());
+		if (f.exists()) {
+			f.delete();
+			try {
+				f.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		// Write it to file here
+		FileWriter filewriter = null;
+		BufferedWriter writer = null;
+		
+		try {
+			filewriter = new FileWriter(f);
+			writer = new BufferedWriter(filewriter);
+			writer.write(name);
+			writer.close();
+		}
+		catch (Exception e) {
+			System.err.println("Unable to serialize file");
+			e.printStackTrace();
+		}
+	}
+	
+	private static String getHostnamePath() {
+		return SwampApiWrapper.SWAMP_DIR_PATH + System.getProperty("file.separator") + HOST_FILENAME;
 	}
 
 	/*
@@ -90,5 +156,9 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public static ImageDescriptor getImageDescriptor(String path) {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
+	}
+	
+	public static String getLastHostname() {
+		return hostname;
 	}
 }

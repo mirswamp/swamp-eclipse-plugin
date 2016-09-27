@@ -87,6 +87,7 @@ public class SwampSubmitter {
 	private static int UNABLE_TO_GENERATE_BUILD = 1;
 	private static int CYCLICAL_DEPENDENCIES = 2;
 	private static String[] FILE_PATTERNS = { ".*\\" + BuildfileGenerator.BUILDFILE_EXT, ImprovedClasspathHandler.SWAMPBIN_DIR, PackageInfo.PACKAGE_CONF_NAME, ".*\\.zip" };
+	private static String LAST_HOST_FILENAME = ".lasthost";
 
 	
 	private static int UPLOAD_TICKS = 80;
@@ -408,7 +409,7 @@ public class SwampSubmitter {
 		}
 		try {
 			System.out.println("Initialized SWAMP API");
-			api = new SwampApiWrapper(SwampApiWrapper.HostType.PRODUCTION);
+			api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, Activator.getLastHostname());
 		} catch (Exception e) {
 			out.println(Utils.getBracketedTimestamp() + "Error: Unable to initialize SWAMP API.");
 			e.printStackTrace();
@@ -487,14 +488,14 @@ public class SwampSubmitter {
 	}
 	
 	private boolean authenticateUser() {
-		AuthenticationDialog ad = new AuthenticationDialog(window.getShell(), this.api, this.out);
+		AuthenticationDialog ad = new AuthenticationDialog(window.getShell(), this.out);
 		ad.create();
 		if (ad.open() != Window.OK) {
 			out.println(Utils.getBracketedTimestamp() + "Status: User manually exited login dialog.");
 			return false;
 		}
+		api = ad.getSwampApiWrapper();
 		Activator.setLoggedIn(true);
-		api.saveSession();
 		return true;
 	}
 	

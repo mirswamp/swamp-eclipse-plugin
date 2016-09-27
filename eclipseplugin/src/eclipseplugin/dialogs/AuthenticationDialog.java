@@ -75,8 +75,6 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	 */
 	private static final String LOGIN_CAPTION = "Login";
 	
-	private static final String DEFAULT_HOST = "https://www.mir-swamp.org";
-	
 	/**
 	 * Reference to SwampApiWrapper object. This facilitates interaction with
 	 * the SWAMP
@@ -98,10 +96,9 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	 * @param swampApi SwampApiWrapper object for communicating with the SWAMP
 	 * @param stream stream for end user's console
 	 */
-	public AuthenticationDialog(Shell parentShell, SwampApiWrapper swampApi, MessageConsoleStream stream) {
+	public AuthenticationDialog(Shell parentShell, MessageConsoleStream stream) {
 		super(parentShell);
 		shell = parentShell;
-		api = swampApi;
 		out = stream;
 	}
 
@@ -130,7 +127,8 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		
 		DialogUtil.initializeLabelWidget("Hostname: ", SWT.NONE, container);
 		hostnameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, griddata);
-		hostnameText.setText(DEFAULT_HOST);
+		//hostnameText.setText(Activator.getLastHostname());
+		hostnameText.setText(SwampApiWrapper.SWAMP_HOST_NAMES_MAP.get(HostType.PRODUCTION));
 		hostnameText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, HOSTNAME_HELP));
 
 		DialogUtil.initializeLabelWidget("Username: ", SWT.NONE, container);
@@ -168,6 +166,10 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		passwordText.setText("");
 	}
 	
+	public SwampApiWrapper getSwampApiWrapper() {
+		return api;
+	}
+	
 	/**
 	 * Tries authenticating with the SWAMP
 	 */
@@ -176,19 +178,11 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		String username = usernameText.getText();
 		String password = passwordText.getText();
 		String hostname = hostnameText.getText();
-		HostType ht;
 		String id;
 		
 		if ((hostname.length() == 0)) {
 			out.println(Utils.getBracketedTimestamp() + "Error: No host specified.");
 			return;
-		}
-		
-		if (hostname.equals(DEFAULT_HOST)) {
-			ht = HostType.PRODUCTION;
-		}
-		else {
-			ht = HostType.CUSTOM;
 		}
 		
 		if ((username.length() == 0) || (password.length() == 0)) {
@@ -197,9 +191,11 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		}
 	
 		try {
-			id = api.login(username, password, ht, hostname);
+			api = new SwampApiWrapper(HostType.CUSTOM, hostname);
+			id = api.login(username, password, HostType.CUSTOM, hostname);
+			api.saveSession();
 		}
-		catch (HTTPException h) {
+		catch (Exception h) {
 			setInvalidMsgAndClearPrompts();
 			return;
 		}
@@ -208,6 +204,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 			return;
 		}
 		Activator.setLoggedIn(true);
+		Activator.setHostname(hostname);
 		super.okPressed();
 	}
 	
