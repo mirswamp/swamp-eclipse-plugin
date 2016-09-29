@@ -42,6 +42,12 @@
   		id="eclipseplugin.commands.rightClickCommand"
   		name="Resubmit most recent assessment of this project">
   	</command>
+  	
+  	<command
+  		categoryId="eclipseplugin.commands.category"
+  		id="eclipseplugin.commands.aboutSwampCommand"
+  		name="About SWAMP">
+  	</command>
  		
  </extension>	
 
@@ -93,6 +99,11 @@
  	<handler
  		class="eclipseplugin.handlers.RightClickHandler"
  		commandId="eclipseplugin.commands.rightClickCommand">
+  	</handler>
+  	
+  	<handler
+  		class="eclipseplugin.handlers.AboutSwampHandler"
+  		commandId="eclipseplugin.commands.aboutSwampCommand">
   	</handler>
  </extension>
   
@@ -158,6 +169,10 @@
   			mnemonic="C"
   			style="push">
   		</command>
+  		<separator
+  			name="separator-id"
+  			visible="true">
+  		</separator>	
 		<command
 			commandId="eclipseplugin.commands.loginCommand"
 			label="Log In"
@@ -170,6 +185,15 @@
 			mnemonic="O"
 			style="push">
 		</command> 
+		<separator
+			name="separator-id2"
+			visible="true">
+		</separator>	
+		<command
+			commandId="eclipseplugin.commands.aboutSwampCommand"
+			label="About SWAMP"
+			style="push">
+		</command>
     </menu>
  </menuContribution>
  
