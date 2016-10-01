@@ -13,15 +13,27 @@
 
 package eclipseplugin.dialogs;
 
+import org.eclipse.cdt.core.CCorePlugin;
+import org.eclipse.cdt.core.model.CoreModel;
+import org.eclipse.cdt.make.core.IMakeBuilderInfo;
+import org.eclipse.cdt.make.core.MakeBuilder;
+import org.eclipse.cdt.make.core.MakeBuilderUtil;
+import org.eclipse.cdt.make.core.MakeCorePlugin;
+import org.eclipse.cdt.managedbuilder.core.IManagedBuildInfo;
+import org.eclipse.cdt.managedbuilder.core.ManagedBuildManager;
+import org.eclipse.cdt.managedbuilder.makegen.IManagedBuilderMakefileGenerator;
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -38,6 +50,7 @@ import org.eclipse.swt.widgets.Text;
 import eclipseplugin.SubmissionInfo;
 import static eclipseplugin.SubmissionInfo.AUTO_GENERATE_BUILD_STRING;
 import static eclipseplugin.SubmissionInfo.NO_BUILD_STRING;
+import static eclipseplugin.SubmissionInfo.ECLIPSE_GENERATED_STRING;
 import eclipseplugin.Utils;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.Project;
@@ -88,6 +101,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	private static final String BUILD_TARGET_HELP				= "Select the build target in the build file.";
 	private static final String SELECT_FILE_HELP				= "Select the build file for this project.";
 	private static final String PACKAGE_SYSTEM_LIBRARIES_HELP 	= "Select this option to upload system libraries (e.g. JDK) to the SWAMP. By default, they will not be uploaded.";
+	private static final String ADVANCED_SETTINGS				= "Advanced Settings...";
 	
 	private enum Type {
 		PACKAGE_TYPE, ECLIPSE_PROJECT, BUILD, PACKAGE, SWAMP_PROJECT
@@ -113,8 +127,13 @@ public class ConfigDialog extends TitleAreaDialog {
 		swampPrjCombo.deselectAll();
 		eclipsePrjCombo.deselectAll();
 		pkgCombo.setItems("");
-		pkgTypeCombo.deselectAll();
-		buildSysCombo.deselectAll();
+		pkgCombo.setItems("");
+		pkgTypeCombo.setItems("");
+		pkgTypeCombo.setEnabled(false);
+		buildSysCombo.setItems("");
+		buildSysCombo.setEnabled(false);
+		packageRTButton.setSelection(false);
+		packageRTButton.setEnabled(false);
 		setDefaults();	
 	}
 	
@@ -171,15 +190,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			return getSwampProjectList();
 			
 		}
-		if (type == Type.BUILD) {
-			return getBuildSystemList();
-		}
-		if (type == Type.PACKAGE) {
-			// SWAMP Package
-			return getSwampPackageList();
-		}
-		// Package Type
-		return getPackageTypeList();
+		return getSwampPackageList();
 	}
 	
 	private String[] getEclipseProjectList() {
@@ -212,10 +223,6 @@ public class ConfigDialog extends TitleAreaDialog {
 		return array;
 	}
 	
-	private String[] getBuildSystemList() {
-		return submissionInfo.getBuildSystemList();
-	}
-	
 	private String[] getSwampPackageList() {
 		if (prjUUID == null) {
 			String[] array = {""};
@@ -229,12 +236,6 @@ public class ConfigDialog extends TitleAreaDialog {
 			pkgNames[i] = swampPackages.get(i-1).getName();
 		}
 		return pkgNames; 
-	}
-	
-	private String[] getPackageTypeList() {
-		//List<String> pkgTypes = api.getPackageTypesList();
-		//return Utils.convertStringListToArray(pkgTypes);
-		return submissionInfo.getPackageTypeList();
 	}
 	
 	@Override
@@ -286,8 +287,8 @@ public class ConfigDialog extends TitleAreaDialog {
 		prjFilePathText.setEditable(false);
 		DialogUtil.initializeLabelWidget("Package Type: ", SWT.NONE, container, horizontalSpan);
 
-		String pkgTypes[] = getSelectionElements(Type.PACKAGE_TYPE);
-		pkgTypeCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgTypes, horizontalSpan);
+		//String pkgTypes[] = getSelectionElements(Type.PACKAGE_TYPE);
+		pkgTypeCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), new String[0], horizontalSpan);
 		pkgTypeCombo.setEnabled(false);
 		pkgTypeCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_TYPE_HELP));
 		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container, horizontalSpan);
@@ -329,7 +330,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		
 		return area;
 	}
-	
+
 	private void setupPackageType() {
 		// get the appropriate pkgType String, not the index
 		String pkgType = submissionInfo.getPackageType();
@@ -341,7 +342,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
-	private void setPredictedBuildSys(IProject project) {
+	private void setPredictedJavaBuildSys(IProject project) {
 		String GRADLE_NATURE = "org.eclipse.buildship.core.gradleprojectnature";
 		String MAVEN_NATURE = "org.eclipse.m2e.core.maven2Nature";
 		String ANT_BUILD = "build.xml"; // this could be ant or ant+Ivy
@@ -402,6 +403,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			}
 		}
 		// default to auto-generate
+		packageRTButton.setEnabled(true);
 		setBuildSystem(AUTO_GENERATE_BUILD_STRING);
 	}
 	
@@ -440,29 +442,74 @@ public class ConfigDialog extends TitleAreaDialog {
 	private void handleEclipseProjectSelection(int index) {
 		if (index < 0) {
 			prjFilePathText.setText("");
+			pkgTypeCombo.setItems("");
+			buildSysCombo.setItems("");
+			packageRTButton.setSelection(false);
+			packageRTButton.setEnabled(false);
 		}
 		else {
-			IProject project = eclipseProjects[index];	
-			IJavaProject jp = JavaCore.create(project);
-			String complianceVersion = jp.getOption("org.eclipse.jdt.core.compiler.compliance", true);
-			if (complianceVersion != null) {
-				if (complianceVersion.equals("1.7")) {
-					System.out.println("Java 7 package");
-					// set package type to Java 7
-					// This API doesn't really make sense for our purposes
-					//setPackageType(api.getPkgTypeString("Java", "java-7", "", null));
-					setPackageType("Java 7 Source Code");
+			pkgTypeCombo.setEnabled(true);
+			buildSysCombo.setEnabled(true);
+			IProject project = eclipseProjects[index];
+			String lang = getProjectLanguage(project);
+			if (lang.equals("Java")) {
+				IJavaProject jp = JavaCore.create(project);
+				// JavaCore.COMPILER_COMPLIANCE
+				String complianceVersion = jp.getOption("org.eclipse.jdt.core.compiler.compliance", true);
+				if (complianceVersion != null) {
+					if (complianceVersion.equals("1.7")) {
+						System.out.println("Java 7 package");
+						// set package type to Java 7
+						// This API doesn't really make sense for our purposes
+						//setPackageType(api.getPkgTypeString("Java", "java-7", "", null));
+						setPkgTypeOptions("Java");
+						setPackageType("Java 7 Source Code");
+						setBuildSysOptions("Java");
+					}
+					else if (complianceVersion.equals("1.8")) {
+						System.out.println("Java 8 package");
+						// set package type to Java 8
+						//setPackageType(api.getPkgTypeString("Java", "java-8", "", null));
+						setPkgTypeOptions("Java");
+						setPackageType("Java 8 Source Code");
+						setBuildSysOptions("Java");
+					}
 				}
-				else if (complianceVersion.equals("1.8")) {
-					System.out.println("Java 8 package");
-					// set package type to Java 8
-					//setPackageType(api.getPkgTypeString("Java", "java-8", "", null));
-					setPackageType("Java 8 Source Code");
-				}
+				setPredictedJavaBuildSys(project);
+			}
+			else if (lang.equals("C/C++")) {
+				packageRTButton.setEnabled(false);
+				setPkgTypeOptions("C/C++");
+				setPackageType("C/C++");
+				setBuildSysOptions("C/C++");
+				setBuildSystem(ECLIPSE_GENERATED_STRING);
 			}
 			prjFilePathText.setText(project.getLocation().toOSString());
-			setPredictedBuildSys(project);
 		}
+	}
+	
+	private void setBuildSysOptions(String lang) { 
+		String[] buildOptions = submissionInfo.getBuildSystemList(lang);
+		buildSysCombo.setItems(buildOptions);
+	}
+	
+	private void setPkgTypeOptions(String lang) {
+		String[] pkgTypes = submissionInfo.getPackageTypeList(lang);
+		pkgTypeCombo.setItems(pkgTypes);
+	}
+	
+	private String getProjectLanguage(IProject project) {
+		if (CoreModel.hasCCNature(project) || CoreModel.hasCNature(project)) {
+			return "C/C++";
+		}
+		else {
+			try {
+				if (project.hasNature(JavaCore.NATURE_ID)) {
+					return "Java";
+				}
+			} catch (CoreException e) { }
+		}
+		return "";
 	}
 	
 	private void setPackageType(String versionString) {
@@ -494,15 +541,12 @@ public class ConfigDialog extends TitleAreaDialog {
 			pkgCombo.deselectAll();
 			pkgCombo.setEnabled(false);
 			pkgVersionText.setEnabled(false);
-			pkgTypeCombo.deselectAll();
-			pkgTypeCombo.setEnabled(false);
 			pkgCombo.setItems("");
 		}
 		else {
 			prjUUID = swampProjects.get(index).getUUIDString();
 			pkgCombo.setEnabled(true);
 			pkgVersionText.setEnabled(true);
-			pkgTypeCombo.setEnabled(true);
 			pkgCombo.setItems(getSelectionElements(Type.PACKAGE));
 			setPackageDefault();
 		}
@@ -570,7 +614,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	
 	private void handleBuildSelection(int index) {
 		String buildSys =  buildSysCombo.getItem(index);
-		if (buildSys.equals(AUTO_GENERATE_BUILD_STRING) || buildSys.equals(NO_BUILD_STRING)) {
+		if (buildSys.equals(AUTO_GENERATE_BUILD_STRING) || buildSys.equals(NO_BUILD_STRING) || buildSys.equals(ECLIPSE_GENERATED_STRING)) {
 			selectFileButton.setEnabled(false);
 			buildTargetText.setText("");
 			buildTargetText.setEnabled(false);
@@ -594,8 +638,11 @@ public class ConfigDialog extends TitleAreaDialog {
 		
 		parent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
 		
-		Button button = createButton(parent, IDialogConstants.NO_ID, DialogUtil.CLEAR_CAPTION, false);
-		button.addSelectionListener(new ClearButtonSelectionListener());
+		Button advancedButton = createButton(parent, IDialogConstants.NO_ID, ADVANCED_SETTINGS, false);
+		advancedButton.addSelectionListener(new AdvancedButtonSelectionListener());
+		
+		Button clearButton = createButton(parent, IDialogConstants.NO_ID, DialogUtil.CLEAR_CAPTION, false);
+		clearButton.addSelectionListener(new ClearButtonSelectionListener());
 		createButton(parent, IDialogConstants.OK_ID, DialogUtil.OK_CAPTION, true);
 		createButton(parent, IDialogConstants.CANCEL_ID, DialogUtil.CANCEL_CAPTION, false);
 	}
@@ -613,13 +660,13 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		
 		if (pkgIndex == CREATE_NEW_PACKAGE) {
-			if (pkgNameText.equals("")) {
+			if (pkgNameText.getText().equals("")) {
 				this.setMessage("Please add a name for your new package.");
 				return false;
 			}
 		}
 		
-		if (pkgVersionText.equals("")) {
+		if (pkgVersionText.getText().equals("")) {
 			this.setMessage("Please add a descriptor for your package version.");
 			return false;
 		}
@@ -642,7 +689,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			return false;
 		}
 		String buildSysString = buildSysCombo.getItem(buildIndex);
-		if (buildSysString.equals(NO_BUILD_STRING) || buildSysString.equals(AUTO_GENERATE_BUILD_STRING)) {
+		if (buildSysString.equals(NO_BUILD_STRING) || buildSysString.equals(AUTO_GENERATE_BUILD_STRING) || buildSysString.equals(ECLIPSE_GENERATED_STRING)) {
 			return true;
 		}
 		if (buildPathText.getText().equals("")) { // TODO Add check to make sure build file is within project directory
@@ -694,26 +741,75 @@ public class ConfigDialog extends TitleAreaDialog {
 			String relBuildDir = "";
 			String buildFileName = "";
 			boolean createBuildFile = false;
-			if (buildSysStr.equals(AUTO_GENERATE_BUILD_STRING)) {
-				createBuildFile = true;
+			
+			if (buildSysStr.equals(ECLIPSE_GENERATED_STRING)) {
+				// TODO Fill this in
+				IManagedBuildInfo buildInfo = ManagedBuildManager.getBuildInfo(project);
+				IPath path = MakeBuilderUtil.getBuildDirectory(project, MakeBuilder.BUILDER_ID);
+				IMakeBuilderInfo makeBuildInfo = null;
+				try {
+					makeBuildInfo = MakeCorePlugin.createBuildInfo(project, MakeBuilder.BUILDER_ID);
+				} catch (CoreException e) {
+					// TODO Auto-generated catch block
+					System.out.println(Utils.getBracketedTimestamp() + "Error: Problem getting build information");
+					e.printStackTrace();
+					return;
+				}
+				IFile file = project.getFile("makefile");
+				if (file == null) {
+					System.out.println(Utils.getBracketedTimestamp() + "Error: Unable to find makefile for project");
+					return;
+				}
+				String cleanTarget = makeBuildInfo.getCleanBuildTarget();
+				String buildTarget = makeBuildInfo.getAutoBuildTarget();
+				if (buildTarget == null) {
+					buildTarget = makeBuildInfo.getFullBuildTarget();
+					if (buildTarget == null) {
+						buildTarget = makeBuildInfo.getIncrementalBuildTarget();
+					}
+					if (buildTarget == null) {
+						// TODO Add error reporting
+					}
+				}
+				if (cleanTarget == null) {
+					// TODO Add warning
+				}
+				relBuildDir = getBuildDir(project.getLocation().toOSString(), path.toOSString(), false);
+				System.out.println("Build system: " + buildSysStr);
+				System.out.println("Create build file: " + false);
+				System.out.println("Relative build directory: " + relBuildDir);
+				System.out.println("Build file name: " + IManagedBuilderMakefileGenerator.MAKEFILE_NAME);
+				System.out.println("Build targets: " + cleanTarget + " " + buildTarget);
+				System.out.println("Package Run-time libs: " + false);
+				submissionInfo.setBuildInfo(buildSysStr, false, relBuildDir, IManagedBuilderMakefileGenerator.MAKEFILE_NAME, cleanTarget + " " + buildTarget, false);
 			}
 			else {
-				String prjDir = project.getLocation().toOSString();
-				String buildPath = buildPathText.getText();
-				int prjIndex = prjDir.lastIndexOf(SEPARATOR);
-				int fileIndex = buildPath.lastIndexOf(SEPARATOR);
-				relBuildDir = buildPath.substring(prjIndex+1, fileIndex);
-				if (relBuildDir.equals("")) {
-					relBuildDir = ".";
+				if (buildSysStr.equals(AUTO_GENERATE_BUILD_STRING)) {
+					createBuildFile = true;
 				}
-				buildFileName = buildPath.substring(fileIndex+1);
-				System.out.println("Relative Directory: " + relBuildDir);
-				System.out.println("Build file: " + buildFileName);
+				else {
+					String prjDir = project.getLocation().toOSString();
+					String buildPath = buildPathText.getText();
+					relBuildDir = getBuildDir(prjDir, buildPath, true);
+					buildFileName = buildPath.substring(buildPath.lastIndexOf(SEPARATOR)+1);
+					System.out.println("Relative Directory: " + relBuildDir);
+					System.out.println("Build file: " + buildFileName);
+				}
+				submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relBuildDir, buildFileName, buildTargetText.getText(), packageRTButton.getSelection());
 			}
-			submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relBuildDir, buildFileName, buildTargetText.getText(), packageRTButton.getSelection());
 			submissionInfo.setConfigInitialized(true);
 			super.okPressed();
 		}
+	}
+	
+	private String getBuildDir(String projectDir, String path, boolean isFilePath) {
+		int prjIndex = projectDir.lastIndexOf(SEPARATOR);
+		int fileIndex = isFilePath ? path.lastIndexOf(SEPARATOR) : path.length();
+		String relBuildDir = path.substring(prjIndex+1, fileIndex);
+		if (relBuildDir.equals("")) {
+			return ".";
+		}
+		return relBuildDir;
 	}
 	
 	private class ComboSelectionListener implements SelectionListener {
@@ -744,6 +840,23 @@ public class ConfigDialog extends TitleAreaDialog {
 		
 		@Override
 		public void widgetDefaultSelected(SelectionEvent e) {
+		}
+	}
+	
+	private class AdvancedButtonSelectionListener implements SelectionListener {
+		public AdvancedButtonSelectionListener() {
+			
+		}
+		
+		@Override
+		public void widgetSelected(SelectionEvent e) {
+			AdvancedSettingsDialog ad = new AdvancedSettingsDialog(shell, submissionInfo);
+			ad.create();
+			ad.open();
+		}
+		
+		@Override
+		public void widgetDefaultSelected(SelectionEvent e) { 
 		}
 	}
 	

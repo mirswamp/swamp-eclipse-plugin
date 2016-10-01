@@ -24,8 +24,6 @@ import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
@@ -36,7 +34,6 @@ import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.IJobChangeListener;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jdt.core.IClasspathEntry;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.JavaCore;
@@ -54,13 +51,11 @@ import org.eclipse.ui.console.IConsoleView;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.osgi.framework.Version;
-import org.osgi.service.prefs.Preferences;
 
 import eclipseplugin.dialogs.AuthenticationDialog;
 import eclipseplugin.dialogs.ConfigDialog;
 import eclipseplugin.dialogs.PlatformDialog;
 import eclipseplugin.dialogs.ToolDialog;
-import eclipseplugin.exceptions.CyclicDependenciesException;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.uiuc.ncsa.swamp.api.PackageVersion;
 import edu.wisc.cs.swamp.SwampApiWrapper;
@@ -87,7 +82,6 @@ public class SwampSubmitter {
 	private static int UNABLE_TO_GENERATE_BUILD = 1;
 	private static int CYCLICAL_DEPENDENCIES = 2;
 	private static String[] FILE_PATTERNS = { ".*\\" + BuildfileGenerator.BUILDFILE_EXT, ImprovedClasspathHandler.SWAMPBIN_DIR, PackageInfo.PACKAGE_CONF_NAME, ".*\\.zip" };
-	private static String LAST_HOST_FILENAME = ".lasthost";
 
 	
 	private static int UPLOAD_TICKS = 80;
@@ -161,7 +155,7 @@ public class SwampSubmitter {
 				}
 				
 				subMonitor.split(PKG_CONF_TICKS);
-				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
+				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPackageLanguage(), si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
 				
 				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
@@ -297,7 +291,7 @@ public class SwampSubmitter {
 				}
 				
 				subMonitor.split(PKG_CONF_TICKS);
-				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
+				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", "Java", si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
 				
 				if (subMonitor.isCanceled()) {
 					IStatus status = Status.CANCEL_STATUS;
@@ -540,7 +534,17 @@ public class SwampSubmitter {
 		si.savePluginSettings();
 		configFilepath = si.getProjectWorkingLocation() + SEPARATOR + CONFIG_FILENAME;
 		FileSerializer.serializeSubmissionInfo(configFilepath, si);
-		if (si.needsBuildFile()) {
+		if (si.isCProject()) {
+			submitPreConfiguredJob(si);
+			// here we'll call method to handle C project properly
+			// TODO The fun stuff
+
+			// (DONE) Get path of makefile relative to project - should be done in ConfigDialog
+			// (DONE) Zip project - just add it to files to be zipped
+			// (3) Make appropriate modifications to pkgConf
+			// (Later) Also zip dependent projects
+		}
+		else if (si.needsBuildFile()) {
 			submitAutoGenJob(si);
 		}
 		else {

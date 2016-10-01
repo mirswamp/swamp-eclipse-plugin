@@ -17,12 +17,12 @@ import static eclipseplugin.Activator.PLUGIN_ID;
 
 import java.util.List;
 
+import org.eclipse.cdt.core.model.CoreModel;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
-import org.eclipse.core.runtime.IPath;
 
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.wisc.cs.swamp.SwampApiWrapper;
@@ -49,6 +49,11 @@ public class SubmissionInfo {
 	private String buildFile;
 	private String buildTarget;
 	private IProject project;
+	
+	private String buildOpts;
+	private String configOpts;
+	private String configCmd;
+	private String configDir;
 
 	private List<? extends PackageThing> packages;
 	private String selectedPackageThingID;
@@ -56,17 +61,21 @@ public class SubmissionInfo {
 	// Other
 	private SwampApiWrapper api;
 	
-	public static final String JAVA_8_SRC = "Java 8 Source Code";
-	public static final String JAVA_7_SRC = "Java 7 Source Code";
-	public static final String JAVA_8_BYTE = "Java 8 Bytecode";
-	public static final String JAVA_7_BYTE = "Java 7 Bytecode";
+	public static final String JAVA_8_SRC 	= "Java 8 Source Code";
+	public static final String JAVA_7_SRC 	= "Java 7 Source Code";
+	public static final String JAVA_8_BYTE 	= "Java 8 Bytecode";
+	public static final String JAVA_7_BYTE 	= "Java 7 Bytecode";
+	public static final String C_CPP		= "C/C++";
 	
 	public static String NO_BUILD_STRING = "no-build";
 	public static String AUTO_GENERATE_BUILD_STRING = "Auto-generate build file";
-	private static String buildOptions[] = { "Auto-generate build file", "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", "no-build", "other" };
+	public static String ECLIPSE_GENERATED_STRING = "Eclipse-generated makefile";
+	private static String javaBuildOptions[] = { AUTO_GENERATE_BUILD_STRING, "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", NO_BUILD_STRING, "other" };
+	private static String cppBuildOptions[] = { ECLIPSE_GENERATED_STRING, "cmake+make", "configure+make", "make", NO_BUILD_STRING, "other" };
 	private static String PROJECT_KEY = "PROJECT";
 	private static String DELIMITER = ",";
-	private static String pkgTypeOptions[] = { JAVA_8_SRC, JAVA_7_SRC, JAVA_8_BYTE, JAVA_7_BYTE };
+	private static String javaPkgTypeOptions[] = { JAVA_8_SRC, JAVA_7_SRC, JAVA_8_BYTE, JAVA_7_BYTE };
+	private static String cppPkgTypeOptions[] = { C_CPP };
 	
 	public SubmissionInfo(SwampApiWrapper api) {
 		this.api = api;
@@ -74,6 +83,11 @@ public class SubmissionInfo {
 		selectedProjectID = null;
 		selectedToolIDs = null;
 		selectedPlatformIDs = null;
+		
+		buildOpts = "";
+		configOpts = "";
+		configCmd = "";
+		configDir = "";
 	}
 	
 	public boolean isConfigInitialized() {
@@ -93,7 +107,20 @@ public class SubmissionInfo {
 		if (packageType.equals(JAVA_8_SRC) || packageType.equals(JAVA_8_BYTE)) {
 			return "java-8";
 		}
-		return "java-7";
+		if (packageType.equals(JAVA_7_SRC) || packageType.equals(JAVA_7_SRC)) {
+			return "java-7";
+		}
+		return "C/C++";
+	}
+	
+	public String getPackageLanguage() {
+		if (CoreModel.hasCCNature(project)) {
+			return "C++";
+		}
+		if (CoreModel.hasCNature(project)) {
+			return "C";
+		}
+		return "Java";
 	}
 	
 	public void setPackageType(String pkgType, boolean fromFile) {
@@ -126,14 +153,24 @@ public class SubmissionInfo {
 		return (selectedPlatformIDs != null);
 	}
 	
-	public String[] getBuildSystemList() {
-		return buildOptions;
+	public String[] getBuildSystemList(String lang) {
+		switch(lang.toUpperCase()) {
+			case "JAVA":
+				return javaBuildOptions;
+			case "C/C++":
+				return cppBuildOptions;
+		}
+		return new String[0];
 	}
 	
-	public String[] getPackageTypeList() {
-		/*List<String> pkgTypes = api.getPackageTypesList();
-		return Utils.convertStringListToArray(pkgTypes);*/
-		return pkgTypeOptions;
+	public String[] getPackageTypeList(String lang) {
+		switch(lang.toUpperCase()) {
+			case "JAVA":
+				return javaPkgTypeOptions;
+			case "C/C++":
+				return cppPkgTypeOptions;
+		}
+		return new String[0];
 	}
 	
 	public void setSelectedPlatformIDs(List<String> platformIDs) {
@@ -166,6 +203,10 @@ public class SubmissionInfo {
 	
 	public boolean isNewPackage() {
 		return newPackage;
+	}
+	
+	public boolean isCProject() {
+		return (CoreModel.hasCCNature(project) || CoreModel.hasCNature(project));
 	}
 	
 	public void setNewPackage(boolean b) {
@@ -251,7 +292,7 @@ public class SubmissionInfo {
 			this.buildFile = "";
 		}
 		else {
-			buildSystem = buildSys;
+			buildSystem = buildSys.equals(ECLIPSE_GENERATED_STRING) ? "make" : buildSys;
 			buildDirectory = buildDir;
 			this.buildFile = buildFile;
 			buildTarget = target;
@@ -345,5 +386,37 @@ public class SubmissionInfo {
 	
 	private String getPlatformKey() {
 		return packageType + "-PLATFORMS";
+	}
+	
+	public void setBuildOpts(String opts) {
+		buildOpts = opts;
+	}
+	
+	public void setConfigOpts(String opts) {
+		configOpts = opts;
+	}
+	
+	public void setConfigCmd(String cmd) {
+		configCmd = cmd;
+	}
+	
+	public void setConfigDir(String dir) {
+		configDir = dir;
+	}
+	
+	public String getBuildOpts() {
+		return buildOpts;
+	}
+	
+	public String getConfigOpts() {
+		return configOpts;
+	}
+	
+	public String getConfigCmd() {
+		return configCmd;
+	}
+	
+	public String getConfigDir() {
+		return configDir;
 	}
 }

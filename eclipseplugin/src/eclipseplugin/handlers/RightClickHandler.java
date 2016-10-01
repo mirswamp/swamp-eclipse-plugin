@@ -30,6 +30,7 @@ import org.eclipse.ui.console.IConsoleView;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.cdt.core.model.ICProject;
 
 import eclipseplugin.SwampSubmitter;
 import eclipseplugin.Utils;
@@ -56,35 +57,51 @@ public class RightClickHandler extends AbstractHandler {
 		System.out.println("Selection: " + structured);
 		System.out.println("Type of selection: " + structured.getFirstElement().getClass());
 		
-		if (!(structured.getFirstElement() instanceof IJavaProject)) {
-			System.out.println("Somehow the selection is not a project");
-			return null;
-		}
-		
-		IJavaProject project = (IJavaProject)structured.getFirstElement();
-		System.out.println("Project is open? " + project.isOpen());
-		if (!project.isOpen()) {
-			ConsolePlugin plugin = ConsolePlugin.getDefault();
-			IConsoleManager conMgr = plugin.getConsoleManager();
-			MessageConsole console = new MessageConsole("SWAMP Plugin", null);
-			conMgr.addConsoles(new IConsole[]{console});
-			IWorkbenchPage page = window.getActivePage();
-			try {
-				IConsoleView view = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
-				view.display(console);
-			} catch (PartInitException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		// TODO Add handling for C Project
+		Object proj = structured.getFirstElement();
+		IJavaProject javaProject = null;
+		ICProject cProject = null;
+		if (proj instanceof IJavaProject) {
+			javaProject = (IJavaProject)proj;
+			if (!javaProject.isOpen()) {
+				writeClosedProjectMessage(window);
+				return null;
 			}
-			MessageConsoleStream stream = console.newMessageStream();
-			stream.println(Utils.getBracketedTimestamp() + "Error: Project is not open");
-			return null;
+			submitAssessment(javaProject.getProject(), window);
 		}
-		
-		SwampSubmitter ss = new SwampSubmitter(window);
-		IProject prj = project.getProject();
-		ss.launchBackgroundAssessment(prj);
-		
+		else if (proj instanceof ICProject) {
+			cProject = (ICProject)proj;
+			if (!cProject.isOpen()) {
+				writeClosedProjectMessage(window);
+				return null;
+			}
+			submitAssessment(cProject.getProject(), window);
+		}
+		else if (proj instanceof IProject){
+			submitAssessment((IProject) proj, window);
+		}
 		return null;
+	}
+	
+	private void writeClosedProjectMessage(IWorkbenchWindow window) {
+		ConsolePlugin plugin = ConsolePlugin.getDefault();
+		IConsoleManager conMgr = plugin.getConsoleManager();
+		MessageConsole console = new MessageConsole("SWAMP Plugin", null);
+		conMgr.addConsoles(new IConsole[]{console});
+		IWorkbenchPage page = window.getActivePage();
+		try {
+			IConsoleView view = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
+			view.display(console);
+		} catch (PartInitException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		MessageConsoleStream stream = console.newMessageStream();
+		stream.println(Utils.getBracketedTimestamp() + "Error: Project is not open");
+	}
+	
+	private void submitAssessment(IProject prj, IWorkbenchWindow window) {
+		SwampSubmitter ss = new SwampSubmitter(window);
+		ss.launchBackgroundAssessment(prj);
 	}
 }
