@@ -170,6 +170,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		DialogUtil.initializeLabelWidget("Username: ", SWT.NONE, container);
 		usernameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		usernameText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, USERNAME_HELP));
+		usernameText.setFocus();
 		
 		DialogUtil.initializeLabelWidget("Password: ", SWT.NONE, container);
 		passwordText = DialogUtil.initializeTextWidget(SWT.PASSWORD | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));

@@ -155,7 +155,7 @@ public class SwampSubmitter {
 				}
 				
 				subMonitor.split(PKG_CONF_TICKS);
-				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPackageLanguage(), si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
+				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPackageLanguage(), si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget(), si.getBuildOpts(), si.getConfigDir(), si.getConfigCmd(), si.getConfigOpts());
 				
 				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
@@ -291,7 +291,7 @@ public class SwampSubmitter {
 				}
 				
 				subMonitor.split(PKG_CONF_TICKS);
-				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", "Java", si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget());
+				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", "Java", si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget(), si.getBuildOpts(), si.getConfigDir(), si.getConfigCmd(), si.getConfigOpts());
 				
 				if (subMonitor.isCanceled()) {
 					IStatus status = Status.CANCEL_STATUS;

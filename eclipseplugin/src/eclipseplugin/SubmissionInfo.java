@@ -276,13 +276,14 @@ public class SubmissionInfo {
 		return packageSystemLibs;
 	}
 	
-	public void setBuildInfo(String buildSys, boolean needsBuildFile, String buildDir, String buildFile, String target, boolean packageRTLibs) {
+	public void setBuildInfo(String buildSys, boolean needsBuildFile, String buildDir, String buildFile, String target, String buildOptions, boolean packageRTLibs) {
 		if (needsBuildFile) {
 			createBuildFile = true;
 			buildSystem = "ant";
 			buildTarget = "build";
 			buildDirectory = "."; // Top-level directory
 			this.buildFile = getProjectName() + BuildfileGenerator.BUILDFILE_EXT;
+			buildOpts = "";
 			packageSystemLibs = packageRTLibs;
 		}
 		else if (buildSys.equals(NO_BUILD_STRING)) {
@@ -290,13 +291,21 @@ public class SubmissionInfo {
 			buildTarget = "";
 			buildDirectory = "";
 			this.buildFile = "";
+			buildOpts = "";
 		}
 		else {
 			buildSystem = buildSys.equals(ECLIPSE_GENERATED_STRING) ? "make" : buildSys;
 			buildDirectory = buildDir;
 			this.buildFile = buildFile;
 			buildTarget = target;
+			buildOpts = buildOptions;
 		}
+	}
+	
+	public void setConfigInfo(String configDir, String configCmd, String configOptions) {
+		this.configDir = configDir;
+		this.configCmd = configCmd;
+		this.configOpts = configOptions;
 	}
 	
 	public String getProjectName() {

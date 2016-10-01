@@ -11,6 +11,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
@@ -19,63 +20,60 @@ import eclipseplugin.SubmissionInfo;
 public class AdvancedSettingsDialog extends TitleAreaDialog {
 	private Text buildOptText;
 	private Text configOptText;
-	private Text configCmdText;
-	private Text configDirText;
+	private Text configScriptText;
+	private Button selectFileButton;
 
 	private static String ADVANCED_SETTINGS_TITLE = "Advanced Settings";
 	private static String BUILD_OPTIONS_HELP = "Add flags to be used when your package is built.";		
 	private static String CONFIG_COMMAND_HELP = "Write the command to be used prior to building your package";
 	private static String CONFIG_OPTIONS_HELP = "Add flags to be used when your package is configured.";
-	private static String CONFIG_DIR_HELP = "Specify the directory in which your configure script is located.";
+	private static String SELECT_FILE_HELP = "Select your configure script";
 	
-	private SubmissionInfo submissionInfo;
 	private Shell shell;
+	private ConfigDialog parentDialog;
 	
-	public AdvancedSettingsDialog(Shell parentShell, SubmissionInfo si) {
+	public AdvancedSettingsDialog(Shell parentShell, ConfigDialog cd) {
 		super(parentShell);
 		shell = new Shell(parentShell);
-		submissionInfo = si;
+		parentDialog = cd;
 	}
 	
 	private void resetWidgets() {
 		buildOptText.setText("");
 		configOptText.setText("");
-		configCmdText.setText("");
-		configDirText.setText("");
+		configScriptText.setText("");
 	}
 	
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
-		int horizontalSpan = 2;
 		Composite container = new Composite(area, SWT.NONE);
+		int horizontalSpan = 2;
 		
 		setTitle(ADVANCED_SETTINGS_TITLE);
 		
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		GridLayout layout = new GridLayout(2, false);
+		GridLayout layout = new GridLayout(4, false);
 		container.setLayout(layout);
 		
-		DialogUtil.initializeLabelWidget("Build options: ", SWT.NONE, container);
-		buildOptText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), 1);
-		buildOptText.setText(submissionInfo.getBuildOpts());
+		DialogUtil.initializeLabelWidget("Build Options: ", SWT.NONE, container, horizontalSpan);
+		buildOptText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
+		buildOptText.setText(parentDialog.getBuildOpts());
 		buildOptText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, BUILD_OPTIONS_HELP));
 		
-		// Add config dir and config cmd
-		DialogUtil.initializeLabelWidget("Configuration directory: ", SWT.NONE, container);
-		configDirText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), 1);
-		configDirText.setText(submissionInfo.getConfigDir());
-		configDirText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, CONFIG_DIR_HELP));
+		DialogUtil.initializeLabelWidget("Configuration Script: ", SWT.NONE, container, horizontalSpan);
+		configScriptText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), 1);
+		configScriptText.setText(parentDialog.getConfigScriptPath());
+		configScriptText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, CONFIG_COMMAND_HELP));
 		
+		selectFileButton = DialogUtil.initializeButtonWidget(container, " ...", new GridData(SWT.FILL, SWT.NONE, false, false), 1);
+		selectFileButton.addSelectionListener(new FileSelectionListener());
+		selectFileButton.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, SELECT_FILE_HELP));
+
 		
-		DialogUtil.initializeLabelWidget("Coniguration command: ", SWT.NONE, container);
-		configCmdText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), 1);
-		configCmdText.setText(submissionInfo.getConfigCmd());
-		configCmdText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, CONFIG_COMMAND_HELP));
-		
-		DialogUtil.initializeLabelWidget("Configuration options: ", SWT.NONE, container);
-		configOptText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), 1);
-		configOptText.setText(submissionInfo.getConfigOpts());
+		DialogUtil.initializeLabelWidget("Configuration Options: ", SWT.NONE, container, horizontalSpan);
+		configOptText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
+		configOptText.setText(parentDialog.getConfigOpts());
 		configOptText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, CONFIG_OPTIONS_HELP));
 
 		return area;
@@ -83,9 +81,9 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 	
 	@Override
 	protected void okPressed() {
-		submissionInfo.setBuildOpts(buildOptText.getText());
-		submissionInfo.setConfigOpts(configOptText.getText());
-		submissionInfo.setConfigCmd(configCmdText.getText());
+		parentDialog.setBuildOpts(buildOptText.getText());
+		parentDialog.setConfigOpts(configOptText.getText());
+		parentDialog.setConfigScriptPath(configScriptText.getText());
 		super.okPressed();
 	}
 	
@@ -108,6 +106,24 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 		@Override
 		public void widgetSelected(SelectionEvent e) {
 			resetWidgets();
+		}
+		
+		@Override
+		public void widgetDefaultSelected(SelectionEvent e) {
+		}
+	}
+	
+	private class FileSelectionListener implements SelectionListener {
+		public FileSelectionListener() {
+		}
+		
+		@Override
+		public void widgetSelected(SelectionEvent e) {
+			FileDialog dialog = new FileDialog(shell);
+			String rc = dialog.open();
+			if (rc != null) {
+				configScriptText.setText(rc);
+			}
 		}
 		
 		@Override

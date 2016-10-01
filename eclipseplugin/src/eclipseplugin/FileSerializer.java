@@ -245,11 +245,24 @@ public class FileSerializer {
 		// Build Target
 		String buildTarget = reader.readLine();
 		
+		// Build Opts
+		String buildOpts = reader.readLine();
+		
+		// Config Dir
+		String configDir = reader.readLine();
+		
+		// Config Command
+		String configCmd = reader.readLine();
+		
+		// Config Opts
+		String configOpts = reader.readLine();
+		
 		// Package system libraries
 		String pkgSysLibsStr = reader.readLine();
 		boolean pkgSysLibs = Boolean.parseBoolean(pkgSysLibsStr);
 		
-		si.setBuildInfo(buildSys, needsBuildFile, buildDir, buildFile, buildTarget, pkgSysLibs);
+		si.setBuildInfo(buildSys, needsBuildFile, buildDir, buildFile, buildTarget, buildOpts, pkgSysLibs);
+		si.setConfigInfo(configDir, configCmd, configOpts);
 		return true;
 	}
 	
@@ -338,6 +351,26 @@ public class FileSerializer {
 		// Build Target
 		String buildTarget = si.getBuildTarget();
 		writer.write(buildTarget);
+		writer.write(LINE_SEPARATOR);
+		
+		// Build Opts
+		String buildOpts = si.getBuildOpts();
+		writer.write(buildOpts);
+		writer.write(LINE_SEPARATOR);
+		
+		// Config Dir
+		String configDir = si.getConfigDir();
+		writer.write(configDir);
+		writer.write(LINE_SEPARATOR);
+		
+		// Config Command
+		String configCmd = si.getConfigCmd();
+		writer.write(configCmd);
+		writer.write(LINE_SEPARATOR);
+		
+		// Config Opts
+		String configOpts = si.getConfigOpts();
+		writer.write(configOpts);
 		writer.write(LINE_SEPARATOR);
 		
 		// Package system libraries?

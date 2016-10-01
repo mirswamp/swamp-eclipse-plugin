@@ -49,7 +49,8 @@ public class PackageInfo {
 		return Hex.encodeHexString(retArray);
 	}
 	
-	public static File generatePkgConfFile(Path archivePath, String outputDir, String shortName, String version, String pkgDir, String language, String pkgType, String buildSys, String buildDir, String buildFile, String buildTarget) {
+	public static File generatePkgConfFile(Path archivePath, String outputDir, String shortName, String version, String pkgDir, String language, String pkgType, String buildSys, String buildDir, String buildFile, String buildTarget,
+			String buildOpts, String configDir, String configCmd, String configOpts) {
 		MessageDigest md5 = null;
 		MessageDigest sha512 = null;
 		try {
@@ -109,6 +110,12 @@ public class PackageInfo {
 			writer.println("build-dir=" + buildDir);
 			writer.println("build-file=" + buildFile);
 			writer.println("build-target=" + buildTarget);
+			writer.println("build-opt=" + buildOpts);
+		}
+		if (!configDir.equals("")) {
+			writer.println("config-dir=" + configDir);
+			writer.println("config-cmd=" + configCmd);
+			writer.println("config-opt=" + configOpts);
 		}
 		writer.close();
 		return pkgConf;

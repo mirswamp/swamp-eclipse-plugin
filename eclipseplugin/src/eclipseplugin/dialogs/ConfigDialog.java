@@ -77,11 +77,15 @@ public class ConfigDialog extends TitleAreaDialog {
 	private Text buildPathText;
 	
 	private Shell shell;
+	private AdvancedSettingsDialog advancedSettingsDialog;
 	
 	/* Instance variables representing state */
 	private List<Project> swampProjects;
 	private IProject[] eclipseProjects;
 	private List<PackageThing> swampPackages;
+	private String buildOpts;
+	private String configOpts;
+	private String configScriptPath;
 
 	private String prjUUID;
 	
@@ -112,6 +116,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		submissionInfo = si;
 		api = submissionInfo.getApi();
 		shell = parentShell;
+		buildOpts = "";
+		configOpts = "";
+		configScriptPath = "";
 	}
 	
 	private void resetWidgets() {
@@ -264,7 +271,6 @@ public class ConfigDialog extends TitleAreaDialog {
 		pkgCombo.setEnabled(false);
 		pkgCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, SWAMP_PACKAGE_HELP));
 
-		
 		DialogUtil.initializeLabelWidget("New Package Name: ", SWT.NONE, container, horizontalSpan);
 		pkgNameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
 		pkgNameText.setEnabled(false);
@@ -633,13 +639,37 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	String getBuildOpts() {
+		return buildOpts;
+	}
+	
+	String getConfigScriptPath() {
+		return configScriptPath;
+	}
+	
+	String getConfigOpts() {
+		return configOpts;
+	}
+	
+	void setBuildOpts(String opts) {
+		buildOpts = opts;
+	}
+	
+	void setConfigScriptPath(String path) {
+		configScriptPath = path;
+	}
+	
+	void setConfigOpts(String opts) {
+		configOpts = opts;
+	}
+	
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
 		
 		parent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
 		
 		Button advancedButton = createButton(parent, IDialogConstants.NO_ID, ADVANCED_SETTINGS, false);
-		advancedButton.addSelectionListener(new AdvancedButtonSelectionListener());
+		advancedButton.addSelectionListener(new AdvancedButtonSelectionListener(this));
 		
 		Button clearButton = createButton(parent, IDialogConstants.NO_ID, DialogUtil.CLEAR_CAPTION, false);
 		clearButton.addSelectionListener(new ClearButtonSelectionListener());
@@ -697,6 +727,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		if (buildTargetText.getText().equals("")) {
 			this.setMessage("Please enter a valid build target.");
+			return false;
+		}
+		if (!configOpts.equals("") && configScriptPath.equals("")) {
+			this.setMessage("Config options set but no configuration script specified.");
 			return false;
 		}
 		return true;
@@ -774,42 +808,51 @@ public class ConfigDialog extends TitleAreaDialog {
 				if (cleanTarget == null) {
 					// TODO Add warning
 				}
-				relBuildDir = getBuildDir(project.getLocation().toOSString(), path.toOSString(), false);
+				relBuildDir = getRelDir(project.getLocation().toOSString(), path.toOSString(), false);
 				System.out.println("Build system: " + buildSysStr);
 				System.out.println("Create build file: " + false);
 				System.out.println("Relative build directory: " + relBuildDir);
 				System.out.println("Build file name: " + IManagedBuilderMakefileGenerator.MAKEFILE_NAME);
 				System.out.println("Build targets: " + cleanTarget + " " + buildTarget);
 				System.out.println("Package Run-time libs: " + false);
-				submissionInfo.setBuildInfo(buildSysStr, false, relBuildDir, IManagedBuilderMakefileGenerator.MAKEFILE_NAME, cleanTarget + " " + buildTarget, false);
+				submissionInfo.setBuildInfo(buildSysStr, false, relBuildDir, IManagedBuilderMakefileGenerator.MAKEFILE_NAME, cleanTarget + " " + buildTarget, "", false);
+				submissionInfo.setConfigInfo("", "", "");
 			}
 			else {
 				if (buildSysStr.equals(AUTO_GENERATE_BUILD_STRING)) {
 					createBuildFile = true;
+					submissionInfo.setConfigInfo("", "", "");
 				}
 				else {
 					String prjDir = project.getLocation().toOSString();
 					String buildPath = buildPathText.getText();
-					relBuildDir = getBuildDir(prjDir, buildPath, true);
+					relBuildDir = getRelDir(prjDir, buildPath, true);
 					buildFileName = buildPath.substring(buildPath.lastIndexOf(SEPARATOR)+1);
 					System.out.println("Relative Directory: " + relBuildDir);
 					System.out.println("Build file: " + buildFileName);
+					String cDir = "";
+					String cCmd = "";
+					if (!configScriptPath.equals("")) {
+						cDir = getRelDir(prjDir, configScriptPath, true);
+						cCmd = configScriptPath.substring(configScriptPath.lastIndexOf(SEPARATOR)+1);
+					}
+					submissionInfo.setConfigInfo(cDir, cCmd, configOpts);
 				}
-				submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relBuildDir, buildFileName, buildTargetText.getText(), packageRTButton.getSelection());
+				submissionInfo.setBuildInfo(buildSysStr, createBuildFile, relBuildDir, buildFileName, buildTargetText.getText(), buildOpts, packageRTButton.getSelection());
 			}
 			submissionInfo.setConfigInitialized(true);
 			super.okPressed();
 		}
 	}
 	
-	private String getBuildDir(String projectDir, String path, boolean isFilePath) {
+	private String getRelDir(String projectDir, String path, boolean isFilePath) {
 		int prjIndex = projectDir.lastIndexOf(SEPARATOR);
 		int fileIndex = isFilePath ? path.lastIndexOf(SEPARATOR) : path.length();
-		String relBuildDir = path.substring(prjIndex+1, fileIndex);
-		if (relBuildDir.equals("")) {
+		String relDir = path.substring(prjIndex+1, fileIndex);
+		if (relDir.equals("")) {
 			return ".";
 		}
-		return relBuildDir;
+		return relDir;
 	}
 	
 	private class ComboSelectionListener implements SelectionListener {
@@ -844,15 +887,16 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	private class AdvancedButtonSelectionListener implements SelectionListener {
-		public AdvancedButtonSelectionListener() {
-			
+		private ConfigDialog cd;
+		public AdvancedButtonSelectionListener(ConfigDialog cd) {
+			this.cd = cd;
 		}
 		
 		@Override
 		public void widgetSelected(SelectionEvent e) {
-			AdvancedSettingsDialog ad = new AdvancedSettingsDialog(shell, submissionInfo);
-			ad.create();
-			ad.open();
+			advancedSettingsDialog = new AdvancedSettingsDialog(shell, cd);
+			advancedSettingsDialog.create();
+			advancedSettingsDialog.open();
 		}
 		
 		@Override
@@ -898,7 +942,6 @@ public class ConfigDialog extends TitleAreaDialog {
 		
 		@Override
 		public void widgetDefaultSelected(SelectionEvent e) {
-			
 		}
 		
 	}
