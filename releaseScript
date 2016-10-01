@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# This is a script to streamline making a release
+# (1) Make $HOME/Desktop directory with proper format (yyyy-mm-dd-swamp_eclipse_plugin)
+# (2) cd to doc directory
+# (3) run asciidoc README.adoc
+# (4) move README.html to the new directory
+# (5) run /p/swamp/bin/asciidoctor -pdf README.adoc
+# (6) move README.pdf to new directory
+# (7) copy SWAMP_hosts.json to new directory
+
+# Out of band: export feature to desktop dir, zip the dir
+ARCHIVE_NAME="swamp_eclipse_plugin"
+START_DIR=$PWD
+
+dir_name=$HOME/Desktop/
+dir_name+=$(date +%Y-%m-%d)
+dir_name+="_"$ARCHIVE_NAME
+
+mkdir $dir_name
+
+echo "Created "$dir_name
+
+cd eclipseplugin/doc
+asciidoc README.adoc
+
+echo "Generated README.html"
+
+mv README.html $dir_name
+cp -r images $dir_name
+
+echo "Moved README.html to "$dir_name
+
+/p/swamp/bin/asciidoctor -r asciidoctor-pdf -b pdf README.adoc
+
+echo "Generated README.pdf"
+
+mv README.pdf $dir_name
+
+echo "Moved README.pdf to "$dir_name
+
+cp SWAMP_hosts.json $dir_name
+
+echo "Moved SWAMP_hosts.json to "$dir_name
+
+cd $START_DIR
