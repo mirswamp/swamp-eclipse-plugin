@@ -13,21 +13,35 @@
 
 package eclipseplugin.dialogs;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+
+import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.ui.console.MessageConsoleStream;
 
 import eclipseplugin.Activator;
 import eclipseplugin.Utils;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
 
-import edu.uiuc.ncsa.swamp.session.HTTPException;
 import edu.wisc.cs.swamp.*;
 import edu.wisc.cs.swamp.SwampApiWrapper.HostType;
 
@@ -38,7 +52,10 @@ import edu.wisc.cs.swamp.SwampApiWrapper.HostType;
  */
 public class AuthenticationDialog extends TitleAreaDialog {
 	
-	private Text hostnameText;
+	private Combo hostnameCombo;
+	
+	private Text otherHostnameText;
+	//private Text hostnameText;
 	/**
 	 * The Text widget for username
 	 */
@@ -60,8 +77,8 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	 */
 	private static final String INVALID_MESSAGE = "Invalid username or password.";
 	
-	private static final String HOSTNAME_HELP = "Enter the SWAMP host that you want to connect to.";
-	
+	private static final String HOST_COMBO_HELP = "Select the SWAMP host that you want to connect to.";
+		
 	/**
 	 * Help message for username Text
 	 */
@@ -74,6 +91,24 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	 * Caption for login button
 	 */
 	private static final String LOGIN_CAPTION = "Login";
+	
+	private static final String MIR_SWAMP_DESCRIPTION = "MIR";
+	
+	private static final String JSON_UNLISTED_HOSTS_KEY = "canSpecifyUnlistedHosts";
+	
+	private static final String JSON_HOSTS_LIST_KEY = "hosts";
+	
+	private static final String JSON_HOST_NAME_KEY = "name";
+	
+	private static final String JSON_HOST_DESCRIPTION_KEY = "description";
+	
+	private static final String OTHER_OPTION = "Other";
+	
+	private static final String NO_HOST_SPECIFIED = "Invalid hostname specified.";
+	
+	private static final String JSON_CONFIG_FILENAME = "SWAMP_hosts.json";
+	
+	private JsonObject info;
 	
 	/**
 	 * Reference to SwampApiWrapper object. This facilitates interaction with
@@ -121,25 +156,80 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		GridLayout layout = new GridLayout(2, false);
 		container.setLayout(layout);
 
-		GridData griddata = new GridData();
-		griddata.grabExcessHorizontalSpace = true;
-		griddata.horizontalAlignment = GridData.FILL;
 		
 		DialogUtil.initializeLabelWidget("Hostname: ", SWT.NONE, container);
-		hostnameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, griddata);
-		//hostnameText.setText(Activator.getLastHostname());
-		hostnameText.setText(SwampApiWrapper.SWAMP_HOST_NAMES_MAP.get(HostType.PRODUCTION));
-		hostnameText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, HOSTNAME_HELP));
-
+		hostnameCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), getAvailableHostnames());
+		hostnameCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, HOST_COMBO_HELP));
+		hostnameCombo.select(0);
+		hostnameCombo.addSelectionListener(new HostComboSelectionListener(hostnameCombo));
+		
+		DialogUtil.initializeLabelWidget("Other hostname:", SWT.NONE, container);
+		otherHostnameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false)); 
+		otherHostnameText.setEnabled(false);
+		
 		DialogUtil.initializeLabelWidget("Username: ", SWT.NONE, container);
-		usernameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, griddata);
+		usernameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		usernameText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, USERNAME_HELP));
 		
 		DialogUtil.initializeLabelWidget("Password: ", SWT.NONE, container);
-		passwordText = DialogUtil.initializeTextWidget(SWT.PASSWORD | SWT.BORDER, container, griddata);
+		passwordText = DialogUtil.initializeTextWidget(SWT.PASSWORD | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false));
 		passwordText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PASSWORD_HELP));
 		
 		return area;
+	}
+	
+	private String[] getAvailableHostnames() {
+		Location configLoc = Platform.getInstallLocation();
+		
+		String filePath = configLoc.getURL().getPath() + JSON_CONFIG_FILENAME;
+		File f = new File(filePath);
+		java.util.List<String> hosts = new ArrayList<>();
+		if (f.exists()) {
+			InputStream is = null;
+			JsonReader reader = null;
+			try {
+				is = new FileInputStream(f);
+				reader = Json.createReader(is);
+				info = reader.readObject();
+				JsonArray hostArray = info.getJsonArray(JSON_HOSTS_LIST_KEY);
+				for (int i = 0; i < hostArray.size(); i++) {
+					JsonObject o = hostArray.getJsonObject(i);
+					String host = o.getString(JSON_HOST_NAME_KEY);
+					String description = o.getString(JSON_HOST_DESCRIPTION_KEY);
+					hosts.add(host + " (" + description + ")");
+				}
+				if (info.getBoolean(JSON_UNLISTED_HOSTS_KEY)) {
+					hosts.add(OTHER_OPTION);
+				}
+				return hosts.toArray(new String[0]);
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+				return getDefaultHostnames();
+			}
+			finally {
+				if (is != null) {
+					try {
+						is.close();
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+				if (reader != null) {
+					reader.close();
+				}
+			}
+
+		}
+		else {
+			return getDefaultHostnames();
+		}
+	}
+	
+	private String[] getDefaultHostnames() {
+		String[] array = {SwampApiWrapper.SWAMP_HOST_NAMES_MAP.get(HostType.PRODUCTION) + " (" + MIR_SWAMP_DESCRIPTION + ")"};
+		return array;
 	}
 	
 	/**
@@ -177,8 +267,25 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	protected void okPressed() {
 		String username = usernameText.getText();
 		String password = passwordText.getText();
-		String hostname = hostnameText.getText();
+		//String hostname = hostnameText.getText();
+		int index = hostnameCombo.getSelectionIndex();
+		if (index < 0) {
+			out.println(Utils.getBracketedTimestamp() + "Error: Invalid hostname specified.");
+			this.setMessage(NO_HOST_SPECIFIED);
+			usernameText.setText("");
+			usernameText.setFocus();
+			passwordText.setText("");
+			return;
+		}
+		String hostname = hostnameCombo.getItem(index);
+		if (hostname.equals(OTHER_OPTION)) {
+			hostname = otherHostnameText.getText();
+		}
+		else {
+			hostname = hostname.split(" ")[0];
+		}
 		String id;
+		System.out.println("Hostname: " + hostname);
 		
 		if ((hostname.length() == 0)) {
 			out.println(Utils.getBracketedTimestamp() + "Error: No host specified.");
@@ -206,6 +313,28 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		Activator.setLoggedIn(true);
 		Activator.setHostname(hostname);
 		super.okPressed();
+	}
+	
+	private class HostComboSelectionListener implements SelectionListener {
+		Combo combo;
+		public HostComboSelectionListener(Combo c) {
+			combo = c;
+		}
+		
+		@Override
+		public void widgetSelected(SelectionEvent e) {
+			int selection = combo.getSelectionIndex();
+			if (combo.getItem(selection).equals(OTHER_OPTION)) {
+				otherHostnameText.setEnabled(true);
+			}
+			else {
+				otherHostnameText.setEnabled(false);
+			}
+		}
+		
+		@Override
+		public void widgetDefaultSelected(SelectionEvent e) {
+		}
 	}
 	
 }
