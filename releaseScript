@@ -18,6 +18,7 @@ ARCHIVE_NAME="swamp_eclipse_plugin"
 START_DIR=$PWD
 SEPARATOR_LINE="---------------------------------------------"
 TIMESTAMP=$(date +%Y-%m-%d)
+VERSION=$1"v"$TIMESTAMP
 
 dir_name=$HOME/Desktop/
 dir_name+=$TIMESTAMP
@@ -52,7 +53,7 @@ echo "Moved SWAMP_hosts.json to "$dir_name
 echo "RELEASE_NOTES.txt" > tmpfile
 echo $SEPARATOR_LINE >> tmpfile
 echo $TIMESTAMP >> tmpfile
-echo "Version: "$1 >> tmpfile
+echo "Version: "$VERSION >> tmpfile
 echo $SEPARATOR_LINE >> tmpfile
 cat RELEASE_NOTES.txt >> tmpfile
 mv tmpfile $dir_name"/RELEASE_NOTES.txt"
