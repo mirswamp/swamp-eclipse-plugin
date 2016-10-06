@@ -70,7 +70,7 @@ public class SubmissionInfo {
 	public static String NO_BUILD_STRING = "no-build";
 	public static String AUTO_GENERATE_BUILD_STRING = "Auto-generate build file";
 	public static String ECLIPSE_GENERATED_STRING = "Eclipse-generated makefile";
-	private static String javaBuildOptions[] = { AUTO_GENERATE_BUILD_STRING, "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "Maven", NO_BUILD_STRING, "other" };
+	private static String javaBuildOptions[] = { AUTO_GENERATE_BUILD_STRING, "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "maven", NO_BUILD_STRING, "other" };
 	private static String cppBuildOptions[] = { ECLIPSE_GENERATED_STRING, "cmake+make", "configure+make", "make", NO_BUILD_STRING, "other" };
 	private static String PROJECT_KEY = "PROJECT";
 	private static String DELIMITER = ",";
