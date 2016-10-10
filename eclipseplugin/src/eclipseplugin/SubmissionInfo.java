@@ -277,8 +277,8 @@ public class SubmissionInfo {
 	}
 	
 	public void setBuildInfo(String buildSys, boolean needsBuildFile, String buildDir, String buildFile, String target, String buildOptions, boolean packageRTLibs) {
+		createBuildFile = needsBuildFile;
 		if (needsBuildFile) {
-			createBuildFile = true;
 			buildSystem = "ant";
 			buildTarget = "build";
 			buildDirectory = "."; // Top-level directory

@@ -58,7 +58,10 @@ import edu.wisc.cs.swamp.SwampApiWrapper;
 import static org.eclipse.core.runtime.Path.SEPARATOR;
 
 import java.io.File;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ConfigDialog extends TitleAreaDialog {
 
@@ -490,18 +493,52 @@ public class ConfigDialog extends TitleAreaDialog {
 				setBuildSysOptions("C/C++");
 				setBuildSystem(ECLIPSE_GENERATED_STRING);
 			}
+			else {
+				packageRTButton.setEnabled(true);
+				setPkgTypeOptions("All");
+				setBuildSysOptions("All");
+			}
 			prjFilePathText.setText(project.getLocation().toOSString());
 		}
 	}
 	
-	private void setBuildSysOptions(String lang) { 
-		String[] buildOptions = submissionInfo.getBuildSystemList(lang);
+	private void setBuildSysOptions(String lang) {
+		String[] buildOptions;
+		if (lang.equals("All")) {
+			String[] javaBuildOptions = submissionInfo.getBuildSystemList("Java");
+			String[] cBuildOptions = submissionInfo.getBuildSystemList("C/C++");
+			buildOptions = union(javaBuildOptions, cBuildOptions);
+			Arrays.sort(buildOptions);
+		}
+		else {
+			buildOptions = submissionInfo.getBuildSystemList(lang);
+		}
 		buildSysCombo.setItems(buildOptions);
 	}
 	
 	private void setPkgTypeOptions(String lang) {
-		String[] pkgTypes = submissionInfo.getPackageTypeList(lang);
+		String[] pkgTypes;
+		if (lang.equals("All")) {
+			String[] javaPkgTypes = submissionInfo.getPackageTypeList("Java");
+			String[] cPkgTypes = submissionInfo.getPackageTypeList("C/C++");
+			pkgTypes = union(javaPkgTypes, cPkgTypes);
+			Arrays.sort(pkgTypes);
+		}
+		else {
+			pkgTypes = submissionInfo.getPackageTypeList(lang);
+		}
 		pkgTypeCombo.setItems(pkgTypes);
+	}
+	
+	private static String[] union(String[] a, String[] b) {
+		Set<String> set = new HashSet<>();
+		for (String s : a) {
+			set.add(s);
+		}
+		for (String s : b) {
+			set.add(s);
+		}
+		return set.toArray(new String[0]);
 	}
 	
 	private String getProjectLanguage(IProject project) {
@@ -519,6 +556,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	private void setPackageType(String versionString) {
+		// TODO If auto-generated build is chosen, we should enable package RT checkbox
 		for (int i = 0; i < pkgTypeCombo.getItemCount(); i++) {
 			if (pkgTypeCombo.getItem(i).equals(versionString)) {
 				pkgTypeCombo.select(i);
@@ -824,6 +862,7 @@ public class ConfigDialog extends TitleAreaDialog {
 					submissionInfo.setConfigInfo("", "", "");
 				}
 				else {
+					createBuildFile = false;
 					String prjDir = project.getLocation().toOSString();
 					String buildPath = buildPathText.getText();
 					relBuildDir = getRelDir(prjDir, buildPath, true);
