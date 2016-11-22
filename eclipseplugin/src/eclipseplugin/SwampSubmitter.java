@@ -75,6 +75,7 @@ public class SwampSubmitter {
 	private String configFilepath;
 
 	private static String SWAMP_FAMILY 		 = "SWAMP_FAMILY";
+	public static String SWAMP_RESULTS_DIRNAME = ".SWAMP_RESULTS";
 	private static String CONFIG_FILENAME 	 = "swampconfig.txt";
 	private static String PLUGIN_EXIT_MANUAL = "Status: Plugin exited manually.";
 	private static String SWAMP_JOB_TITLE    = "SWAMP Assessment Submission";
@@ -553,6 +554,12 @@ public class SwampSubmitter {
 		
 	}
 	
+	public void fetchResults() {
+		if (!initializeSwampApi()) {
+			return;
+		}
+	}
+	
 	public void launch(IProject project) {
 		out = initializeConsole("SWAMP Plugin");
 
@@ -605,6 +612,7 @@ public class SwampSubmitter {
 	}
 	
 	public void logOutOfSwamp() {
+		Activator.saveResults();
 		Activator.setLoggedIn(false);
 		if (!initializeSwampApi()) {
 			return;
@@ -647,7 +655,13 @@ public class SwampSubmitter {
 			System.err.println("Error in running assessment.");
 		}
 		else {
+			File f = new File(System.getProperty("user.home") + File.separator + SWAMP_RESULTS_DIRNAME + File.separator + prjUUID + File.separator + pkgUUID);
+			if (!f.exists()) {
+				f.mkdirs();
+			}
+			// TODO: Take snapshot of the codebase and put it here - possibly even use archive
 			out.println(Utils.getBracketedTimestamp() + "Status: Successfully submitted assessment with tool {" + toolName + "} on platform {" + platformName +"}");
+			Activator.addAssessment(prjUUID, assessUUID);
 		}
 	}
 	

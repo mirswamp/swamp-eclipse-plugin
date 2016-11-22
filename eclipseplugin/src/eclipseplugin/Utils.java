@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -30,6 +31,7 @@ import java.util.zip.ZipOutputStream;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.swt.widgets.TableItem;
 
 import static org.eclipse.core.runtime.IPath.SEPARATOR;
 
@@ -221,5 +223,27 @@ public class Utils {
 	public static String getProjectDirectory(IProject p) {
 		IPath path = p.getLocation();
 		return path.lastSegment();
+	}
+	
+	public static Comparator<TableItem> INT_CMP(int col) {
+		Comparator<TableItem> cmp = new Comparator<TableItem>() {
+			@Override
+			public int compare(TableItem t1, TableItem t2) {
+				int i1 = Integer.parseInt(t1.getText(col));
+				int i2 = Integer.parseInt(t2.getText(col));
+				return Integer.compare(i1, i2);
+			}
+		};
+		return cmp;
+	}
+	
+	public static Comparator<TableItem> STR_CMP(int col) {
+		Comparator<TableItem> cmp = new Comparator<TableItem>() {
+			@Override
+			public int compare(TableItem t1, TableItem t2) {
+				return t1.getText(col).compareTo(t2.getText(col));
+			}
+		};
+		return cmp;
 	}
 }

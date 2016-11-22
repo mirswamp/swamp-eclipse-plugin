@@ -19,6 +19,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -47,6 +51,11 @@ public class Activator extends AbstractUIPlugin {
 	private static final String DEFAULT_HOST = "https://www.mir-swamp.org";
 	
 	private static final String HOST_FILENAME = ".host";
+	private static final String UNFINISHED_ASSESS_FILENAME = ".unfinished_assess";
+	
+	private static Map<String, Set<String>> assessIDs;
+	private static Map<String, Set<String>> finishedIDs;
+	
 	
 	/**
 	 * The constructor
@@ -67,6 +76,8 @@ public class Activator extends AbstractUIPlugin {
 		SwampApiWrapper api;
 		loggedIn = false;
 		hostname = DEFAULT_HOST;
+		assessIDs = new HashMap<>();
+		finishedIDs = new HashMap<>();
 
 		if (file.exists()) {
 			FileReader filereader = null;
@@ -85,6 +96,39 @@ public class Activator extends AbstractUIPlugin {
 					}
 				}
 			} catch (Exception e) {
+			}
+		}
+		
+		File f = new File(getUnfinishedAssessmentsPath());
+		if (f.exists()) {
+			FileReader filereader = null;
+			BufferedReader reader = null;
+			try {
+				filereader = new FileReader(f);
+				reader = new BufferedReader(filereader);
+				String str = reader.readLine();
+				while (str != null && !str.equals("")) {
+					String[] array = str.split(":");
+					String prjID = array[0];
+					String assessID = array[1];
+					Set<String> set;
+					if (assessIDs.containsKey(prjID)) {
+						set = assessIDs.get(prjID);
+						set.add(assessID);
+					}
+					else {
+						set = new HashSet<>();
+						set.add(assessID);
+					}
+					assessIDs.put(prjID, set);
+				}
+				
+			} catch (IOException e) {
+				System.err.println("Unable to read in assessments from file.");
+				e.printStackTrace();
+			} finally {
+				filereader.close();
+				reader.close();
 			}
 		}
 	}
@@ -120,12 +164,17 @@ public class Activator extends AbstractUIPlugin {
 	private static String getHostnamePath() {
 		return SwampApiWrapper.SWAMP_DIR_PATH + System.getProperty("file.separator") + HOST_FILENAME;
 	}
+	
+	private static String getUnfinishedAssessmentsPath() {
+		return SwampApiWrapper.SWAMP_DIR_PATH + System.getProperty("file.separator") + UNFINISHED_ASSESS_FILENAME;
+	}
 
 	/*
 	 * (non-Javadoc)
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
 	 */
 	public void stop(BundleContext context) throws Exception {
+		saveResults();
 		plugin = null;
 		super.stop(context);
 	}
@@ -160,5 +209,64 @@ public class Activator extends AbstractUIPlugin {
 	
 	public static String getLastHostname() {
 		return hostname;
+	}
+	
+	public static void saveResults() {
+		String path = getUnfinishedAssessmentsPath();
+		File f = new File(path);
+		if (f.exists()) {
+			f.delete();
+		}
+		FileWriter filewriter = null;
+		BufferedWriter writer = null;
+		
+		try {
+			filewriter = new FileWriter(f);
+			writer = new BufferedWriter(filewriter);
+			for (String prjID : assessIDs.keySet()) {
+				for (String assessID : assessIDs.get(prjID)) {
+					writer.write(prjID + ":" + assessID);
+				}
+			}
+			filewriter.close();
+			writer.close();
+			
+		} catch (Exception e) {
+			System.err.println("Unabled to write results file");
+			e.printStackTrace();
+		} 
+	}
+	
+	private static void addAssessment(Map<String, Set<String>> map, String projectID, String assessID) {
+		if (map.containsKey(projectID)) {
+			map.get(projectID).add(assessID);
+		}
+		else {
+			Set<String> set = new HashSet<>();
+			set.add(assessID);
+			map.put(projectID, set);
+		}
+	}
+	
+	public static void finish(String projectID, String assessID) {
+		if (assessIDs.containsKey(projectID)) {
+			Set<String> set = assessIDs.get(projectID);
+			if (set.contains(assessID)) {
+				set.remove(assessID);
+			}
+		}
+		addAssessment(finishedIDs, projectID, assessID);
+	}
+	
+	public static void addAssessment(String projectID, String assessID) {
+		addAssessment(assessIDs, projectID, assessID);
+	}
+	
+	public static Map<String, Set<String>> getFinishedAssessments() {
+		return new HashMap<String, Set<String>>(finishedIDs);
+	}
+	
+	public static Map<String, Set<String>> getUnfinishedAssessments() {
+		return new HashMap<String, Set<String>>(assessIDs);
 	}
 }

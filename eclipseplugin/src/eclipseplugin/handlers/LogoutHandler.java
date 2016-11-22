@@ -13,6 +13,7 @@ public class LogoutHandler extends AbstractHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		System.out.println("Executed Logout Handler");
 		ss = new SwampSubmitter(HandlerUtil.getActiveWorkbenchWindow(event));
+		// TODO: Save the results that we're currently waiting on
 		ss.logOutOfSwamp();	
 		return null;
 	}

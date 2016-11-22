@@ -1,6 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
+
+<!-- Making SWAMP perspective -->
+<extension point="org.eclipse.ui.perspectives">
+	<perspective
+		name="SWAMP Perspective"
+		class="eclipseplugin.ui.SwampPerspective" 
+		id="eclipseplugin.ui.perspective">
+	</perspective>
+</extension>
+
+<extension point="org.eclipse.ui.views">
+	<view 
+		name="Table View"
+		class="eclipseplugin.ui.TableView"
+		id="eclipseplugin.ui.views.tableview" /> <!-- Add icon -->
+</extension>
+
+<extension point="org.eclipse.ui.views">
+	<view 
+		name="Detail View"
+		class="eclipseplugin.ui.DetailView"
+		id="eclipseplugin.ui.views.detailview" /> <!-- Add icon -->
+</extension>
+
+<!-- Making SWAMP marker -->
+
+<extension id="swampmarker" point="org.eclipse.core.resources.markers"/>
+<extension id="swampproblem" point="org.eclipse.core.resources.markers">
+	<super type="org.eclipse.core.resources.problemmarker"/>
+	<super type="eclipseplugin.swampmarker"/>
+	<attribute name="swampIssue"/>
+	<persistent value="true"/>
+</extension>
   
  <!-- Declaring commands -->
  <extension point="org.eclipse.ui.commands">
@@ -41,6 +74,12 @@
   		categoryId="eclipseplugin.commands.category"
   		id="eclipseplugin.commands.rightClickCommand"
   		name="Resubmit most recent assessment of this project">
+  	</command>
+  	
+  	<command
+  		categoryId="eclipseplugin.commands.category"
+  		id="eclipseplugin.commands.checkResultsCommand"
+  		name="Check for results from your assessments">
   	</command>
   	
   	<command
@@ -102,6 +141,11 @@
   	</handler>
   	
   	<handler
+  		class="eclipseplugin.handlers.CheckResultsHandler"
+  		commandId="eclipseplugin.commands.checkResultsCommand">
+  	</handler>
+  	
+  	<handler
   		class="eclipseplugin.handlers.AboutSwampHandler"
   		commandId="eclipseplugin.commands.aboutSwampCommand">
   	</handler>
@@ -136,6 +180,12 @@
   			mnemonic="C"
   			style="push">
   		</command>
+  		<command
+			commandId="eclipseplugin.commands.checkResultsCommand"
+			label="Check for Results"
+			mnemonic="R"
+			style="push">
+		</command>
 		<command
 			commandId="eclipseplugin.commands.loginCommand"
 			label="Log In"
@@ -185,6 +235,14 @@
 			mnemonic="O"
 			style="push">
 		</command> 
+		
+		<command
+			commandId="eclipseplugin.commands.checkResultsCommand"
+			label="Check for Results"
+			mnemonic="R"
+			style="push">
+		</command>
+		
 		<separator
 			name="separator-id2"
 			visible="true">
