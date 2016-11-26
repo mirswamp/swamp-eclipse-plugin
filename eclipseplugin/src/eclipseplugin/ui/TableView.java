@@ -12,6 +12,9 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.ViewPart;
 
@@ -19,8 +22,8 @@ import eclipseplugin.Utils;
 
 public class TableView extends ViewPart {
 	
-	public static final String[] COLUMN_NAMES = {"File", "Line", "Bug Type"};
-	private static final int[] COLUMN_WIDTHS = {300, 100, 300};
+	public static final String[] COLUMN_NAMES = {"File", "Line", "Bug Type", "Tool", "Platform"};
+	private static final int[] COLUMN_WIDTHS = {500, 200, 500, 500, 500};
 	private Table table;
 	
 	// TODO: Make columns have more appropriate widths by default
@@ -49,6 +52,8 @@ public class TableView extends ViewPart {
 		TableColumn fileColumn = getTableColumn(table, 0, "STRING");
 		TableColumn lineColumn = getTableColumn(table, 1, "INT");
 		TableColumn typeColumn = getTableColumn(table, 2, "STRING");
+		TableColumn toolColumn = getTableColumn(table, 3, "STRING");
+		TableColumn platformColumn = getTableColumn(table, 4, "STRING");
 		
 
 		/* The following code adapted from http://stackoverflow.com/questions/15508493/swt-table-sorting-by-clicking-the-column-header */
@@ -69,7 +74,10 @@ public class TableView extends ViewPart {
 			for (int i = 1; i < items.length; i++) {
 				for (int j = 0; j < i; j++) {
 		            if ((comparator.compare(items[i], items[j]) < 0 && dir == SWT.UP) || (comparator.compare(items[i], items[j]) > 0 && dir == SWT.DOWN)) {
-		            	String[] values = {items[i].getText(0), items[i].getText(1), items[i].getText(2)};
+		            	String[] values = new String[COLUMN_NAMES.length];
+		            	for (int k = 0; k < COLUMN_NAMES.length; k++) {
+		            		values[k] = items[i].getText(k);
+		            	}
 		            	items[i].dispose();
 		            	TableItem item = new TableItem(table, SWT.NONE, j);
 		            	item.setText(values);
@@ -83,6 +91,11 @@ public class TableView extends ViewPart {
 		fileColumn.addListener(SWT.Selection, sortListener);
 		lineColumn.addListener(SWT.Selection, sortListener);
 		typeColumn.addListener(SWT.Selection, sortListener);
+		toolColumn.addListener(SWT.Selection, sortListener);
+		platformColumn.addListener(SWT.Selection, sortListener);
+		
+		table.addSelectionListener(new RowSelectionListener(table));
+		//table.addMouseListener(new DoubleClickListener(table));
 		
 		// TODO: Add table items from the actual data
 		for (int i = 0; i < 5; i++) {
@@ -90,6 +103,9 @@ public class TableView extends ViewPart {
 			item.setText(0, i % 2 == 0 ? "Test1.java" : "Test2.java");
 			item.setText(1, Integer.toString(i*100));
 			item.setText(2, i % 2 == 0 ? "Style" : "Other");
+			item.setText(3, i % 3 == 0 ? "FindBugs" : "Test Tool");
+			item.setText(4, "RedHat version" + i);
+			//item.addListener(SWT.Selection, rowSelectionListener);
 		}
 	
 		for (int i = 0; i < COLUMN_NAMES.length; i++) {
@@ -103,14 +119,28 @@ public class TableView extends ViewPart {
 		table.setFocus();
 	}
 	
-	public class RowSelectionListener implements Listener {
+	private class RowSelectionListener implements SelectionListener {
+		Table table;
+		public RowSelectionListener(Table t) {
+			table = t;
+		}
+		@Override
+		public void widgetSelected(SelectionEvent event) {
+			System.out.println("Selection occured");
+			TableItem[] items = table.getSelection();
+			if (items.length > 0) {
+				TableItem selectedRow = items[0];
+				// TODO: Store a reference to detail view, so we don't keep on having to do this!
+				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+				DetailView view = (DetailView) page.findView("eclipseplugin.ui.views.detailview");
+				view.redrawPartControl(selectedRow.getText(0), selectedRow.getText(1), selectedRow.getText(2), selectedRow.getText(3), selectedRow.getText(4));
+			}
+		}
 
 		@Override
-		public void handleEvent(Event event) {
-			//HandlerUtil.getActiveEditor(event);
-			// TODO: Handle row selection
-			// TODO: Editor annotations should be shown for this bug
-			// TODO: Jump to this place in the editor
+		public void widgetDefaultSelected(SelectionEvent event) {
+			// TODO Auto-generated method stub
+			
 		}
 		
 	}

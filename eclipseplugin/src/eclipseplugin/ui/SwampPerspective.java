@@ -30,10 +30,6 @@ public class SwampPerspective implements IPerspectiveFactory {
 	
 	public void defineLayout(IPageLayout layout) {
 		
-		MessageDialog md = new MessageDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(), "Test Message Dialog", null, "Please select a project to view results from", 
-				MessageDialog.QUESTION, null, 0);
-		md.open();
-		
 		String editorArea = layout.getEditorArea();
 		annotateEditor();
 		IFolderLayout topLeft = layout.createFolder("topLeft", IPageLayout.LEFT, 0.25f, editorArea);
@@ -51,13 +47,17 @@ public class SwampPerspective implements IPerspectiveFactory {
 		
 		IWorkbench wb = PlatformUI.getWorkbench();
 		IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
-		//IEditorInput editor = HandlerUtilityMethods.getActiveEditorInput(window);
+		IEditorInput editor = HandlerUtilityMethods.getActiveEditorInput(window);
+
 		
 		
 		// TODO Use actual input
 		IFile file = HandlerUtilityMethods.getActiveFile(window);
 		try {
-			createMarkerForResource(file);
+			for (int i = 0; i < 10; i++) {
+				if ((i+1 % 3) == 0)
+					createMarkerForResource(file, i+1);
+			}
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -68,12 +68,12 @@ public class SwampPerspective implements IPerspectiveFactory {
 	}
 	
 	/* The following method is adapted from http://www.eclipse.org/articles/Article-Mark%20My%20Words/mark-my-words.html */
-	public void createMarkerForResource(IFile resource) throws CoreException {
+	public void createMarkerForResource(IFile resource, int lineNum) throws CoreException {
 		//IMarker marker = resource.createMarker("eclipseplugin.swampmarker");
 		IMarker marker = resource.createMarker(IMarker.PROBLEM);
 		marker.setAttribute(IMarker.MESSAGE, "Invalid use of keyword");
 		marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
-		marker.setAttribute(IMarker.LINE_NUMBER, 6);
+		marker.setAttribute(IMarker.LINE_NUMBER, lineNum);
 	}
 	
 }
