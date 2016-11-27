@@ -78,7 +78,7 @@ public class Activator extends AbstractUIPlugin {
 		hostname = DEFAULT_HOST;
 		assessIDs = new HashMap<>();
 		finishedIDs = new HashMap<>();
-
+		
 		if (file.exists()) {
 			FileReader filereader = null;
 			BufferedReader reader = null;

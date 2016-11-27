@@ -1,6 +1,7 @@
 package eclipseplugin.ui;
 
 import java.util.Comparator;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -18,15 +19,22 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.ViewPart;
 
+import eclipseplugin.ResultsParser;
 import eclipseplugin.Utils;
+import javaSCARF.ScarfInterface;
 
-public class TableView extends ViewPart {
+public class TableView extends ViewPart implements ScarfInterface {
 	
-	public static final String[] COLUMN_NAMES = {"File", "Line", "Bug Type", "Tool", "Platform"};
-	private static final int[] COLUMN_WIDTHS = {500, 200, 500, 500, 500};
+	public static final String[] COLUMN_NAMES = {"File", "Start Line", "End Line", "Bug Type", "Tool", "Platform"};
+	private static final int[] COLUMN_WIDTHS = {500, 300, 300, 500, 500, 500};
 	private Table table;
+	private ResultsParser resultsParser;
 	
 	// TODO: Make columns have more appropriate widths by default
+	public TableView(ResultsParser rp) {
+		super();
+		resultsParser = rp;
+	}
 	
 	private static TableColumn getTableColumn(Table table, int index, String type) {
 		TableColumn col = new TableColumn(table, SWT.NONE);
@@ -51,9 +59,9 @@ public class TableView extends ViewPart {
 		
 		TableColumn fileColumn = getTableColumn(table, 0, "STRING");
 		TableColumn lineColumn = getTableColumn(table, 1, "INT");
-		TableColumn typeColumn = getTableColumn(table, 2, "STRING");
-		TableColumn toolColumn = getTableColumn(table, 3, "STRING");
-		TableColumn platformColumn = getTableColumn(table, 4, "STRING");
+		TableColumn typeColumn = getTableColumn(table, 3, "STRING");
+		TableColumn toolColumn = getTableColumn(table, 4, "STRING");
+		TableColumn platformColumn = getTableColumn(table, 5, "STRING");
 		
 
 		/* The following code adapted from http://stackoverflow.com/questions/15508493/swt-table-sorting-by-clicking-the-column-header */
@@ -97,6 +105,14 @@ public class TableView extends ViewPart {
 		table.addSelectionListener(new RowSelectionListener(table));
 		//table.addMouseListener(new DoubleClickListener(table));
 		
+		List<String[]> rowElements = resultsParser.getRows();
+		for (String[] row : rowElements) {
+			TableItem item = new TableItem(table, SWT.NONE);
+			item.setText(row);
+			// item.addListener(SWT.Selection, rowSelectionListener);
+		}
+		
+		/*
 		// TODO: Add table items from the actual data
 		for (int i = 0; i < 5; i++) {
 			TableItem item = new TableItem(table, SWT.NONE);
@@ -107,13 +123,14 @@ public class TableView extends ViewPart {
 			item.setText(4, "RedHat version" + i);
 			//item.addListener(SWT.Selection, rowSelectionListener);
 		}
+		*/
 	
 		for (int i = 0; i < COLUMN_NAMES.length; i++) {
 			table.getColumn(i).pack();
 		}
 
 	}
-
+	
 	@Override
 	public void setFocus() {
 		table.setFocus();
