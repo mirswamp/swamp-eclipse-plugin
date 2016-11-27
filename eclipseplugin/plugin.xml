@@ -6,23 +6,23 @@
 <extension point="org.eclipse.ui.perspectives">
 	<perspective
 		name="SWAMP Perspective"
-		class="eclipseplugin.ui.SwampPerspective" 
-		id="eclipseplugin.ui.perspective">
+		class="org.continuousassurance.swamp.eclipse.ui.SwampPerspective" 
+		id="org.continuousassurance.swamp.eclipse.ui.perspective">
 	</perspective>
 </extension>
 
 <extension point="org.eclipse.ui.views">
 	<view 
 		name="Table View"
-		class="eclipseplugin.ui.TableView"
-		id="eclipseplugin.ui.views.tableview" /> <!-- Add icon -->
+		class="org.continuousassurance.swamp.eclipse.ui.TableView"
+		id="org.continuousassurance.swamp.eclipse.ui.views.tableview" /> <!-- Add icon -->
 </extension>
 
 <extension point="org.eclipse.ui.views">
 	<view 
 		name="Detail View"
-		class="eclipseplugin.ui.DetailView"
-		id="eclipseplugin.ui.views.detailview" /> <!-- Add icon -->
+		class="org.continuousassurance.swamp.eclipse.ui.DetailView"
+		id="org.continuousassurance.swamp.eclipse.ui.views.detailview" /> <!-- Add icon -->
 </extension>
 
 <!-- Making SWAMP marker -->
@@ -30,61 +30,61 @@
 <extension id="swampmarker" point="org.eclipse.core.resources.markers"/>
 <extension id="swampproblem" point="org.eclipse.core.resources.markers">
 	<super type="org.eclipse.core.resources.problemmarker"/>
-	<super type="eclipseplugin.swampmarker"/>
+	<super type="org.continuousassurance.swamp.eclipse.swampmarker"/>
 	<attribute name="swampIssue"/>
 	<persistent value="true"/>
 </extension>
   
  <!-- Declaring commands -->
  <extension point="org.eclipse.ui.commands">
- 	<category id="eclipseplugin.commands.category" name="eclipseplugin.commands.category.name">
+ 	<category id="org.continuousassurance.swamp.eclipse.commands.category" name="org.continuousassurance.swamp.eclipse.commands.category.name">
  	</category>
  	
  	<command
- 		categoryId="eclipseplugin.commands.category"
- 		id="eclipseplugin.commands.configureCommand"
+ 		categoryId="org.continuousassurance.swamp.eclipse.commands.category"
+ 		id="org.continuousassurance.swamp.eclipse.commands.configureCommand"
  		name="Modify configuration options and submit">
  	</command>
  	
  	<command
- 		categoryId="eclipseplugin.commands.category"
- 		id="eclipseplugin.commands.resubmitCommand"
+ 		categoryId="org.continuousassurance.swamp.eclipse.commands.category"
+ 		id="org.continuousassurance.swamp.eclipse.commands.resubmitCommand"
  		name="Resubmit most recent assessment for active project">
  	</command>	
  	
  	<command
- 		categoryId="eclipseplugin.commands.category"
- 		id="eclipseplugin.commands.loginCommand"
+ 		categoryId="org.continuousassurance.swamp.eclipse.commands.category"
+ 		id="org.continuousassurance.swamp.eclipse.commands.loginCommand"
  		name="Log in to SWAMP">
  	</command>	
  	
  	<command
- 		categoryId="eclipseplugin.commands.category"
- 		id="eclipseplugin.commands.logoutCommand"
+ 		categoryId="org.continuousassurance.swamp.eclipse.commands.category"
+ 		id="org.continuousassurance.swamp.eclipse.commands.logoutCommand"
  		name="Log out of SWAMP">
  	</command>	
  	
  	<command
- 		categoryId="eclipseplugin.commands.category"
- 		id="eclipseplugin.commands.pulldownCommand"
+ 		categoryId="org.continuousassurance.swamp.eclipse.commands.category"
+ 		id="org.continuousassurance.swamp.eclipse.commands.pulldownCommand"
  		name="Pulldown">
  	</command>		
  	
  	<command
-  		categoryId="eclipseplugin.commands.category"
-  		id="eclipseplugin.commands.rightClickCommand"
+  		categoryId="org.continuousassurance.swamp.eclipse.commands.category"
+  		id="org.continuousassurance.swamp.eclipse.commands.rightClickCommand"
   		name="Resubmit most recent assessment of this project">
   	</command>
   	
   	<command
-  		categoryId="eclipseplugin.commands.category"
-  		id="eclipseplugin.commands.checkResultsCommand"
+  		categoryId="org.continuousassurance.swamp.eclipse.commands.category"
+  		id="org.continuousassurance.swamp.eclipse.commands.checkResultsCommand"
   		name="Check for results from your assessments">
   	</command>
   	
   	<command
-  		categoryId="eclipseplugin.commands.category"
-  		id="eclipseplugin.commands.aboutSwampCommand"
+  		categoryId="org.continuousassurance.swamp.eclipse.commands.category"
+  		id="org.continuousassurance.swamp.eclipse.commands.aboutSwampCommand"
   		name="About SWAMP">
   	</command>
  		
@@ -93,7 +93,7 @@
  <!-- Adding image to pulldown command -->
  <extension point="org.eclipse.ui.commandImages">
   	<image 
-  		commandId="eclipseplugin.commands.pulldownCommand"
+  		commandId="org.continuousassurance.swamp.eclipse.commands.pulldownCommand"
   		icon="icons/swamp-logo-square-height-20.png">
   	</image>
   </extension>  
@@ -101,53 +101,53 @@
  <!-- Associating handlers with the commands -->
  <extension point="org.eclipse.ui.handlers">
  	<handler
- 		class="eclipseplugin.handlers.ConfigureHandler"
- 		commandId="eclipseplugin.commands.configureCommand">
+ 		class="org.continuousassurance.swamp.eclipse.handlers.ConfigureHandler"
+ 		commandId="org.continuousassurance.swamp.eclipse.commands.configureCommand">
  	</handler>
  	
  	<handler
- 		class="eclipseplugin.handlers.ResubmitHandler"
- 		commandId="eclipseplugin.commands.resubmitCommand">
+ 		class="org.continuousassurance.swamp.eclipse.handlers.ResubmitHandler"
+ 		commandId="org.continuousassurance.swamp.eclipse.commands.resubmitCommand">
  	</handler>
  	
  	<handler
- 		class="eclipseplugin.handlers.LoginHandler"
- 		commandId="eclipseplugin.commands.loginCommand">
+ 		class="org.continuousassurance.swamp.eclipse.handlers.LoginHandler"
+ 		commandId="org.continuousassurance.swamp.eclipse.commands.loginCommand">
  		<enabledWhen>
  			<not>
- 				<test property="eclipseplugin.properties.loggedIn">
+ 				<test property="org.continuousassurance.swamp.eclipse.properties.loggedIn">
  				</test>
  			</not>
  		</enabledWhen>
  	</handler>
   
   	<handler
- 		class="eclipseplugin.handlers.LogoutHandler"
- 		commandId="eclipseplugin.commands.logoutCommand">
+ 		class="org.continuousassurance.swamp.eclipse.handlers.LogoutHandler"
+ 		commandId="org.continuousassurance.swamp.eclipse.commands.logoutCommand">
  		<enabledWhen>
- 			<test property="eclipseplugin.properties.loggedIn">
+ 			<test property="org.continuousassurance.swamp.eclipse.properties.loggedIn">
  			</test>
  		</enabledWhen>
  	</handler>
   	
   	<handler
- 		class="eclipseplugin.handlers.ResubmitHandler"
- 		commandId="eclipseplugin.commands.pulldownCommand">
+ 		class="org.continuousassurance.swamp.eclipse.handlers.ResubmitHandler"
+ 		commandId="org.continuousassurance.swamp.eclipse.commands.pulldownCommand">
  	</handler>
  	
  	<handler
- 		class="eclipseplugin.handlers.RightClickHandler"
- 		commandId="eclipseplugin.commands.rightClickCommand">
+ 		class="org.continuousassurance.swamp.eclipse.handlers.RightClickHandler"
+ 		commandId="org.continuousassurance.swamp.eclipse.commands.rightClickCommand">
   	</handler>
   	
   	<handler
-  		class="eclipseplugin.handlers.CheckResultsHandler"
-  		commandId="eclipseplugin.commands.checkResultsCommand">
+  		class="org.continuousassurance.swamp.eclipse.handlers.CheckResultsHandler"
+  		commandId="org.continuousassurance.swamp.eclipse.commands.checkResultsCommand">
   	</handler>
   	
   	<handler
-  		class="eclipseplugin.handlers.AboutSwampHandler"
-  		commandId="eclipseplugin.commands.aboutSwampCommand">
+  		class="org.continuousassurance.swamp.eclipse.handlers.AboutSwampHandler"
+  		commandId="org.continuousassurance.swamp.eclipse.commands.aboutSwampCommand">
   	</handler>
  </extension>
   
@@ -156,44 +156,44 @@
  	<!-- SWAMP Button and dropdown -->
  	<menuContribution locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
  		<toolbar
-  			id="eclipseplugin.toolbars.swampToolbar">
+  			id="org.continuousassurance.swamp.eclipse.toolbars.swampToolbar">
   			<command
-  				commandId="eclipseplugin.commands.pulldownCommand"
+  				commandId="org.continuousassurance.swamp.eclipse.commands.pulldownCommand"
   				label="SWAMP Button"
   				tooltip="Resubmit Previous Assessment"
   				style="pulldown"
-  				id="eclipseplugin.commands.swampButton">
+  				id="org.continuousassurance.swamp.eclipse.commands.swampButton">
   			</command>
   		</toolbar>
   	</menuContribution>
   	
-  	<menuContribution locationURI="menu:eclipseplugin.commands.swampButton">
+  	<menuContribution locationURI="menu:org.continuousassurance.swamp.eclipse.commands.swampButton">
   		<command
-  			commandId="eclipseplugin.commands.resubmitCommand"
+  			commandId="org.continuousassurance.swamp.eclipse.commands.resubmitCommand"
   			label="Resubmit Previous Assessment"
   			mnemonic="R"
   			style="push">
   		</command>
   		<command
-  			commandId="eclipseplugin.commands.configureCommand"
+  			commandId="org.continuousassurance.swamp.eclipse.commands.configureCommand"
   			label="Configure Assessment Submission"
   			mnemonic="C"
   			style="push">
   		</command>
   		<command
-			commandId="eclipseplugin.commands.checkResultsCommand"
+			commandId="org.continuousassurance.swamp.eclipse.commands.checkResultsCommand"
 			label="Check for Results"
 			mnemonic="R"
 			style="push">
 		</command>
 		<command
-			commandId="eclipseplugin.commands.loginCommand"
+			commandId="org.continuousassurance.swamp.eclipse.commands.loginCommand"
 			label="Log In"
 			mnemonic="I"
 			style="push">
 		</command>
 		<command
-			commandId="eclipseplugin.commands.logoutCommand"
+			commandId="org.continuousassurance.swamp.eclipse.commands.logoutCommand"
 			label="Log Out"
 			mnemonic="O"
 			style="push">
@@ -204,17 +204,17 @@
 	<menuContribution
        locationURI="menu:org.eclipse.ui.main.menu?after=additions">
     <menu
-          id="eclipseplugin.menus.swampMenu"
+          id="org.continuousassurance.swamp.eclipse.menus.swampMenu"
           label="SWAMP"
           mnemonic="W">
       	<command
-  			commandId="eclipseplugin.commands.resubmitCommand"
+  			commandId="org.continuousassurance.swamp.eclipse.commands.resubmitCommand"
   			label="Resubmit Previous Assessment"
   			mnemonic="R"
   			style="push">
   		</command>
   		<command
-  			commandId="eclipseplugin.commands.configureCommand"
+  			commandId="org.continuousassurance.swamp.eclipse.commands.configureCommand"
   			label="Configure Assessment Submission"
   			mnemonic="C"
   			style="push">
@@ -224,20 +224,20 @@
   			visible="true">
   		</separator>	
 		<command
-			commandId="eclipseplugin.commands.loginCommand"
+			commandId="org.continuousassurance.swamp.eclipse.commands.loginCommand"
 			label="Log In"
 			mnemonic="I"
 			style="push">
 		</command>
 		<command
-			commandId="eclipseplugin.commands.logoutCommand"
+			commandId="org.continuousassurance.swamp.eclipse.commands.logoutCommand"
 			label="Log Out"
 			mnemonic="O"
 			style="push">
 		</command> 
 		
 		<command
-			commandId="eclipseplugin.commands.checkResultsCommand"
+			commandId="org.continuousassurance.swamp.eclipse.commands.checkResultsCommand"
 			label="Check for Results"
 			mnemonic="R"
 			style="push">
@@ -248,7 +248,7 @@
 			visible="true">
 		</separator>	
 		<command
-			commandId="eclipseplugin.commands.aboutSwampCommand"
+			commandId="org.continuousassurance.swamp.eclipse.commands.aboutSwampCommand"
 			label="About SWAMP"
 			style="push">
 		</command>
@@ -260,8 +260,8 @@
  	<menuContribution
   		locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
   		<command
-  			commandId="eclipseplugin.commands.rightClickCommand"
-  			id="eclipseplugin.menus.PackageExplorer.rightClickCommand"
+  			commandId="org.continuousassurance.swamp.eclipse.commands.rightClickCommand"
+  			id="org.continuousassurance.swamp.eclipse.menus.PackageExplorer.rightClickCommand"
   			label="Assess Project on SWAMP"
   			mnemonic="A">
   			<visibleWhen
@@ -282,8 +282,8 @@
   	<menuContribution
   		locationURI="popup:org.eclipse.ui.navigator.ProjectExplorer#PopupMenu">
   		<command
-  			commandId="eclipseplugin.commands.rightClickCommand"
-  			id="eclipseplugin.menus.ProjectExplorer.rightClickCommand"
+  			commandId="org.continuousassurance.swamp.eclipse.commands.rightClickCommand"
+  			id="org.continuousassurance.swamp.eclipse.menus.ProjectExplorer.rightClickCommand"
   			label="Assess Project on SWAMP"
   			mnemonic="A">
   		<!--
@@ -306,9 +306,9 @@
  <!-- Property tester for login/logout -->
  <extension point="org.eclipse.core.expressions.propertyTesters">
  	<propertyTester
- 		class="eclipseplugin.handlers.LoginPropertyTester"
- 		id="eclipseplugin.loginPropertyTester"
- 		namespace="eclipseplugin.properties"
+ 		class="org.continuousassurance.swamp.eclipse.handlers.LoginPropertyTester"
+ 		id="org.continuousassurance.swamp.eclipse.loginPropertyTester"
+ 		namespace="org.continuousassurance.swamp.eclipse.properties"
  		properties="loggedIn"
  		type="java.lang.Object">
  	</propertyTester>
@@ -317,7 +317,7 @@
  
  <!-- Class to trigger plug-in activation -->
  <extension point="org.eclipse.ui.startup">
- 	<startup class="eclipseplugin.ActivationTriggerDummy">
+ 	<startup class="org.continuousassurance.swamp.eclipse.ActivationTriggerDummy">
  	</startup>
  </extension>
  

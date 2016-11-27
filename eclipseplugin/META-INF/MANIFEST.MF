@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Eclipseplugin
 Bundle-SymbolicName: eclipseplugin;singleton:=true
 Bundle-Version: 1.0.0.qualifier
-Bundle-Activator: eclipseplugin.Activator
+Bundle-Activator: org.continuousassurance.swamp.eclipse.Activator
 Bundle-Vendor: swamp.cs.wisc.edu
 Require-Bundle: org.eclipse.ui,
  org.eclipse.core.runtime,
@@ -44,31 +44,7 @@ Bundle-ClassPath: .,
 Import-Package: org.eclipse.jdt.core,
  org.eclipse.jdt.internal.core,
  org.eclipse.ui.console
-Export-Package: eclipseplugin;
-  uses:="org.eclipse.jdt.core,
-   org.eclipse.ui.plugin,
-   org.eclipse.core.runtime.jobs,
-   org.osgi.framework,
-   org.eclipse.ui,
-   org.eclipse.core.runtime,
-   org.eclipse.jface.resource,
-   edu.wisc.cs.swamp,
-   org.eclipse.core.resources",
- eclipseplugin.dialogs;
-  uses:="org.eclipse.ui.console,
-   org.eclipse.swt.layout,
-   edu.wisc.cs.swamp,
-   org.eclipse.swt.widgets,
-   org.eclipse.jface.dialogs,
-   eclipseplugin",
- eclipseplugin.exceptions,
- eclipseplugin.handlers;
-  uses:="org.eclipse.ui,
-   org.eclipse.core.expressions,
-   org.eclipse.core.resources,
-   eclipseplugin,
-   org.eclipse.core.commands",
- edu.uiuc.ncsa.security.core;uses:="javax.inject",
+Export-Package: edu.uiuc.ncsa.security.core;uses:="javax.inject",
  edu.uiuc.ncsa.security.core.cache;uses:="edu.uiuc.ncsa.security.core.util,edu.uiuc.ncsa.security.core",
  edu.uiuc.ncsa.security.core.configuration;uses:="org.apache.commons.configuration.tree,org.apache.commons.configuration",
  edu.uiuc.ncsa.security.core.configuration.provider;
@@ -564,4 +540,28 @@ Export-Package: eclipseplugin;
    org.xml.sax,
    org.apache.log4j,
    javax.xml.parsers,
-   org.apache.log4j.spi"
+   org.apache.log4j.spi",
+ org.continuousassurance.swamp.eclipse;
+  uses:="org.eclipse.jdt.core,
+   org.eclipse.ui.plugin,
+   org.eclipse.core.runtime.jobs,
+   org.osgi.framework,
+   org.eclipse.ui,
+   org.eclipse.core.runtime,
+   org.eclipse.jface.resource,
+   edu.wisc.cs.swamp,
+   org.eclipse.core.resources",
+ org.continuousassurance.swamp.eclipse.dialogs;
+  uses:="org.eclipse.ui.console,
+   org.eclipse.swt.layout,
+   edu.wisc.cs.swamp,
+   org.eclipse.swt.widgets,
+   org.eclipse.jface.dialogs,
+   eclipseplugin",
+ org.continuousassurance.swamp.eclipse.exceptions,
+ org.continuousassurance.swamp.eclipse.handlers;
+  uses:="org.eclipse.ui,
+   org.eclipse.core.expressions,
+   org.eclipse.core.resources,
+   eclipseplugin,
+   org.eclipse.core.commands"
