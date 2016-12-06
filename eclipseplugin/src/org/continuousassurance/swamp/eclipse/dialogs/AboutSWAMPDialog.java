@@ -1,3 +1,15 @@
+/*
+ * Copyright 2016 Malcolm Reid Jr.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.continuousassurance.swamp.eclipse.dialogs;
 
 import java.net.URL;
@@ -15,6 +27,11 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 import org.osgi.framework.Bundle;
 
+/**
+ * Implements About SWAMP
+ * @author reid-jr
+ *
+ */
 public class AboutSWAMPDialog extends TitleAreaDialog {
 	
 	private static String ABOUT_SWAMP_TITLE = "About SWAMP";
@@ -57,15 +74,26 @@ public class AboutSWAMPDialog extends TitleAreaDialog {
 		return area;
 	}
 	
+	/**
+	 * @return release date
+	 */
 	private String getFormattedReleaseDate() {
-		return "10/04/2016";
+		return "12/04/2016";
 	}
 	
+	/**
+	 * @return release version
+	 */
 	private String getReleaseVersion() {
 		//return org.eclipse.core.runtime.Platform.getBundle("swamp_eclipse_plugin").getHeaders().get("Bundle-Version");
 		return "0.8.0";
 	}
 	
+	/**
+	 * Listener for link in dialog
+	 * @author reid-jr
+	 *
+	 */
 	public class LinkSelectionAdapter extends SelectionAdapter {
 		@Override
 		public void widgetSelected(SelectionEvent e) {

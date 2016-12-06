@@ -143,6 +143,13 @@ public class Utils {
 		return ary;
 	}
 	
+	/**
+	 * Zips files and writes them
+	 * @param files set of paths of files to zip
+	 * @param zipFilePath path of directory where the newly created .zip will be written
+	 * @param zipFileName name of the .zip file
+	 * @return path of the .zip file
+	 */
 	public static java.nio.file.Path zipFiles(Set<String> files, String zipFilePath, String zipFileName) {
 		String finalPath = zipFilePath + SEPARATOR + zipFileName;
 		FileOutputStream fileOS = null;
@@ -220,11 +227,21 @@ public class Utils {
 		}
 	}
 	
+	/**
+	 * Utility method for getting the directory of a project
+	 * @param p project
+	 * @return directory of the project
+	 */
 	public static String getProjectDirectory(IProject p) {
 		IPath path = p.getLocation();
 		return path.lastSegment();
 	}
 	
+	/**
+	 * Utility method for generating a comparator that orders rows by integer value
+	 * @param col the number of the column
+	 * @return a comparator that orders rows of a table (i.e. TableItems) by the integer value found in the specified column
+	 */
 	public static Comparator<TableItem> INT_CMP(int col) {
 		Comparator<TableItem> cmp = new Comparator<TableItem>() {
 			@Override
@@ -237,6 +254,11 @@ public class Utils {
 		return cmp;
 	}
 	
+	/**
+	 * Utility method for generating a comparator that orders rows by string value
+	 * @param col the number of the column
+	 * @return a comparator that orders rows of a table (i.e. TableItems) by the string value found in the specified column
+	 */
 	public static Comparator<TableItem> STR_CMP(int col) {
 		Comparator<TableItem> cmp = new Comparator<TableItem>() {
 			@Override

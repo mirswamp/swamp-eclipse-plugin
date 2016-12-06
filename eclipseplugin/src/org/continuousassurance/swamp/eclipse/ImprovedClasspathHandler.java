@@ -1,3 +1,16 @@
+/*
+ * Copyright 2016 Malcolm Reid Jr.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.continuousassurance.swamp.eclipse;
 
 import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
@@ -35,10 +48,20 @@ import org.eclipse.jdt.core.JavaModelException;
 import static org.eclipse.core.runtime.Path.SEPARATOR;
 
 public class ImprovedClasspathHandler {
+	/**
+	 * Eclipse project option for getting source compiler version 
+	 */
 	private static final String SOURCE_VERSION_OPTION = "org.eclipse.jdt.core.compiler.source";
+	/**
+	 * Eclipse project option for getting target compiler version
+	 */
 	private static final String TARGET_VERSION_OPTION = "org.eclipse.jdt.core.compiler.codegen.targetPlatform";
+	/**
+	 * The name used for storing SWAMP dependencies
+	 */
 	public static final String SWAMPBIN_DIR = "swampbin";
 	private static final char DASH = '-';
+
 	private IPath SWAMPBIN_PATH = null;
 	
 	// TODO Consider making these sets of entries instead of Lists
@@ -57,6 +80,13 @@ public class ImprovedClasspathHandler {
 	private String targetVersion;
 	private SubMonitor subMonitor;
 	
+	/**
+	 * Constructor for ImprovedClasspathHandler
+	 * @param project the Java project that we will generate a build file for
+	 * @param root the ImprovedClasspathHandler object for the project (this is the root of the recursive tree that we build from projects having dependencies)
+	 * @param exclSysLibs if true, Java system libraries get copied into the package at submission
+	 * @param subMonitor submonitor for tracking progress
+	 */
 	public  ImprovedClasspathHandler(IJavaProject project, ImprovedClasspathHandler root, boolean exclSysLibs, SubMonitor subMonitor) {
 		this.excludeSysLibs = exclSysLibs;
 		sources = new ArrayList<IClasspathEntry>();
@@ -134,6 +164,11 @@ public class ImprovedClasspathHandler {
 		}
 	}
 	
+	/**
+	 * Creates a swampbin directory for holding dependencies that need to be copied
+	 * @param project the Java project that we will generate a build file for
+	 * @return path of the swampbin directory
+	 */
 	private IPath setupBinDir(IProject project) {
 		// make SWAMPBIN directory
 		String path = project.getWorkingLocation(PLUGIN_ID).toOSString() + SEPARATOR + SWAMPBIN_DIR;
@@ -151,6 +186,11 @@ public class ImprovedClasspathHandler {
 		return new org.eclipse.core.runtime.Path(path);
 	}
 	
+	/**
+	 * Handles a source entry in the classpath
+	 * @param entry the classpath entry
+	 * @param root the workspace root (necessary for getting the file specified by this entry)
+	 */
 	private void handleSource(IClasspathEntry entry, IWorkspaceRoot root) {
 		// Each entry either has an associated Output Location or goes to the project's default output location
 		// Associated output locations are also just absolute paths (e.g. /MalcolmsProject/bin) just like sources
@@ -165,6 +205,12 @@ public class ImprovedClasspathHandler {
 		filesToArchive.add(projectPath.toOSString());
 	}
 	
+	/**
+	 * Handles a library entry in the classpath
+	 * @param entry the classpath entry
+	 * @param root the workspace root
+	 * @throws IOException
+	 */
 	private void handleLibrary(IClasspathEntry entry, IWorkspaceRoot root) throws IOException {
 		// 3 types of library entries: internal (this project), internal (another project), and external
 		// (1) Rooted absolute path
@@ -219,6 +265,12 @@ public class ImprovedClasspathHandler {
 		}	
 	}
 	
+	
+	/**
+	 * Handles a project entry in the classpath. If not already processed, recursively create a new ImprovedClasspathHandler object for the dependent project
+	 * @param entry the project entry
+	 * @param root the workspace root
+	 */
 	private void handleProject(IClasspathEntry entry, IWorkspaceRoot root) {
 		String path = entry.getPath().toOSString();
 		ImprovedClasspathHandler ich;
@@ -240,6 +292,12 @@ public class ImprovedClasspathHandler {
 		}
 	}
 	
+	/**
+	 * Handles a variable entry in the classpath. A variable entry can be resolved to either a library entry or a project entry
+	 * @param entry the variable entry
+	 * @param root the workspace entry
+	 * @throws IOException
+	 */
 	private void handleVariable(IClasspathEntry entry, IWorkspaceRoot root) throws IOException {
 		IClasspathEntry resolvedEntry = JavaCore.getResolvedClasspathEntry(entry);
 		if (resolvedEntry.getEntryKind() == IClasspathEntry.CPE_LIBRARY) {
@@ -250,6 +308,13 @@ public class ImprovedClasspathHandler {
 		}
 	}
 	
+	/**
+	 * Handles a container entry in the classpath. A container entry contains 1+ entries each of which is either a library entry or a project entry
+	 * @param entry the container entry
+	 * @param root the workspace root
+	 * @throws IOException
+	 * @throws JavaModelException
+	 */
 	public void handleContainer(IClasspathEntry entry, IWorkspaceRoot root) throws IOException, JavaModelException {
 		IClasspathContainer container = JavaCore.getClasspathContainer(entry.getPath(), project);
 		System.out.println("Here's a container" + container);
@@ -269,6 +334,10 @@ public class ImprovedClasspathHandler {
 		}
 	}
 	
+	/**
+	 * Deletes swampbin directory
+	 * @throws IOException
+	 */
 	public void deleteSwampBin() throws IOException {
 		File f = SWAMPBIN_PATH.toFile();
 		if (f.exists()) {
@@ -279,12 +348,26 @@ public class ImprovedClasspathHandler {
 	// TODO THIS NEEDS SERIOUS, INDUSTRIAL-STRENGTH TESTING - 
 	// The assumption that it's making is that a project in our workspace is always a top-level directory in the root
 	// (i.e. that entryPath.removeFirstSegments(1) is a valid project name
+	/**
+	 * Utility method for getting project library location
+	 * @param project the project
+	 * @param entryPath the path of the entry
+	 * @return project library location
+	 */
 	private static String getProjectLibraryLocation(IProject project, IPath entryPath) {
 		String projectDir = project.getLocation().toOSString();
 		String srcFile = projectDir + SEPARATOR + entryPath.removeFirstSegments(1);
 		return srcFile;
 	}
 	
+	/**
+	 * Given a workspace-relative path (see Eclipse documentation) for a dependency, copies it into the specified directory 
+	 * @param file the file to be copied
+	 * @param filename name of the file
+	 * @param swampBinPath path of swampbin directory
+	 * @return path of the newly created copy
+	 * @throws CoreException
+	 */
 	private static IPath copyWorkspacePathIntoBinDir(IFile file, String filename, IPath swampBinPath) throws CoreException {
 		String filePath = swampBinPath.toOSString() + SEPARATOR + filename;
 		IPath destPath = new org.eclipse.core.runtime.Path(filePath);
@@ -293,7 +376,14 @@ public class ImprovedClasspathHandler {
 		return new org.eclipse.core.runtime.Path(SEPARATOR + SWAMPBIN_DIR + SEPARATOR + filename);
 	}
 	
-	
+	/**
+	 * Given an absolute path for a dependency, copies it into the specified directory
+	 * @param srcStr path of the file
+	 * @param filename name of the file
+	 * @param swampBinPath path of the swampbin directory
+	 * @return path of the newly created copy
+	 * @throws IOException
+	 */
 	private static IPath copyAbsolutePathIntoBinDir(String srcStr, String filename, IPath swampBinPath) throws IOException {
 		String destStr = swampBinPath.toOSString() + SEPARATOR + filename;
 		Path destPath = new File(destStr).toPath();
@@ -310,6 +400,11 @@ public class ImprovedClasspathHandler {
 		return new org.eclipse.core.runtime.Path(SEPARATOR + SWAMPBIN_DIR + SEPARATOR + filename);
 	}
 	
+	/**
+	 * Gets the new name for a file (replacing separator and device separator characters)
+	 * @param path the path of the file
+	 * @return sanitized path
+	 */
 	private static String getLibraryFileName(IPath path) {
 		String strPath = path.toOSString();
 		if (strPath.charAt(0) == IPath.SEPARATOR) {
@@ -320,6 +415,10 @@ public class ImprovedClasspathHandler {
 		return strPath;
 	}
 
+	/**
+	 * Accessor for set of filepaths for files that need to be in the archive uploaded for the package
+	 * @return set of filepaths
+	 */
 	public Set<String> getFilesToArchive() {
 		System.out.println("FILES TO ARCHIVE");
 		for (String s : filesToArchive) {
@@ -328,34 +427,66 @@ public class ImprovedClasspathHandler {
 		return filesToArchive;
 	}
 	
+	/**
+	 * Accessor for this ImprovedClasspathHandler object's project's name
+	 * @return project name
+	 */
 	public String getProjectName() {
 		return project.getProject().getName();
 	}
 	
+	/**
+	 * Accessor for source code version of this ImprovedClasspathHandler object's project
+	 * @return version of source code (e.g. 1.7)
+	 */
 	public String getSourceVersion() {
 		return srcVersion;
 	}
 	
+	/**
+	 * Accessor for target version of this ImprovedClasspathHandler object's project
+	 * @return version of target
+	 */
 	public String getTargetVersion() {
 		return targetVersion;
 	}
 	
+	/**
+	 * Accessor for library classpath entries 
+	 * @return list of library classpath entries
+	 */
 	public List<IClasspathEntry> getLibraryClasspath() {
 		return libs;
 	}
 	
+	/**
+	 * Accessor for system library classpath entries
+	 * @return list of system library classpath entries
+	 */
 	public List<IClasspathEntry> getSystemLibraryClasspath() {
 		return systemLibs;
 	}
 	
+	/**
+	 * Accessor for source classpath entries
+	 * @return list of source classpath entries
+	 */
 	public List<IClasspathEntry> getSourceClasspath() {
 		return sources;
 	}
 	
+	/**
+	 * Accessor for exported classpath entries
+	 * @return list of exported classpath entries
+	 */
 	public List<IClasspathEntry> getExportedEntries() {
 		return exportedEntries;
 	}
 	
+	/**
+	 * Get default output location for the project (used if the source entry doesn't have a specified output location)
+	 * @return project's default output location
+	 */
 	public IPath getDefaultOutputLocation() {
 		try {
 			return project.getOutputLocation();
@@ -366,21 +497,28 @@ public class ImprovedClasspathHandler {
 		return null;
 	}
 	
+	/**
+	 * Get project plugin location (this is a directory in which we can store project-specific files for this plug-in)
+	 * @return project plugin location
+	 */
 	public String getProjectPluginLocation() {
 		return root.project.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
 	}
 	
+	/**
+	 * Accessor for dependent projects
+	 * @return list of ImprovedClasspathHandlers for dependent projects
+	 */
 	public List<ImprovedClasspathHandler> getDependentProjects() {
 		return dependentProjects;
 	}
 	
-	public boolean isRoot() {
-		return true;
-	}
-	
+	/**
+	 * Gets referenced projects for a given Java project
+	 * @param jp the Java project
+	 * @param projectSet the set of referenced projects
+	 */
 	public static void getReferencedProjects(IJavaProject jp, Set<IProject> projectSet) {
-		System.out.println("Java project: " + jp);
-		System.out.println("Project set: " + projectSet);
 		projectSet.add(jp.getProject());
 		try {
 			IProject[] prjArray = jp.getProject().getReferencedProjects();

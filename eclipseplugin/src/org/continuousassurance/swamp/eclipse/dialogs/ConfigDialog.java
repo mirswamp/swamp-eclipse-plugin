@@ -125,6 +125,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		configScriptPath = "";
 	}
 	
+	/**
+	 * Resets widgets
+	 */
 	private void resetWidgets() {
 		buildPathText.setText("");
 		buildPathText.setEditable(false);
@@ -148,6 +151,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		setDefaults();	
 	}
 	
+	/**
+	 * Sets defaults
+	 */
 	private void setDefaults() {
 		setSwampProjectDefault();
 		setEclipseProjectDefault();
@@ -156,6 +162,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		setPackageTypeDefault();
 	}
 
+	/**
+	 * Sets default Eclipse project
+	 */
 	private void setEclipseProjectDefault() {
 		if (eclipsePrjCombo.getItemCount() == 1) {
 			eclipsePrjCombo.select(0);
@@ -163,6 +172,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Sets default SWAMP project
+	 */
 	private void setSwampProjectDefault() {
 		if (swampPrjCombo.getItemCount() == 1) {
 			swampPrjCombo.select(0);
@@ -170,6 +182,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Sets default SWAMP package
+	 */
 	private void setPackageDefault() {
 		if (prjUUID == null) {
 			return;
@@ -180,6 +195,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Sets default build system
+	 */
 	private void setBuildSysDefault() {
 		if (buildSysCombo.getItemCount() == 1) {
 			buildSysCombo.select(0);
@@ -187,12 +205,20 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Sets default package type
+	 */
 	private void setPackageTypeDefault() {
 		if (pkgTypeCombo.getItemCount() == 1) {
 			pkgTypeCombo.select(0);
 		}
 	}
 	
+	/**
+	 * Gets list of elements 
+	 * @param type member of Type enum
+	 * @return list of elements
+	 */
 	private String[] getSelectionElements(Type type) {
 		if (type == Type.ECLIPSE_PROJECT) { // Eclipse project
 			return getEclipseProjectList();
@@ -204,6 +230,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		return getSwampPackageList();
 	}
 	
+	/**
+	 * @return list of Eclipse projects
+	 */
 	private String[] getEclipseProjectList() {
 		if (eclipseProjects == null) {
 			eclipseProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
@@ -224,6 +253,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		return array;
 	}
 	
+	/**
+	 * @return list of SWAMP projects
+	 */
 	private String[] getSwampProjectList() {
 		swampProjects = api.getProjectsList();
 		int size = swampProjects.size();
@@ -234,6 +266,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		return array;
 	}
 	
+	/**
+	 * @return list of SWAMP packages
+	 */
 	private String[] getSwampPackageList() {
 		if (prjUUID == null) {
 			String[] array = {""};
@@ -341,6 +376,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		return area;
 	}
 
+	/**
+	 * Sets various SWAMP package type-related widgets and state for the ConfigDialog
+	 */
 	private void setupPackageType() {
 		// get the appropriate pkgType String, not the index
 		String pkgType = submissionInfo.getPackageType();
@@ -352,6 +390,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Method attempts to predict that Java build system based on project nature's and common build file names
+	 * @param project Eclipse Java project
+	 */
 	private void setPredictedJavaBuildSys(IProject project) {
 		String GRADLE_NATURE = "org.eclipse.buildship.core.gradleprojectnature";
 		String MAVEN_NATURE = "org.eclipse.m2e.core.maven2Nature";
@@ -417,6 +459,11 @@ public class ConfigDialog extends TitleAreaDialog {
 		setBuildSystem(AUTO_GENERATE_BUILD_STRING);
 	}
 	
+	/**
+	 * Sets path of the build file
+	 * @param dirPath directory path
+	 * @param filename filename
+	 */
 	private void setBuildPath(String dirPath, String filename) {
 		File file = new File(dirPath);
 		for (String f : file.list()) {
@@ -427,7 +474,11 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		buildPathText.setText("");
 	}
-	
+
+	/**
+	 * Sets build system
+	 * @param buildSys
+	 */
 	private void setBuildSystem(String buildSys) {
 		for (int i = 0; i < buildSysCombo.getItemCount(); i++) {
 			if (buildSysCombo.getItem(i).equals(buildSys)) {
@@ -436,7 +487,10 @@ public class ConfigDialog extends TitleAreaDialog {
 			}
 		}
 	}
-	
+
+	/**
+	 * Sets various Eclipse project-related widgets and state for the ConfigDialog
+	 */
 	private void setupEclipseProject() {
 		IProject project = submissionInfo.getProject();
 		for (int i = 0; i < eclipseProjects.length; i++) {
@@ -449,6 +503,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		handleEclipseProjectSelection(-1);
 	}
 	
+	/**
+	 * Handles Eclipse project being selected
+	 * @param index index of the selected Eclipse project
+	 */
 	private void handleEclipseProjectSelection(int index) {
 		if (index < 0) {
 			prjFilePathText.setText("");
@@ -503,34 +561,48 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Sets build system options based on language
+	 * @param lang "All", "Java", or "C/C++"
+	 */
 	private void setBuildSysOptions(String lang) {
 		String[] buildOptions;
 		if (lang.equals("All")) {
-			String[] javaBuildOptions = submissionInfo.getBuildSystemList("Java");
-			String[] cBuildOptions = submissionInfo.getBuildSystemList("C/C++");
+			String[] javaBuildOptions = SubmissionInfo.getBuildSystemList("Java");
+			String[] cBuildOptions = SubmissionInfo.getBuildSystemList("C/C++");
 			buildOptions = union(javaBuildOptions, cBuildOptions);
 			Arrays.sort(buildOptions);
 		}
 		else {
-			buildOptions = submissionInfo.getBuildSystemList(lang);
+			buildOptions = SubmissionInfo.getBuildSystemList(lang);
 		}
 		buildSysCombo.setItems(buildOptions);
 	}
 	
+	/**
+	 * Sets package type options based on language
+	 * @param lang "All", "Java", or "C/C++"
+	 */
 	private void setPkgTypeOptions(String lang) {
 		String[] pkgTypes;
 		if (lang.equals("All")) {
-			String[] javaPkgTypes = submissionInfo.getPackageTypeList("Java");
-			String[] cPkgTypes = submissionInfo.getPackageTypeList("C/C++");
+			String[] javaPkgTypes = SubmissionInfo.getPackageTypeList("Java");
+			String[] cPkgTypes = SubmissionInfo.getPackageTypeList("C/C++");
 			pkgTypes = union(javaPkgTypes, cPkgTypes);
 			Arrays.sort(pkgTypes);
 		}
 		else {
-			pkgTypes = submissionInfo.getPackageTypeList(lang);
+			pkgTypes = SubmissionInfo.getPackageTypeList(lang);
 		}
 		pkgTypeCombo.setItems(pkgTypes);
 	}
 	
+	/**
+	 * Static method that returns the union of two arrays
+	 * @param a one array
+	 * @param b other array
+	 * @return union of the arrays (unsorted)
+	 */
 	private static String[] union(String[] a, String[] b) {
 		Set<String> set = new HashSet<>();
 		for (String s : a) {
@@ -541,7 +613,12 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		return set.toArray(new String[0]);
 	}
-	
+
+	/**
+	 * Gets language for Eclipse project
+	 * @param project Eclipse project
+	 * @return "C/C++" or "Java"
+	 */
 	private String getProjectLanguage(IProject project) {
 		if (CoreModel.hasCCNature(project) || CoreModel.hasCNature(project)) {
 			return "C/C++";
@@ -556,6 +633,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		return "";
 	}
 	
+	/**
+	 * Sets package type
+	 * @param versionString language version string
+	 */
 	private void setPackageType(String versionString) {
 		// TODO If auto-generated build is chosen, we should enable package RT checkbox
 		for (int i = 0; i < pkgTypeCombo.getItemCount(); i++) {
@@ -566,6 +647,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Sets various SWAMP project-related widgets and state for the ConfigDialog
+	 */
 	private void setupSwampProject() {
 		prjUUID = submissionInfo.getSelectedProjectID();
 		for (int i = 0; i < swampProjects.size(); i++) {
@@ -579,6 +663,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		handleSwampProjectSelection(-1);
 	}
 	
+	/**
+	 * Handles SWAMP project being selected
+	 * @param index index of SWAMP project selected
+	 */
 	private void handleSwampProjectSelection(int index) {
 		if (index < 0) {
 			prjUUID = null;
@@ -597,6 +685,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Sets various SWAMP package-related widgets and state for the ConfigDialog
+	 */
 	private void setupSwampPackage() {
 		// get the appropriate UUID from submissionInfo
 		// disable the text box
@@ -619,6 +710,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Handles SWAMP package being selected
+	 * @param index index of package selected
+	 */
 	private void handlePackageSelection(int index) {
 		pkgNameText.setText("");
 		if (index == CREATE_NEW_PACKAGE) {
@@ -629,6 +724,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Sets various build-related widgets and state for the ConfigDialog
+	 */
 	private void setupBuild() {
 		// get the build system, not an index
 		// set it
@@ -657,6 +755,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		// if auto or no-build, keep the build text boxes disabled
 	}
 	
+	/**
+	 * Handles build system being selected 
+	 * @param index index of build system selected
+	 */
 	private void handleBuildSelection(int index) {
 		String buildSys =  buildSysCombo.getItem(index);
 		if (buildSys.equals(AUTO_GENERATE_BUILD_STRING) || buildSys.equals(NO_BUILD_STRING) || buildSys.equals(ECLIPSE_GENERATED_STRING)) {
@@ -678,26 +780,48 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * @return build options
+	 */
 	String getBuildOpts() {
 		return buildOpts;
 	}
 	
+	/**
+	 * @return config script path
+	 */
 	String getConfigScriptPath() {
 		return configScriptPath;
 	}
 	
+	/**
+	 * Gets config options
+	 * @return config options
+	 */
 	String getConfigOpts() {
 		return configOpts;
 	}
 	
+	/**
+	 * Sets build options
+	 * @param opts options
+	 */
 	void setBuildOpts(String opts) {
 		buildOpts = opts;
 	}
 	
+	/**
+	 * Sets config script path
+	 * @param path
+	 */
 	void setConfigScriptPath(String path) {
 		configScriptPath = path;
 	}
 	
+	/**
+	 * Sets config options for the dialog
+	 * @param opts config options
+	 */
 	void setConfigOpts(String opts) {
 		configOpts = opts;
 	}
@@ -716,6 +840,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		createButton(parent, IDialogConstants.CANCEL_ID, DialogUtil.CANCEL_CAPTION, false);
 	}
 	
+	/**
+	 * @return true if dialog has been filled in properly and adequately
+	 */
 	private boolean isValid() {
 		int swampPrjIndex = swampPrjCombo.getSelectionIndex();
 		if (swampPrjIndex < 0) {
@@ -885,6 +1012,13 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Gets relative directory
+	 * @param projectDir project directory
+	 * @param path path
+	 * @param isFilePath true if path is for a file rather than a directory
+	 * @return
+	 */
 	private String getRelDir(String projectDir, String path, boolean isFilePath) {
 		int prjIndex = projectDir.lastIndexOf(SEPARATOR);
 		int fileIndex = isFilePath ? path.lastIndexOf(SEPARATOR) : path.length();
@@ -895,6 +1029,12 @@ public class ConfigDialog extends TitleAreaDialog {
 		return relDir;
 	}
 	
+	/**
+	 * Listener for combo widgets. When a selection is made in a combo widget
+	 * it may affect one or more widgets elsewhere in the project
+	 * @author reid-jr
+	 *
+	 */
 	private class ComboSelectionListener implements SelectionListener {
 		Combo combo;
 		Type type;
@@ -926,6 +1066,11 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Listener for advanced settings button. Clicking button launches new dialog
+	 * @author reid-jr
+	 *
+	 */
 	private class AdvancedButtonSelectionListener implements SelectionListener {
 		private ConfigDialog cd;
 		public AdvancedButtonSelectionListener(ConfigDialog cd) {
@@ -944,6 +1089,11 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Listener for clear button. Clicking "Clear" button clears fields in dialog	
+	 * @author reid-jr
+	 *
+	 */
 	private class ClearButtonSelectionListener implements SelectionListener {
 		
 		public ClearButtonSelectionListener() {
@@ -959,6 +1109,11 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Listener for button to open file selection dialog
+	 * @author reid-jr
+	 *
+	 */
 	private class FileSelectionListener implements SelectionListener {
 		public FileSelectionListener() {
 		}
@@ -972,10 +1127,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			}
 			dialog.setFilterPath(path);
 			String rc = dialog.open();
-			//fullPath = rc;
 			if (rc != null) {
-				//String lastSegment = rc.substring(rc.lastIndexOf(SEPARATOR)+1);
-				//buildPathText.setText(lastSegment);
 				buildPathText.setText(rc);
 			}
 		}

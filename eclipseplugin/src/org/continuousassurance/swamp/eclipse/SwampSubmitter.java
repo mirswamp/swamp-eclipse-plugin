@@ -66,6 +66,8 @@ import edu.wisc.cs.swamp.exceptions.SessionRestoreException;
 
 import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
 import static org.eclipse.core.runtime.Path.SEPARATOR;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 
 public class SwampSubmitter {
 
@@ -169,6 +171,30 @@ public class SwampSubmitter {
 				
 				subMonitor.split(UPLOAD_TICKS);
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
+				File f = new File(pluginLoc + SEPARATOR + "swamp-package.txt");
+				if (f.exists()) {
+					f.delete();
+				}
+				try {
+					f.createNewFile();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+				FileWriter filewriter = null;
+				BufferedWriter writer = null;
+				
+				try {
+					filewriter = new FileWriter(f);
+					writer = new BufferedWriter(filewriter);
+					writer.write(prjUUID);
+					writer.close();
+				}
+				catch (Exception e) {
+					System.err.println("Unable to write Eclipse project to SWAMP package mapping to file");
+					e.printStackTrace();
+				}
 				
 				// Delete archive
 				// Delete package.conf

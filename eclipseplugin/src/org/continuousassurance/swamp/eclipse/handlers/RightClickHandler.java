@@ -36,7 +36,7 @@ import org.eclipse.cdt.core.model.ICProject;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
 /**
- * Our sample handler extends AbstractHandler, an IHandler base class.
+ * Handler for Right Click submit
  * @see org.eclipse.core.commands.IHandler
  * @see org.eclipse.core.commands.AbstractHandler
  */
@@ -81,6 +81,10 @@ public class RightClickHandler extends AbstractHandler {
 		return null;
 	}
 	
+	/**
+	 * Write message that project is closed to console
+	 * @param window workbench window
+	 */
 	private void writeClosedProjectMessage(IWorkbenchWindow window) {
 		ConsolePlugin plugin = ConsolePlugin.getDefault();
 		IConsoleManager conMgr = plugin.getConsoleManager();
@@ -98,6 +102,11 @@ public class RightClickHandler extends AbstractHandler {
 		stream.println(Utils.getBracketedTimestamp() + "Error: Project is not open");
 	}
 	
+	/**
+	 * Submit assessment for the specified project
+	 * @param prj Eclipse project
+	 * @param window workbench window
+	 */
 	private void submitAssessment(IProject prj, IWorkbenchWindow window) {
 		SwampSubmitter ss = new SwampSubmitter(window);
 		ss.launchBackgroundAssessment(prj);

@@ -1,6 +1,17 @@
+/*
+ * Copyright 2016 Malcolm Reid Jr.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.continuousassurance.swamp.eclipse.dialogs;
 
-import org.continuousassurance.swamp.eclipse.SubmissionInfo;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -16,6 +27,11 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+/**
+ * Dialog for advanced settings including config options and build options
+ * @author reid-jr
+ *
+ */
 public class AdvancedSettingsDialog extends TitleAreaDialog {
 	private Text buildOptText;
 	private Text configOptText;
@@ -37,6 +53,9 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 		parentDialog = cd;
 	}
 	
+	/**
+	 * Resets widgets
+	 */
 	private void resetWidgets() {
 		buildOptText.setText("");
 		configOptText.setText("");
@@ -97,6 +116,11 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 		createButton(parent, IDialogConstants.CANCEL_ID, DialogUtil.CANCEL_CAPTION, false);
 	}
 	
+	/**
+	 * Listener for clear button
+	 * @author reid-jr
+	 *
+	 */
 	private class ClearButtonSelectionListener implements SelectionListener {
 		
 		public ClearButtonSelectionListener() {
@@ -112,6 +136,11 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * Listener for file selection
+	 * @author reid-jr
+	 *
+	 */
 	private class FileSelectionListener implements SelectionListener {
 		public FileSelectionListener() {
 		}

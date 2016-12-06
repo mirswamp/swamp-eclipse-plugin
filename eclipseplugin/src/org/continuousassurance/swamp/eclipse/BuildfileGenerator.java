@@ -50,8 +50,14 @@ public class BuildfileGenerator {
 	 */
 	private static String 	CLASSPATH_NAME 		= "project.classpath";
 	
+	/**
+	 * The name used for referencing the bootclasspath for a project.
+	 */	
 	private static String 	BOOTCLASSPATH_NAME	= "project.bootclasspath";
 	
+	/**
+	 * The name used for referencing the sourcepath for a project.
+	 */
 	private static String	SOURCEPATH_NAME		= "project.sourcepath";
 	
 	/**
@@ -75,20 +81,6 @@ public class BuildfileGenerator {
 	 */
 	private static int 		INDENT_SPACES 		= 4;
 
-	/**
-	 * Generates build files for the set of projects passed in, 
-	 * and saves each build file in the project's top-level directory
-	 *
-	 * @param projects a set of ClasspathHandler objects
-	 */
-	/*
-	public static void generateBuildFiles(Set<ClasspathHandler> projects) {
-		for (ClasspathHandler c : projects) {
-			generateBuildFile(c);
-		}
-	}
-	*/
-	
 	/**
 	 * Generates a build file for the passed in project and saves the
 	 * build file in the project's top-level directory 
@@ -202,7 +194,7 @@ public class BuildfileGenerator {
 	}
 	
 	/**
-	 * Adds library entries to the classpath or bootclasspath
+	 * Sets the library classpath for the build file
 	 *
 	 * @param doc the document
 	 * @param root the root element
@@ -228,6 +220,13 @@ public class BuildfileGenerator {
 		root.appendChild(path);
 	}
 	
+	/**
+	 * Adds library entries to the classpath
+	 * 
+	 * @param doc the document
+	 * @param path the path element
+	 * @param entries list of entries to be added
+	 */
 	private static void addLibraryEntries(Document doc, Element path, List<IClasspathEntry> entries) {
 		for (IClasspathEntry entry : entries) {
 			String rootedPath = entry.getPath().toOSString();
@@ -236,6 +235,13 @@ public class BuildfileGenerator {
 		}
 	}
 	
+	/**
+	 * Adds source output entries to the classpath
+	 * 
+	 * @param doc the document
+	 * @param path the path element that the entries are being added under
+	 * @param srcEntries list of source entries to be added
+	 */
 	private static void addSourceOutputEntries(Document doc, Element path, List<IClasspathEntry> srcEntries) {
 		Set<String> dirs = new HashSet<>();
 		if (srcEntries != null) {
@@ -252,6 +258,13 @@ public class BuildfileGenerator {
 		}
 	}
 	
+	/**
+	 * Sets bootclasspath for the build file
+	 * 
+	 * @param doc the document
+	 * @param root the root element of the XML document
+	 * @param entries list of classpath entries
+	 */
 	private static void setBootClasspath(Document doc, Element root, List<IClasspathEntry> entries) {
 		Element path = doc.createElement("path");
 		path.setAttribute("id", BOOTCLASSPATH_NAME);
@@ -262,7 +275,15 @@ public class BuildfileGenerator {
 		}
 		root.appendChild(path);
 	}
-	
+
+	/**
+	 * Sets sourcepath for the build file
+	 * 
+	 * @param doc the document
+	 * @param root the root element of the XML document
+	 * @param entries list of the main project's sourcepath entries
+	 * @param dependentProjects list of dependent projects, so we can add their source classpath entries, as well
+	 */
 	private static void setSourcepath(Document doc, Element root, List<IClasspathEntry> entries, List<ImprovedClasspathHandler> dependentProjects) {
 		// TODO Get rid of duplicate code
 		Element path = doc.createElement("path");
@@ -274,6 +295,13 @@ public class BuildfileGenerator {
 		root.appendChild(path);
 	}
 	
+	/**
+	 * Sets bootclasspath for the build file
+	 * 
+	 * @param doc the document
+	 * @param root the root element of the XML document
+	 * @param entries list of classpath entries
+	 */
 	private static void addSourceEntries(Document doc, Element path, List<IClasspathEntry> entries) {
 		for (IClasspathEntry entry : entries) {
 			String rootedPath = entry.getPath().toOSString();
@@ -282,6 +310,12 @@ public class BuildfileGenerator {
 		}
 	}
 	
+	/**
+	 * Add "pathelement" to the XML tree
+	 * @param doc the document
+	 * @param path the path element that this will be beneath
+	 * @param strPath the actual path
+	 */
 	private static void addPathElement(Document doc, Element path, String strPath) {
 		Element pe = doc.createElement("pathelement");
 		pe.setAttribute("location", strPath);
@@ -394,6 +428,12 @@ public class BuildfileGenerator {
 	}
 	
 	// We don't want to include an entry in its own sourcepath or we'll have problems
+	/**
+	 * Builds sourcepath with relative paths for an entry
+	 * @param currentEntry the source entry
+	 * @param entries the source entries
+	 * @return comma-delimited source path
+	 */
 	private static String getModifiedSourcePath(IClasspathEntry currentEntry, List<IClasspathEntry> entries) {
 		StringBuffer sb = new StringBuffer("");
 		for (int i = 0; i < entries.size(); i++) {
@@ -428,6 +468,11 @@ public class BuildfileGenerator {
 		}
 	}
 	
+	/**
+	 * Gets the encoding of a classpath entry
+	 * @param entry the entry
+	 * @return the encoding or empty string if unspecified
+	 */
 	private static String getEncodingAttribute(IClasspathEntry entry) {
 		IClasspathAttribute[] attributes = entry.getExtraAttributes();
 		for (IClasspathAttribute attr : attributes) {

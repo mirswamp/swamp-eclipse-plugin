@@ -50,8 +50,14 @@ import edu.wisc.cs.swamp.SwampApiWrapper.HostType;
  */
 public class AuthenticationDialog extends TitleAreaDialog {
 	
+	/**
+	 * Combo for selecting SWAMP host
+	 */
 	private Combo hostnameCombo;
 	
+	/**
+	 * Text widget for specifying a hostname other than those listed in the combo
+	 */
 	private Text otherHostnameText;
 	//private Text hostnameText;
 	/**
@@ -177,6 +183,9 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		return area;
 	}
 	
+	/**
+	 * @return available hostnames
+	 */
 	private String[] getAvailableHostnames() {
 		Location configLoc = Platform.getInstallLocation();
 		
@@ -226,6 +235,9 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		}
 	}
 	
+	/**
+	 * @return default hostnames
+	 */
 	private String[] getDefaultHostnames() {
 		String[] array = {SwampApiWrapper.SWAMP_HOST_NAMES_MAP.get(HostType.PRODUCTION) + " (" + MIR_SWAMP_DESCRIPTION + ")"};
 		return array;
@@ -314,6 +326,11 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		super.okPressed();
 	}
 	
+	/**
+	 * Listener for host change combo widget
+	 * @author reid-jr
+	 *
+	 */
 	private class HostComboSelectionListener implements SelectionListener {
 		Combo combo;
 		public HostComboSelectionListener(Combo c) {

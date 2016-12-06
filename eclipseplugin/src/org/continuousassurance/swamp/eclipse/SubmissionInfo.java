@@ -27,6 +27,11 @@ import org.osgi.service.prefs.Preferences;
 import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 
+/**
+ * This class serves as the backend for the Dialog classes.
+ * @author reid-jr
+ *
+ */
 public class SubmissionInfo {
 
 	private boolean configInitialized;
@@ -90,19 +95,32 @@ public class SubmissionInfo {
 		configDir = "";
 	}
 	
+	/**
+	 * @return true if config information has been initialized
+	 */
 	public boolean isConfigInitialized() {
 		return configInitialized;
 	}
 	
+	/**
+	 * Set the state of the config information
+	 * @param b true if config information has been initialized
+	 */
 	public void setConfigInitialized(boolean b) {
 		configInitialized = b;
 	}
 	
+	/**
+	 * @return package type of Eclipse package
+	 */
 	public String getPackageType() {
 		return packageType;
 	}
 	
-
+	/**
+	 * Gets the package type
+	 * @return package type (i.e. "java-8", "java-7", "C/C++")
+	 */
 	public String getPkgConfPackageType() {
 		if (packageType.equals(JAVA_8_SRC) || packageType.equals(JAVA_8_BYTE)) {
 			return "java-8";
@@ -113,6 +131,10 @@ public class SubmissionInfo {
 		return "C/C++";
 	}
 	
+	/**
+	 * Gets language of package
+	 * @return "C", "C++", or "Java"
+	 */
 	public String getPackageLanguage() {
 		if (CoreModel.hasCCNature(project)) {
 			return "C++";
@@ -123,6 +145,11 @@ public class SubmissionInfo {
 		return "Java";
 	}
 	
+	/**
+	 * Sets package type for a SWAMP package and sets tools and platforms based on the preferences for the package type
+	 * @param pkgType package type (i.e. "java-8", "java-7", or "C/C++")
+	 * @param fromFile true if package type loaded from file
+	 */
 	public void setPackageType(String pkgType, boolean fromFile) {
 		packageType = pkgType;
 		if (fromFile) {
@@ -133,6 +160,12 @@ public class SubmissionInfo {
 		selectedPlatformIDs = getPreferences(prefs, getPlatformKey());
 	}
 	
+	/**
+	 * Gets list of users preferences
+	 * @param prefs
+	 * @param key
+	 * @return list of preferences
+	 */
 	private List<String> getPreferences(Preferences prefs, String key) {
 		String idList = prefs.get(key, null);
 		if (idList == null) {
@@ -141,19 +174,33 @@ public class SubmissionInfo {
 		return Utils.convertDelimitedStringToList(idList, DELIMITER);
 	}
 	
+	/**
+	 * @return SwampApiWrapper object
+	 */
 	public SwampApiWrapper getApi() {
 		return api;
 	}
 	
+	/**
+	 * @return true if tools have been initialized as selected
+	 */
 	public boolean toolsInitialized() {
 		return (selectedToolIDs != null); 
 	}
 	
+	/**
+	 * @return true if platforms have been initialized as selected
+	 */
 	public boolean platformsInitialized() {
 		return (selectedPlatformIDs != null);
 	}
 	
-	public String[] getBuildSystemList(String lang) {
+	/**
+	 * Gets list of build systems for a language 
+	 * @param lang either "C/C++" or "JAVA"
+	 * @return array of build systems
+	 */
+	public static String[] getBuildSystemList(String lang) {
 		switch(lang.toUpperCase()) {
 			case "JAVA":
 				return javaBuildOptions;
@@ -163,7 +210,12 @@ public class SubmissionInfo {
 		return new String[0];
 	}
 	
-	public String[] getPackageTypeList(String lang) {
+	/**
+	 * Gets list of package types for a language
+	 * @param lang either "C/C++" or "JAVA"
+	 * @return array of package types
+	 */
+	public static String[] getPackageTypeList(String lang) {
 		switch(lang.toUpperCase()) {
 			case "JAVA":
 				return javaPkgTypeOptions;
@@ -173,50 +225,95 @@ public class SubmissionInfo {
 		return new String[0];
 	}
 	
+	/**
+	 * Sets list of selected platform UUIDs
+	 * @param platformIDs list of platform UUIDs
+	 */
 	public void setSelectedPlatformIDs(List<String> platformIDs) {
 		selectedPlatformIDs = platformIDs;
 	}
 	
+	/**
+	 * Gets list of currently selected platform UUIDs
+	 * @return list of platform UUIDs
+	 */
 	public List<String> getSelectedPlatformIDs() {
 		return selectedPlatformIDs;
 	}
 	
+	/**
+	 * Sets list of selected tool IDs
+	 * @param toolIDs list of tool UUIDs
+	 */
 	public void setSelectedToolIDs(List<String> toolIDs) {
 		selectedToolIDs = toolIDs;
 	}
 	
+	/**
+	 * Gets list of currently selected tool IDs
+	 * @return list of tool UUIDs
+	 */
 	public List<String> getSelectedToolIDs() {
 		return selectedToolIDs;
 	}
 	
+	/**
+	 * Sets selected project SWAMP UUID
+	 * @param projectID SWAMP UUID
+	 */
 	public void setSelectedProjectID(String projectID) {
 		selectedProjectID = projectID;
 	}
 	
+	/**
+	 * Gets selected project SWAMP UUID
+	 * @return SWAMP UUID
+	 */
 	public String getSelectedProjectID() {
 		return selectedProjectID;
 	}
 	
+	/**
+	 * @return currently selected Eclipse project
+	 */
 	public IProject getProject() {
 		return project;
 	}
 	
+	/**
+	 * @return true if Eclipse package is set to be uploaded as a new package
+	 */
 	public boolean isNewPackage() {
 		return newPackage;
 	}
 	
+	/**
+	 * @return true if Eclipse project is C or C++ project
+	 */
 	public boolean isCProject() {
 		return (CoreModel.hasCCNature(project) || CoreModel.hasCNature(project));
 	}
 	
-	public void setNewPackage(boolean b) {
-		newPackage = b;
+	/**
+	 * Sets whether Eclipse package should be uploaded as a new package
+	 * @param isNew true if package is new
+	 */
+	public void setNewPackage(boolean isNew) {
+		newPackage = isNew;
 	}
 	
+	/**
+	 * @return selected SWAMP package UUID
+	 */
 	public String getSelectedPackageID() {
 		return selectedPackageThingID;
 	}
 	
+	/**
+	 * Sets selected package ID
+	 * @param pkgUUID SWAMP package UUID
+	 * @return
+	 */
 	public boolean setSelectedPackageID(String pkgUUID) {
 		selectedPackageThingID = pkgUUID;
 		if (packages == null) {
@@ -234,6 +331,11 @@ public class SubmissionInfo {
 		// TODO Talk to Vamshi about this
 	}
 	
+	/**
+	 * Attempts to set SWAMP package from name
+	 * @param pkgName name of Eclipse package
+	 * @return true if SWAMP package successfully set
+	 */
 	public boolean setPackageIDFromName(String pkgName) {
 		if (packages == null) {	
 			packages = api.getPackagesList(selectedProjectID);
@@ -251,6 +353,12 @@ public class SubmissionInfo {
 	}
 	
 	
+	/**
+	 * Initializes list of Eclipse projects and finds project with matching name and project path
+	 * @param projectName name of project
+	 * @param prjPath path of project
+	 * @return true if the specified project is in the workspace, false otherwise
+	 */
 	public boolean initializeProject(String projectName, String prjPath) {
 		// TODO add code to actually get and initialize the project
 		eclipseProjects = ResourcesPlugin.getWorkspace().getRoot().getProjects();
@@ -264,18 +372,38 @@ public class SubmissionInfo {
 		return false;
 	}
 	
+	/**
+	 * @return true if Eclipse project has been set
+	 */
 	public boolean isProjectInitialized() {
 		return project != null;
 	}
 	
+	/**
+	 * Sets Eclipse project corresponding to the SWAMP package 
+	 * @param p Eclipse project
+	 */
 	public void setProject(IProject p) {
 		this.project = p;
 	}
 	
+	/**
+	 * @return true if system libraries should be packaged
+	 */
 	public boolean packageSystemLibraries() {
 		return packageSystemLibs;
 	}
 	
+	/**
+	 * Sets build information for the Eclipse package
+	 * @param buildSys build system
+	 * @param needsBuildFile true if package needs build file
+	 * @param buildDir build directory 
+	 * @param buildFile build file
+	 * @param target build target
+	 * @param buildOptions build options
+	 * @param packageRTLibs true if system/run-time libraries need to be packaged
+	 */
 	public void setBuildInfo(String buildSys, boolean needsBuildFile, String buildDir, String buildFile, String target, String buildOptions, boolean packageRTLibs) {
 		createBuildFile = needsBuildFile;
 		if (needsBuildFile) {
@@ -302,65 +430,126 @@ public class SubmissionInfo {
 		}
 	}
 	
+	/**
+	 * Sets configuration information for the Eclipse package
+	 * @param configDir config directory
+	 * @param configCmd config command
+	 * @param configOptions config options
+	 */
 	public void setConfigInfo(String configDir, String configCmd, String configOptions) {
 		this.configDir = configDir;
 		this.configCmd = configCmd;
 		this.configOpts = configOptions;
 	}
 	
+	/**
+	 * @return name of the project
+	 */
 	public String getProjectName() {
 		return project.getName();
 	}
 	
 	
+	/**
+	 * Returns the location of the Eclipse project on the file system
+	 * @return project path
+	 */
 	public String getProjectPath() {
 		return project.getLocation().toOSString();
 	}
 	
+	/**
+	 * Returns a project-specific location that the plug-in uses to store files
+	 * related to build file generation
+	 * @return working location path
+	 */
 	public String getProjectWorkingLocation() {
 		return project.getWorkingLocation(PLUGIN_ID).toOSString();
 	}
 	
+	/**
+	 * Gets whether the package to be assessed needs a build file
+	 * @return true if package needs a build file
+	 */
 	public boolean needsBuildFile() {
 		return this.createBuildFile;
 	}
 	
+	/**
+	 * Sets whether the package to be assessed needs a build file
+	 * @param b true if package needs a build file
+	 */
 	public void setNeedsBuildFile(boolean b) {
 		this.createBuildFile = b;
 	}
 	
+	/**
+	 * Getter for build target
+	 * @return build target
+	 */
 	public String getBuildTarget() {
 		return buildTarget;
 	}
 	
+	/**
+	 * Getter for build file
+	 * @return build file path
+	 */
 	public String getBuildFile() {
 		return buildFile;
 	}
 	
+	/**
+	 * Getter for build directory
+	 * @return build directory path
+	 */
 	public String getBuildDirectory() {
 		return buildDirectory;
 	}
 	
+	/**
+	 * Getter for SWAMP package build system
+	 * @return build system
+	 */
 	public String getBuildSystem() {
 		return buildSystem;
 	}
 	
+	/**
+	 * Getter for SWAMP package version
+	 * @return version string
+	 */
 	public String getPackageVersion() {
 		return packageVersion;
 	}
 	
+	/**
+	 * Setter for SWAMP package version
+	 * @param pkgVers version string
+	 */
 	public void setPackageVersion(String pkgVers) {
 		packageVersion = pkgVers;
 	}
 	
+	/**
+	 * Getter for SWAMP package name
+	 * @return SWAMP package name
+	 */
 	public String getPackageName() {
 		return packageName;
 	}
 	
+	/**
+	 * Setter for SWAMP package name
+	 * @param packageName SWAMP package name
+	 */
 	public void setPackageName(String packageName) {
 		this.packageName = packageName;
 	}
 
+	/**
+	 * Prints list of package types
+	 */
 	public void printPackageTypes() {
 		List<String> packageTypes = api.getPackageTypesList();
 		System.out.println("\n\n\nPackageTypes\n=================================================");
@@ -370,6 +559,9 @@ public class SubmissionInfo {
 		
 	}
 	
+	/**
+	 * Saves plugin preferences
+	 */
 	public void savePluginSettings() {
 		Preferences prefs = InstanceScope.INSTANCE.getNode(PLUGIN_ID);
 		prefs.put(PROJECT_KEY, selectedProjectID);
@@ -381,6 +573,9 @@ public class SubmissionInfo {
 		}
 	}
 	
+	/**
+	 * Loads plugin preferences
+	 */
 	public void loadPluginSettings() {
 		if (selectedProjectID != null) {
 			return;
@@ -389,42 +584,76 @@ public class SubmissionInfo {
 		selectedProjectID = prefs.get(PROJECT_KEY, null);
 	}
 	
+	/**
+	 * @return key for tools preferences
+	 */
 	private String getToolKey() {
 		return packageType + "-TOOLS"; 
 	}
 	
+	/**
+	 * @return key for platform preferences
+	 */
 	private String getPlatformKey() {
 		return packageType + "-PLATFORMS";
 	}
 	
+	/**
+	 * Sets build options
+	 * @param opts options
+	 */
 	public void setBuildOpts(String opts) {
 		buildOpts = opts;
 	}
 	
+	/**
+	 * Sets config options
+	 * @param opts options
+	 */
 	public void setConfigOpts(String opts) {
 		configOpts = opts;
 	}
 	
+	/**
+	 * Sets config command
+	 * @param cmd
+	 */
 	public void setConfigCmd(String cmd) {
 		configCmd = cmd;
 	}
 	
+	/**
+	 * Sets config directory
+	 * @param dir directory path
+	 */
 	public void setConfigDir(String dir) {
 		configDir = dir;
 	}
 	
+	/**
+	 * @return build options
+	 */
 	public String getBuildOpts() {
 		return buildOpts;
 	}
 	
+	/**
+	 * @return config options
+	 */
 	public String getConfigOpts() {
 		return configOpts;
 	}
-	
+
+	/**
+	 * @return config command
+	 */
 	public String getConfigCmd() {
 		return configCmd;
 	}
 	
+	/**
+	 * @return config directory path
+	 */
 	public String getConfigDir() {
 		return configDir;
 	}

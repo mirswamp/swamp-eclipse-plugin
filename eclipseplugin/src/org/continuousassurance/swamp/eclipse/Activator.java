@@ -40,6 +40,7 @@ public class Activator extends AbstractUIPlugin {
 	// The plug-in ID
 	public static final String PLUGIN_ID = "org.continuousassurance.swamp.eclipse"; //$NON-NLS-1$
 	
+	// Hostname of SWAMP host
 	private static String hostname;
 	
 	// Logged into SWAMP
@@ -48,14 +49,20 @@ public class Activator extends AbstractUIPlugin {
 	// The shared instance
 	private static Activator plugin;
 	
+	// Default host
 	private static final String DEFAULT_HOST = "https://www.mir-swamp.org";
 	
+	// Name of file that stores host
 	private static final String HOST_FILENAME = ".host";
+	
+	// Name of file that stores list of unfinished assessments
 	private static final String UNFINISHED_ASSESS_FILENAME = ".unfinished_assess";
 	
+	// Map of <SWAMP project ID, set of assessment IDs> for assessments that have not yet been retrieved
 	private static Map<String, Set<String>> assessIDs;
-	private static Map<String, Set<String>> finishedIDs;
 	
+	// Map of <SWAMP project ID, set of assessment IDs> for retrieved assessments
+	private static Map<String, Set<String>> finishedIDs;
 	
 	/**
 	 * The constructor
@@ -133,18 +140,24 @@ public class Activator extends AbstractUIPlugin {
 		}
 	}
 	
+	/**
+	 * Sets hostname for SWAMP instance
+	 * @param name hostname
+	 */
 	public static void setHostname(String name) {
 		hostname = name;
 		File f = new File(getHostnamePath());
 		if (f.exists()) {
 			f.delete();
-			try {
-				f.createNewFile();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		}
+		
+		try {
+			f.createNewFile();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		// Write it to file here
 		FileWriter filewriter = null;
 		BufferedWriter writer = null;
@@ -161,10 +174,18 @@ public class Activator extends AbstractUIPlugin {
 		}
 	}
 	
+	/**
+	 * Gets path of hostname file
+	 * @return path
+	 */
 	private static String getHostnamePath() {
 		return SwampApiWrapper.SWAMP_DIR_PATH + System.getProperty("file.separator") + HOST_FILENAME;
 	}
 	
+	/**
+	 * Gets path of unfinished assessments file
+	 * @return path
+	 */
 	private static String getUnfinishedAssessmentsPath() {
 		return SwampApiWrapper.SWAMP_DIR_PATH + System.getProperty("file.separator") + UNFINISHED_ASSESS_FILENAME;
 	}
@@ -188,10 +209,18 @@ public class Activator extends AbstractUIPlugin {
 		return plugin;
 	}
 	
+	/**
+	 * Returns whether the current user is logged into SWAMP
+	 * @return true if user is logged in
+	 */
 	public static boolean getLoggedIn() {
 		return loggedIn;
 	}
 	
+	/**
+	 * Setter for loggedIn
+	 * @param loggedIn true if user is logged into SWAMP
+	 */
 	public static void setLoggedIn(boolean loggedIn) {
 		Activator.loggedIn = loggedIn;
 	}
@@ -207,10 +236,18 @@ public class Activator extends AbstractUIPlugin {
 		return imageDescriptorFromPlugin(PLUGIN_ID, path);
 	}
 	
+	
+	/**
+	 * Getter for most recent hostname 
+	 * @return most recent hostname
+	 */
 	public static String getLastHostname() {
 		return hostname;
 	}
 	
+	/**
+	 * Save unfinished results to file (should be called when Eclipse is exited or user is logged out)
+	 */
 	public static void saveResults() {
 		String path = getUnfinishedAssessmentsPath();
 		File f = new File(path);
@@ -237,6 +274,12 @@ public class Activator extends AbstractUIPlugin {
 		} 
 	}
 	
+	/**
+	 * Utility method for adding a (project ID, assessment ID) pair to a map
+	 * @param map
+	 * @param projectID the UUID of the SWAMP project
+	 * @param assessID the UUID of the SWAMP assessment
+	 */
 	private static void addAssessment(Map<String, Set<String>> map, String projectID, String assessID) {
 		if (map.containsKey(projectID)) {
 			map.get(projectID).add(assessID);
@@ -248,6 +291,11 @@ public class Activator extends AbstractUIPlugin {
 		}
 	}
 	
+	/**
+	 * Marks an assessment as finished
+	 * @param projectID the UUID of the SWAMP project
+	 * @param assessID the UUID of the SWAMP assessment
+	 */
 	public static void finish(String projectID, String assessID) {
 		if (assessIDs.containsKey(projectID)) {
 			Set<String> set = assessIDs.get(projectID);
@@ -258,14 +306,27 @@ public class Activator extends AbstractUIPlugin {
 		addAssessment(finishedIDs, projectID, assessID);
 	}
 	
+	/**
+	 * Adds an assessment to the list of assessments being waited on (unfinishedAssessmentsMap)
+	 * @param projectID the UUID of the SWAMP project
+	 * @param assessID the UUID of the SWAMP assessment
+	 */
 	public static void addAssessment(String projectID, String assessID) {
 		addAssessment(assessIDs, projectID, assessID);
 	}
 	
+	/**
+	 * Getter for finished assessments
+	 * @return map of finished assessment UUIDs
+	 */
 	public static Map<String, Set<String>> getFinishedAssessments() {
 		return new HashMap<String, Set<String>>(finishedIDs);
 	}
 	
+	/**
+	 * Getter for unfininished assessments
+	 * @return map of unfinished assessment UUIDs
+	 */
 	public static Map<String, Set<String>> getUnfinishedAssessments() {
 		return new HashMap<String, Set<String>>(assessIDs);
 	}

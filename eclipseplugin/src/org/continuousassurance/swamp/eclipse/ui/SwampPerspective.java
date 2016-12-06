@@ -1,3 +1,16 @@
+/*
+ * Copyright 2016 Malcolm Reid Jr.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.continuousassurance.swamp.eclipse.ui;
 
 import org.continuousassurance.swamp.eclipse.handlers.HandlerUtilityMethods;
@@ -7,10 +20,15 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IEditorInput;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
+import org.eclipse.ui.IPartListener2;
+import org.eclipse.ui.IPartService;
 import org.eclipse.ui.IPerspectiveFactory;
 import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
@@ -46,10 +64,11 @@ public class SwampPerspective implements IPerspectiveFactory {
 		
 		IWorkbench wb = PlatformUI.getWorkbench();
 		IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
-		IEditorInput editor = HandlerUtilityMethods.getActiveEditorInput(window);
-
 		
-		
+		IPartService service = window.getPartService();
+		service.addPartListener(new FileChangeListener());
+		//IEditorInput editor = HandlerUtilityMethods.getActiveEditorInput(window);
+	
 		// TODO Use actual input
 		IFile file = HandlerUtilityMethods.getActiveFile(window);
 		try {
@@ -73,6 +92,69 @@ public class SwampPerspective implements IPerspectiveFactory {
 		marker.setAttribute(IMarker.MESSAGE, "Invalid use of keyword");
 		marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
 		marker.setAttribute(IMarker.LINE_NUMBER, lineNum);
+	}
+	
+	public class FileChangeListener implements IPartListener2 {
+
+		@Override
+		public void partActivated(IWorkbenchPartReference part) {
+			System.out.println("Part Activated");
+			printPartInfo(part);
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void partBroughtToTop(IWorkbenchPartReference arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void partClosed(IWorkbenchPartReference arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void partDeactivated(IWorkbenchPartReference arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void partHidden(IWorkbenchPartReference arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void partInputChanged(IWorkbenchPartReference part) {
+			System.out.println("Part Input Changed");
+			// TODO Auto-generated method stub
+			
+		}
+
+		@Override
+		public void partOpened(IWorkbenchPartReference part) {
+			System.out.println("Part Opened");
+			printPartInfo(part);
+			
+		}
+
+		@Override
+		public void partVisible(IWorkbenchPartReference arg0) {
+			// TODO Auto-generated method stub
+			
+		}
+		
+		private void printPartInfo(IWorkbenchPartReference part) {
+			System.out.println("Part Opened");
+			System.out.println("Part class: " + part.getClass());
+			System.out.println("Part ID: " + part.getId());
+			System.out.println("Part title: " + part.getTitle());
+		}
+		
 	}
 	
 }

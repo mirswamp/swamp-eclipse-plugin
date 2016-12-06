@@ -41,14 +41,42 @@ import org.eclipse.core.runtime.IPath;
  */
 public class PackageInfo {
 	
+	/**
+	 * The name of the package.conf file
+	 */
 	public static final String PACKAGE_CONF_NAME = "package.conf";
 
 	
+	/**
+	 * Utility method for getting the digest of a set of bytes
+	 * @param bytes array of bytes to get digest of
+	 * @param m type of digest (e.g. MD5)
+	 * @return string digest
+	 */
 	private static String getDigest(byte[] bytes, MessageDigest m) {
 		byte[] retArray = m.digest(bytes);
 		return Hex.encodeHexString(retArray);
 	}
 	
+	/**
+	 * Writes a package.conf file to the specified location with information about the package as specified in the arguments
+	 * @param archivePath path of the archive containing all of the source files and other files necessary for build
+	 * @param outputDir path of directory where package.conf file should be stored
+	 * @param shortName <see package.conf documentation>
+	 * @param version <see package.conf documentation>
+	 * @param pkgDir <see package.conf documentation>
+	 * @param language <see package.conf documentation>
+	 * @param pkgType <see package.conf documentation>
+	 * @param buildSys <see package.conf documentation>
+	 * @param buildDir <see package.conf documentation>
+	 * @param buildFile <see package.conf documentation>
+	 * @param buildTarget <see package.conf documentation>
+	 * @param buildOpts <see package.conf documentation>
+	 * @param configDir <see package.conf documentation>
+	 * @param configCmd <see package.conf documentation>
+	 * @param configOpts <see package.conf documentation>
+	 * @return file object representing the newly-created package.conf file
+	 */
 	public static File generatePkgConfFile(Path archivePath, String outputDir, String shortName, String version, String pkgDir, String language, String pkgType, String buildSys, String buildDir, String buildFile, String buildTarget,
 			String buildOpts, String configDir, String configCmd, String configOpts) {
 		MessageDigest md5 = null;
