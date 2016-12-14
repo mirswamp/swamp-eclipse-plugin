@@ -25,4 +25,11 @@
 		<nature>org.eclipse.pde.PluginNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
+	<linkedResources>
+		<link>
+			<name>javaSCARF</name>
+			<type>2</type>
+			<location>/u/r/e/reid-jr/swphome/scarf/java/src/javaSCARF</location>
+		</link>
+	</linkedResources>
 </projectDescription>

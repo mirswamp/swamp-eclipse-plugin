@@ -26,6 +26,6 @@
 	<classpathentry kind="lib" path="lib/ncsa-security-servlet-3.4-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/ncsa-security-storage-3.4-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/ncsa-security-util-3.4-SNAPSHOT.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/JavaSCARF"/>
+	<classpathentry kind="lib" path="lib/javaSCARF.jar" sourcepath="/JavaSCARF/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

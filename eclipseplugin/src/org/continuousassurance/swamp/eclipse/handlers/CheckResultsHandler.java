@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.continuousassurance.swamp.eclipse.Activator;
+import org.continuousassurance.swamp.eclipse.ResultsUtils;
 import org.continuousassurance.swamp.eclipse.SwampSubmitter;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.continuousassurance.swamp.eclipse.dialogs.AuthenticationDialog;
@@ -90,7 +91,7 @@ public class CheckResultsHandler extends AbstractHandler {
 				AssessmentRecord record = api.getAssessmentRecord(projectID, assessID);
 				System.out.println("Status: " + record.getStatus());
 				if (record.getStatus().equals("Finished")) {
-					String filepath = constructFilepath(projectID, record.getPackageUUID(), record.getToolUUID(), record.getPlatformUUID());
+					String filepath = ResultsUtils.constructFilepath(projectID, record.getPackageUUID(), record.getToolUUID(), record.getPlatformUUID());
 					java.io.File f = new java.io.File(filepath);
 					if (f.exists()) {
 						f.delete();
@@ -119,14 +120,6 @@ public class CheckResultsHandler extends AbstractHandler {
 		return true;
 	}
 	
-	private String constructFilepath(String projectUUID, String pkgUUID, String toolUUID, String platformUUID) {
-		// TODO: get plugin location + SEPARATOR + projectID + "-" + assessID + ".results";
-		System.out.println("Project UUID: " + projectUUID);
-		System.out.println("Package UUID: " + pkgUUID);
-		System.out.println("Tool UUID: " + toolUUID);
-		System.out.println("Platform UUID: " + platformUUID);
-		String SEPARATOR = System.getProperty("file.separator");
-		return System.getProperty("user.home") + SEPARATOR + SwampSubmitter.SWAMP_RESULTS_DIRNAME + SEPARATOR + projectUUID + SEPARATOR + pkgUUID + SEPARATOR + toolUUID + "-" + platformUUID + "-" + "results.xml";
-	}
+
 
 }

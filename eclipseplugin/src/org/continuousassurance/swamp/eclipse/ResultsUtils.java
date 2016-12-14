@@ -15,4 +15,23 @@ package org.continuousassurance.swamp.eclipse;
 
 public class ResultsUtils {
 
+	public static String FILE_SUFFIX = "results.xml";
+	
+	public static String ECLIPSE_TO_SWAMP_FILENAME = "eclipse-swamp.txt";
+	
+	private static String SEPARATOR = System.getProperty("file.separator");
+	
+	public static String constructFilepath(String projectUUID, String pkgUUID, String toolUUID, String platformUUID) {
+		// TODO: get plugin location + SEPARATOR + projectID + "-" + assessID + ".results";
+		System.out.println("Project UUID: " + projectUUID);
+		System.out.println("Package UUID: " + pkgUUID);
+		System.out.println("Tool UUID: " + toolUUID);
+		System.out.println("Platform UUID: " + platformUUID);
+		// return System.getProperty("user.home") + SEPARATOR + SwampSubmitter.SWAMP_RESULTS_DIRNAME + SEPARATOR + projectUUID + SEPARATOR + pkgUUID + SEPARATOR + toolUUID + "-" + platformUUID + "-" + "results.xml";
+		return constructFilepath(pkgUUID) + SEPARATOR + toolUUID + "-" + platformUUID + "-" + FILE_SUFFIX;
+	}
+	
+	public static String constructFilepath(String pkgThingUUID) {
+		return System.getProperty("user.home") + SEPARATOR + SwampSubmitter.SWAMP_RESULTS_DIRNAME + SEPARATOR + pkgThingUUID;
+	}
 }

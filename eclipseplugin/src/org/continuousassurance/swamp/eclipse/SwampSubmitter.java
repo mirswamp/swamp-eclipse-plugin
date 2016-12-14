@@ -14,7 +14,9 @@
 package org.continuousassurance.swamp.eclipse;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Date;
@@ -329,6 +331,36 @@ public class SwampSubmitter {
 				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
+				if (si.isNewPackage()) { // All packages will need to be made new for this to be configured properly
+					String pkgThingUUID = api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing().getUUIDString();
+					System.out.println("PackageThingUUID: " + pkgThingUUID);
+					System.out.println("PackageVersionUUID: " + pkgVersUUID);
+					String path = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString() + org.eclipse.core.runtime.Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
+					File f = new File(path);
+					if (f.exists()) {
+						f.delete();
+					}
+					try {
+						f.createNewFile();
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
+					// TODO Somehow get the PackageThing UUID
+					try {
+						PrintWriter pw = new PrintWriter(f);
+						pw.write(pkgThingUUID);
+						pw.close();
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					String dirPath = ResultsUtils.constructFilepath(pkgThingUUID);
+					File dir = new File(dirPath);
+					if (!dir.exists()) {
+						dir.mkdir();
+					}
+				}
 				
 				/*
 				// Delete ant buildfile
@@ -681,10 +713,10 @@ public class SwampSubmitter {
 			System.err.println("Error in running assessment.");
 		}
 		else {
-			File f = new File(System.getProperty("user.home") + File.separator + SWAMP_RESULTS_DIRNAME + File.separator + prjUUID + File.separator + pkgUUID);
-			if (!f.exists()) {
-				f.mkdirs();
-			}
+			//File f = new File(System.getProperty("user.home") + File.separator + SWAMP_RESULTS_DIRNAME + File.separator + prjUUID + File.separator + pkgUUID);
+			//if (!f.exists()) {
+			//	f.mkdirs();
+			//}
 			// TODO: Take snapshot of the codebase and put it here - possibly even use archive
 			out.println(Utils.getBracketedTimestamp() + "Status: Successfully submitted assessment with tool {" + toolName + "} on platform {" + platformName +"}");
 			Activator.addAssessment(prjUUID, assessUUID);

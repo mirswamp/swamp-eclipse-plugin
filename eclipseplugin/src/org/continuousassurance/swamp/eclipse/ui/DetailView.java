@@ -22,6 +22,7 @@ import org.eclipse.ui.part.ViewPart;
 
 public class DetailView extends ViewPart {
 	Composite composite;
+	Label messageLabel;
 	Label filenameLabel;
 	Label lineNumLabel;
 	Label typeLabel;
@@ -35,6 +36,7 @@ public class DetailView extends ViewPart {
 		GridLayout layout = new GridLayout(1, false);
 		parent.setLayout(layout);
 		
+		messageLabel = DialogUtil.initializeLabelWidget("Message: <message>", SWT.NONE, composite);
 		 filenameLabel = DialogUtil.initializeLabelWidget("Filename: <filename>", SWT.NONE, composite);
 		 lineNumLabel = DialogUtil.initializeLabelWidget("Line Number: <line number>", SWT.NONE, composite);
 		 typeLabel = DialogUtil.initializeLabelWidget("Type: <type>", SWT.NONE, composite);
@@ -59,7 +61,8 @@ public class DetailView extends ViewPart {
 		composite.setFocus();
 	}
 	
-	public void redrawPartControl(String filename, String ln, String type, String tool, String platform) {
+	public void redrawPartControl(String message, String filename, String ln, String type, String tool, String platform) {
+		messageLabel.setText("Message: " + message);
 		filenameLabel.setText("Filename: " + filename);
 		lineNumLabel.setText("Line Number: " + ln);
 		typeLabel.setText("Type: " + type);

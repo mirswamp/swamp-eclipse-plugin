@@ -13,14 +13,14 @@
 
 <extension point="org.eclipse.ui.views">
 	<view 
-		name="Table View"
+		name="Weaknesses"
 		class="org.continuousassurance.swamp.eclipse.ui.TableView"
 		id="org.continuousassurance.swamp.eclipse.ui.views.tableview" /> <!-- Add icon -->
 </extension>
 
 <extension point="org.eclipse.ui.views">
 	<view 
-		name="Detail View"
+		name="Weakness Details"
 		class="org.continuousassurance.swamp.eclipse.ui.DetailView"
 		id="org.continuousassurance.swamp.eclipse.ui.views.detailview" /> <!-- Add icon -->
 </extension>

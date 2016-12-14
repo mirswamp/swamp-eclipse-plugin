@@ -17,6 +17,7 @@ import java.util.List;
 
 import org.continuousassurance.swamp.eclipse.ResultsParser;
 import org.continuousassurance.swamp.eclipse.Utils;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -27,26 +28,19 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.ViewPart;
 
-import javaSCARF.ScarfInterface;
+// import javaSCARF.ScarfInterface;
 
-public class TableView extends ViewPart implements ScarfInterface {
+public class TableView extends ViewPart { // implements ScarfInterface {
 	
 	public static final String[] COLUMN_NAMES = {"File", "Start Line", "End Line", "Bug Type", "Tool", "Platform"};
 	private static final int[] COLUMN_WIDTHS = {500, 300, 300, 500, 500, 500};
 	private Table table;
-	private ResultsParser resultsParser;
 	
 	// TODO: Make columns have more appropriate widths by default
-	public TableView(ResultsParser rp) {
-		super();
-		resultsParser = rp;
-	}
 	
 	public TableView() {
 		super();
@@ -74,14 +68,74 @@ public class TableView extends ViewPart implements ScarfInterface {
 		table.setLayoutData(gd);
 		
 		TableColumn fileColumn = getTableColumn(table, 0, "STRING");
-		TableColumn lineColumn = getTableColumn(table, 1, "INT");
+		TableColumn startLineColumn = getTableColumn(table, 1, "INT");
+		TableColumn endLineColumn = getTableColumn(table, 2, "INT");
 		TableColumn typeColumn = getTableColumn(table, 3, "STRING");
 		TableColumn toolColumn = getTableColumn(table, 4, "STRING");
 		TableColumn platformColumn = getTableColumn(table, 5, "STRING");
 		
+		fileColumn.addListener(SWT.Selection, new SortListener());
+		startLineColumn.addListener(SWT.Selection, new SortListener());
+		endLineColumn.addListener(SWT.Selection, new SortListener());
+		typeColumn.addListener(SWT.Selection, new SortListener());
+		toolColumn.addListener(SWT.Selection, new SortListener());
+		platformColumn.addListener(SWT.Selection, new SortListener());
+		
+		table.addSelectionListener(new RowSelectionListener(table));
+		//table.addMouseListener(new DoubleClickListener(table));
+		
+		/*
+		List<String[]> rowElements = resultsParser.getRows();
+		for (String[] row : rowElements) {
+			TableItem item = new TableItem(table, SWT.NONE);
+			item.setText(row);
+			// item.addListener(SWT.Selection, rowSelectionListener);
+		}
+		*/
+		
+		/*
+		// TODO: Add table items from the actual data
+		for (int i = 0; i < 5; i++) {
+			TableItem item = new TableItem(table, SWT.NONE);
+			item.setText(0, i % 2 == 0 ? "Test1.java" : "Test2.java");
+			item.setText(1, Integer.toString(i*100));
+			item.setText(2, i % 2 == 0 ? "Style" : "Other");
+			item.setText(3, i % 3 == 0 ? "FindBugs" : "Test Tool");
+			item.setText(4, "RedHat version" + i);
+			//item.addListener(SWT.Selection, rowSelectionListener);
+		}
+		*/
+	
+		/*
+		for (int i = 0; i < COLUMN_NAMES.length; i++) {
+			table.getColumn(i).pack();
+		}
+		*/
 
-		/* The following code adapted from http://stackoverflow.com/questions/15508493/swt-table-sorting-by-clicking-the-column-header */
-		Listener sortListener = e -> {
+	}
+	
+	public void update(List<String[]> rows) {
+		table.removeAll();
+		if (rows == null) {
+			return;
+		}
+		for (int i = 0; i < rows.size(); i++) {
+			TableItem item = new TableItem(table, SWT.NONE);
+			for (int j = 0; j < rows.get(i).length; j++) {
+				item.setText(j, rows.get(i)[j]);
+			}
+		}
+	}
+	
+	@Override
+	public void setFocus() {
+		table.setFocus();
+	}
+	
+	private class SortListener implements Listener {
+
+		@Override
+		public void handleEvent(Event e) {
 			TableColumn selectedCol = (TableColumn) e.widget;
 			int dir = table.getSortDirection();
 			if (table.getSortColumn() == selectedCol) {
@@ -110,48 +164,7 @@ public class TableView extends ViewPart implements ScarfInterface {
 		            }
 				}
 			}
-		};
-		
-		fileColumn.addListener(SWT.Selection, sortListener);
-		lineColumn.addListener(SWT.Selection, sortListener);
-		typeColumn.addListener(SWT.Selection, sortListener);
-		toolColumn.addListener(SWT.Selection, sortListener);
-		platformColumn.addListener(SWT.Selection, sortListener);
-		
-		table.addSelectionListener(new RowSelectionListener(table));
-		//table.addMouseListener(new DoubleClickListener(table));
-		
-		/*
-		List<String[]> rowElements = resultsParser.getRows();
-		for (String[] row : rowElements) {
-			TableItem item = new TableItem(table, SWT.NONE);
-			item.setText(row);
-			// item.addListener(SWT.Selection, rowSelectionListener);
 		}
-		*/
-		
-		/*
-		// TODO: Add table items from the actual data
-		for (int i = 0; i < 5; i++) {
-			TableItem item = new TableItem(table, SWT.NONE);
-			item.setText(0, i % 2 == 0 ? "Test1.java" : "Test2.java");
-			item.setText(1, Integer.toString(i*100));
-			item.setText(2, i % 2 == 0 ? "Style" : "Other");
-			item.setText(3, i % 3 == 0 ? "FindBugs" : "Test Tool");
-			item.setText(4, "RedHat version" + i);
-			//item.addListener(SWT.Selection, rowSelectionListener);
-		}
-		*/
-	
-		for (int i = 0; i < COLUMN_NAMES.length; i++) {
-			table.getColumn(i).pack();
-		}
-
-	}
-	
-	@Override
-	public void setFocus() {
-		table.setFocus();
 	}
 	
 	private class RowSelectionListener implements SelectionListener {
@@ -167,8 +180,8 @@ public class TableView extends ViewPart implements ScarfInterface {
 				TableItem selectedRow = items[0];
 				// TODO: Store a reference to detail view, so we don't keep on having to do this!
 				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-				DetailView view = (DetailView) page.findView("org.continuousassurance.swamp.eclipse.ui.views.detailview");
-				view.redrawPartControl(selectedRow.getText(0), selectedRow.getText(1), selectedRow.getText(2), selectedRow.getText(3), selectedRow.getText(4));
+				DetailView view = (DetailView) page.findView(SwampPerspective.DETAIL_VIEW_DESCRIPTOR);
+				view.redrawPartControl("Bug Details", selectedRow.getText(0), selectedRow.getText(1), selectedRow.getText(2), selectedRow.getText(3), selectedRow.getText(4));
 			}
 		}
 

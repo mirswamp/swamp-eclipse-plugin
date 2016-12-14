@@ -16,13 +16,21 @@ package org.continuousassurance.swamp.eclipse;
 import javaSCARF.ScarfInterface;
 import javaSCARF.ScarfXmlReader;
 
+import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
+
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Set;
 
 import org.continuousassurance.swamp.eclipse.ui.TableView;
+import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.ui.IWorkbenchWindow;
 
 import java.util.HashSet;
 
@@ -30,15 +38,16 @@ import dataStructures.*;
 
 public class ResultsParser implements ScarfInterface {
 	
+	public static String RESULTS_INFO = "results_info.txt";
 	private InitialInfo info;
 	private List<BugInstance> bugs;
 	private List<Metric> metrics;
 	private List<MetricSummary> metricSummaries;
 	private List<BugSummary> bugSummaries;
-	private Set<TableItem> tableRows;
 	private List<String[]> rowElements;
 	private String tool;
 	private String platform;
+	private Map<String, List<Integer>> bugLines;
 	
 	public ResultsParser(File f) {
 		ScarfXmlReader reader = new ScarfXmlReader(this);
@@ -46,8 +55,8 @@ public class ResultsParser implements ScarfInterface {
 		metrics = new ArrayList<>();
 		metricSummaries = new ArrayList<>();
 		bugSummaries = new ArrayList<>();
-		tableRows = new HashSet<>();
 		rowElements = new ArrayList<>();
+		bugLines = new HashMap<>();
 		reader.parseFromFile(f);
 	}
 	
@@ -63,7 +72,17 @@ public class ResultsParser implements ScarfInterface {
 		bugs.add(bug);
 		for (Location l : bug.getLocations()) {
 			String[] elements = new String[TableView.COLUMN_NAMES.length];
-			elements[0] = l.getSourceFile();
+			String filename = l.getSourceFile();
+			List<Integer> lines;
+			if (bugLines.containsKey(filename)) {
+				lines = bugLines.get(filename);
+			}
+			else {
+				lines = new ArrayList<>();
+			}
+			lines.add(l.getStartLine());
+			bugLines.put(filename, lines);
+			elements[0] = filename;
 			elements[1] = Integer.toString(l.getStartLine()); 
 			elements[2] = Integer.toString(l.getEndLine());
 			elements[3] = bug.getBugCode(); // TODO: Is bug type, bug code??
@@ -90,6 +109,15 @@ public class ResultsParser implements ScarfInterface {
 	
 	public List<String[]> getRows() {
 		return rowElements;
+	}
+	
+	public List<Integer> getBugLines(String filename) {
+		if (bugLines.containsKey(filename)) {
+			return bugLines.get(filename);
+		}
+		else {
+			return new ArrayList<Integer>();
+		}
 	}
 	
 }
