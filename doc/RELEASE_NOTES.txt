@@ -1,0 +1,8 @@
+12/20/2016
+0.9.0
+
+-SWAMP perspective can show results
+-Plug-in can retrieve results
+-Available host types is now configurable
+-Plug-in now allows user to specify build options
+-Plug-in now allows user to specify configuration script and configuration options
