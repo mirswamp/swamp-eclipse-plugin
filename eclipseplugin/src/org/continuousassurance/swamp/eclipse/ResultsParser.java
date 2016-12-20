@@ -47,7 +47,7 @@ public class ResultsParser implements ScarfInterface {
 	private List<String[]> rowElements;
 	private String tool;
 	private String platform;
-	private Map<String, List<Integer>> bugLines;
+	private Map<String, List<BugInstance>> fileBugs;
 	
 	public ResultsParser(File f) {
 		ScarfXmlReader reader = new ScarfXmlReader(this);
@@ -56,7 +56,7 @@ public class ResultsParser implements ScarfInterface {
 		metricSummaries = new ArrayList<>();
 		bugSummaries = new ArrayList<>();
 		rowElements = new ArrayList<>();
-		bugLines = new HashMap<>();
+		fileBugs = new HashMap<>();
 		reader.parseFromFile(f);
 	}
 	
@@ -73,15 +73,16 @@ public class ResultsParser implements ScarfInterface {
 		for (Location l : bug.getLocations()) {
 			String[] elements = new String[TableView.COLUMN_NAMES.length];
 			String filename = l.getSourceFile();
-			List<Integer> lines;
-			if (bugLines.containsKey(filename)) {
-				lines = bugLines.get(filename);
+			List<BugInstance> bugs;
+			if (fileBugs.containsKey(filename)) {
+				bugs = fileBugs.get(filename);
 			}
 			else {
-				lines = new ArrayList<>();
+				bugs = new ArrayList<>();
+				System.out.println("Filename used: " + filename);
 			}
-			lines.add(l.getStartLine());
-			bugLines.put(filename, lines);
+			bugs.add(bug);
+			fileBugs.put(filename, bugs);
 			elements[0] = filename;
 			elements[1] = Integer.toString(l.getStartLine()); 
 			elements[2] = Integer.toString(l.getEndLine());
@@ -111,12 +112,13 @@ public class ResultsParser implements ScarfInterface {
 		return rowElements;
 	}
 	
-	public List<Integer> getBugLines(String filename) {
-		if (bugLines.containsKey(filename)) {
-			return bugLines.get(filename);
+	public List<BugInstance> getFileBugs(String filename) {
+		System.out.println("Filename queried: " + filename);
+		if (fileBugs.containsKey(filename)) {
+			return fileBugs.get(filename);
 		}
 		else {
-			return new ArrayList<Integer>();
+			return new ArrayList<BugInstance>();
 		}
 	}
 	

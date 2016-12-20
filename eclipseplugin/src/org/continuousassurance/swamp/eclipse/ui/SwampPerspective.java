@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.continuousassurance.swamp.eclipse.ResultsParser;
 import org.continuousassurance.swamp.eclipse.ResultsUtils;
@@ -45,6 +46,9 @@ import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
+
+import dataStructures.BugInstance;
+import dataStructures.Location;
 
 public class SwampPerspective implements IPerspectiveFactory {
 
@@ -79,14 +83,20 @@ public class SwampPerspective implements IPerspectiveFactory {
 		service.addPartListener(new FileChangeListener());
 	}
 	
-	public void annotateEditor(IFile file, List<Integer> lineNums) {
+	public void annotateEditor(IFile file, List<BugInstance> bugs) {
 		
-		//IEditorInput editor = HandlerUtilityMethods.getActiveEditorInput(window);
-	
-		// TODO Use actual input
 		try {
-			for (int ln : lineNums) { 
-					createMarkerForResource(file, ln);
+			// TODO Use SWAMP Specific Marker and stuff
+			file.deleteMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE);
+		}
+		catch (CoreException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			for (BugInstance bug : bugs) {
+				// System.out.println(bug);
+				createMarkerForResource(file, bug);
 			}
 		}
 		catch (Exception e) {
@@ -95,14 +105,19 @@ public class SwampPerspective implements IPerspectiveFactory {
 		}
 	}
 	
-	/* The following method is adapted from http://www.eclipse.org/articles/Article-Mark%20My%20Words/mark-my-words.html */
-	public void createMarkerForResource(IFile resource, int lineNum) throws CoreException {
-		// TODO: Modify this to be useful
-		//IMarker marker = resource.createMarker("org.continuousassurance.swamp.eclipse.swampmarker");
-		IMarker marker = resource.createMarker(IMarker.PROBLEM);
-		marker.setAttribute(IMarker.MESSAGE, "Invalid use of keyword");
-		marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
-		marker.setAttribute(IMarker.LINE_NUMBER, lineNum);
+	public void createMarkerForResource(IFile resource, BugInstance bug) {
+		for (Location l : bug.getLocations()) {
+			try {
+				IMarker marker = resource.createMarker(IMarker.PROBLEM);
+				marker.setAttribute(IMarker.MESSAGE, bug.getBugMessage());
+				marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH); // TODO Get priority right here
+				marker.setAttribute(IMarker.LINE_NUMBER, l.getStartLine()); // TODO End line also / lines between also?
+			}
+			catch (CoreException e) {
+				System.err.println("Core exception when creating marker");
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	public void updateTableView(List<String[]> rows) {
@@ -138,16 +153,18 @@ public class SwampPerspective implements IPerspectiveFactory {
 				}
 				File resultsDir = new File(ResultsUtils.constructFilepath(pkgThingUUID));
 				List<String[]> rows = new ArrayList<String[]>();
-				List<Integer> lines = new ArrayList<Integer>();
+				List<BugInstance> bugs = new ArrayList<>();
 				for (File r : resultsDir.listFiles()) {
 					ResultsParser rp = new ResultsParser(r);
 					rows.addAll(rp.getRows());
-					//lines.addAll(rp.getBugLines(r.getName()));
+					String filepath = file.getFullPath().toString();
+					filepath = filepath.substring(1);
+					bugs.addAll(rp.getFileBugs(filepath));
 				}
-				//ResultsParser rp = new ResultsParser(f);
-				//List<String[]> rows = rp.getRows();
-				//List<Integer> lines = rp.getBugLines(file.getName());
+				
 				updateTableView(rows);
+				annotateEditor(file, bugs);
+
 				if (rows.size() == 0) {
 					setDetailViewMessage("No bugs found");
 				}
