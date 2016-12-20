@@ -1,0 +1,80 @@
+#!/bin/bash
+
+#  releaseScript
+#
+#  Copyright 2016 Malcolm Reid Jr.
+#
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
+
+
+# This is a script to streamline making a release
+# (1) Make $HOME/Desktop directory with proper format (yyyy-mm-dd-swamp_eclipse_plugin)
+# (2) cd to doc directory
+# (3) run asciidoc README.adoc
+# (4) move README.html to the new directory
+# (5) run /p/swamp/bin/asciidoctor -pdf README.adoc
+# (6) move README.pdf to new directory
+# (7) copy SWAMP_hosts.json to new directory
+# (8) add to RELEASE_NOTES.txt
+
+# Out of band: export feature to desktop dir, zip the dir
+
+: ${1?"Usage: $0 versionNumber"}
+
+ARCHIVE_NAME="swamp_eclipse_plugin"
+START_DIR=$PWD
+SEPARATOR_LINE="---------------------------------------------"
+TIMESTAMP=$(date +%Y-%m-%d)
+VERSION=$1"v"$TIMESTAMP
+
+dir_name=$HOME/Desktop/
+dir_name+=$TIMESTAMP
+dir_name+="-"$ARCHIVE_NAME
+
+mkdir $dir_name
+
+echo "Created "$dir_name
+
+cd ../doc
+asciidoc README.adoc
+
+echo "Generated README.html"
+
+mv README.html $dir_name
+cp -r images $dir_name
+
+echo "Moved README.html to "$dir_name
+
+/p/swamp/bin/asciidoctor -r asciidoctor-pdf -b pdf README.adoc
+
+echo "Generated README.pdf"
+
+mv README.pdf $dir_name
+
+echo "Moved README.pdf to "$dir_name
+
+cp SWAMP_hosts.json $dir_name
+
+echo "Moved SWAMP_hosts.json to "$dir_name
+
+echo "RELEASE_NOTES.txt" > tmpfile
+echo $SEPARATOR_LINE >> tmpfile
+echo $TIMESTAMP >> tmpfile
+echo "Version: "$VERSION >> tmpfile
+echo $SEPARATOR_LINE >> tmpfile
+cat RELEASE_NOTES.txt >> tmpfile
+mv tmpfile $dir_name"/RELEASE_NOTES.txt"
+
+echo "Formatted release_notes and moved RELEASE_NOTES.txt to "$dir_name
+
+cd $START_DIR

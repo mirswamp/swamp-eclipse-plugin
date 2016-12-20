@@ -1,0 +1,9 @@
+{
+	"canSpecifyUnlistedHosts": false,
+	"hosts": [
+		{
+			"name": "https://swa-csaweb-pd-01.mir-swamp.org/",
+			"description": "MIR"
+		}
+	]
+}
