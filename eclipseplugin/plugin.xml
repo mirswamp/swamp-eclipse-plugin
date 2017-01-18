@@ -7,7 +7,8 @@
 	<perspective
 		name="SWAMP Perspective"
 		class="org.continuousassurance.swamp.eclipse.ui.SwampPerspective" 
-		id="org.continuousassurance.swamp.eclipse.ui.perspective">
+		id="org.continuousassurance.swamp.eclipse.ui.perspective"
+		icon="icons/swamp-logo-square-height-20.png">
 	</perspective>
 </extension>
 
@@ -25,15 +26,80 @@
 		id="org.continuousassurance.swamp.eclipse.ui.views.detailview" /> <!-- Add icon -->
 </extension>
 
-<!-- Making SWAMP marker -->
-
-<extension id="swampmarker" point="org.eclipse.core.resources.markers"/>
-<extension id="swampproblem" point="org.eclipse.core.resources.markers">
-	<super type="org.eclipse.core.resources.problemmarker"/>
-	<super type="org.continuousassurance.swamp.eclipse.swampmarker"/>
-	<attribute name="swampIssue"/>
+<extension point="org.eclipse.core.resources.markers" id="highseverity">
+	<super type="org.eclipse.core.resources.textmarker"/>
 	<persistent value="true"/>
 </extension>
+
+<extension point="org.eclipse.core.resources.markers" id="medseverity">
+	<super type="org.eclipse.core.resources.textmarker"/>
+	<persistent value="true"/>
+</extension>
+
+<extension point="org.eclipse.core.resources.markers" id="lowseverity">
+	<super type="org.eclipse.core.resources.textmarker"/>
+	<persistent value="true"/>
+</extension>
+
+<extension point="org.eclipse.core.resources.markers" id="unknownseverity">
+	<super type="org.eclipse.core.resources.textmarker"/>
+	<persistent value="true"/>
+</extension>
+
+<extension point="org.eclipse.ui.editors.annotationTypes">
+	<type
+		super="org.eclipse.ui.workbench.texteditor.warning"
+		markerType="eclipseplugin.highseverity"
+		name="org.continuousassurance.swamp.eclipse.annotations.highseverity"
+		markerSeverity="1" /> <!--SWAMP markers should all be treated as warnings regardless of severity?-->
+		
+	<type
+		super="org.eclipse.ui.workbench.texteditor.warning"
+		markerType="eclipseplugin.medseverity"
+		name="org.continuousassurance.swamp.eclipse.annotations.medseverity"
+		markerSeverity="1" />
+	
+	<type
+		super="org.eclipse.ui.workbench.texteditor.warning"
+		markerType="eclipseplugin.lowseverity"
+		name="org.continuousassurance.swamp.eclipse.annotations.lowseverity"
+		markerSeverity="1" /> 
+	
+	<type
+		super="org.eclipse.ui.workbench.texteditor.warning"
+		markerType="eclipseplugin.unknownseverity"
+		name="org.continuousassurance.swamp.eclipse.annotations.unknownseverity"
+		markerSeverity="1" /> 
+</extension>		
+			
+
+<!-- Setting custom images for the markers based on severity -->
+<extension point="org.eclipse.ui.editors.markerAnnotationSpecification">
+	<specification
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.highseverity"
+		icon="icons/high-severity.png"
+		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
+	verticalRulerPreferenceValue="true"/>
+
+	<specification
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.medseverity"
+		icon="icons/med-severity.png"
+		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
+		verticalRulerPreferenceValue="true"/>
+
+	<specification
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.lowseverity"
+		icon="icons/low-severity.png"
+		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
+		verticalRulerPreferenceValue="true"/>
+
+	<specification
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.unknownseverity"
+		icon="icons/unk-severity.png"
+		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
+		verticalRulerPreferenceValue="true"/>
+</extension>
+
   
  <!-- Declaring commands -->
  <extension point="org.eclipse.ui.commands">
@@ -80,6 +146,12 @@
   		categoryId="org.continuousassurance.swamp.eclipse.commands.category"
   		id="org.continuousassurance.swamp.eclipse.commands.checkResultsCommand"
   		name="Check for results from your assessments">
+  	</command>
+  	
+  	<command
+  		categoryId="org.continuousassurance.swamp.eclipse.commands.category"
+  		id="org.continuousassurance.swamp.eclipse.commands.clearResultsCommand"
+  		name="Clear all results and markers">
   	</command>
   	
   	<command
@@ -146,6 +218,11 @@
   	</handler>
   	
   	<handler
+  		class="org.continuousassurance.swamp.eclipse.handlers.ClearResultsHandler"
+  		commandId="org.continuousassurance.swamp.eclipse.commands.clearResultsCommand">
+  	</handler>
+  	
+  	<handler
   		class="org.continuousassurance.swamp.eclipse.handlers.AboutSwampHandler"
   		commandId="org.continuousassurance.swamp.eclipse.commands.aboutSwampCommand">
   	</handler>
@@ -184,6 +261,12 @@
 			commandId="org.continuousassurance.swamp.eclipse.commands.checkResultsCommand"
 			label="Check for Results"
 			mnemonic="R"
+			style="push">
+		</command>
+		<command
+			commandId="org.continuousassurance.swamp.eclipse.commands.clearResultsCommand"
+			label="Clear Results"
+			mnemonic="L"
 			style="push">
 		</command>
 		<command
@@ -240,6 +323,13 @@
 			commandId="org.continuousassurance.swamp.eclipse.commands.checkResultsCommand"
 			label="Check for Results"
 			mnemonic="R"
+			style="push">
+		</command>
+		
+		<command
+			commandId="org.continuousassurance.swamp.eclipse.commands.clearResultsCommand"
+			label="Clear Results"
+			mnemonic="L"
 			style="push">
 		</command>
 		
