@@ -64,7 +64,7 @@ public class ResultsParser implements ScarfInterface {
 	public void initialCallback(InitialInfo initial) {
 		info = initial;
 		tool = info.getToolName() + " " + info.getToolVersion();
-		platform = "Platform"; // TODO: Find the actual platform
+		platform = "?"; // TODO: Get the actual Platform once SCARF is updated
 	}
 	
 	@Override
@@ -120,6 +120,10 @@ public class ResultsParser implements ScarfInterface {
 		else {
 			return new ArrayList<BugInstance>();
 		}
+	}
+	
+	public String getToolName() {
+		return tool;
 	}
 	
 }

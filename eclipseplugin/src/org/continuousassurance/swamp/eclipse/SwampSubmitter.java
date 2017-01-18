@@ -125,7 +125,7 @@ public class SwampSubmitter {
 		Job job = new Job(SWAMP_JOB_TITLE) {
 			
 			@Override public boolean belongsTo(Object family) {
-				return family == SWAMP_FAMILY;
+				return family.equals(SWAMP_FAMILY);
 			}
 			
 			@Override
@@ -243,7 +243,7 @@ public class SwampSubmitter {
 			
 			@Override
 			public boolean belongsTo(Object family) {
-				return family == SWAMP_FAMILY;
+				return family.equals(SWAMP_FAMILY);
 			}
 			
 			@Override
@@ -755,22 +755,24 @@ public class SwampSubmitter {
 				out.println(Utils.getBracketedTimestamp() + "Status: Submission cancelled by user");
 				File f = new File(pluginLocation);
 				File[] files = f.listFiles();
-				for (File file : files) {
-					String fileName = file.getName();
-					for (String pattern : filePatterns) {
-						if (fileName.matches(pattern)) {
-							System.out.println("Deleted file name: " + fileName);
-							try {
-								if (file.isDirectory()) {
-									FileUtils.deleteDirectory(file);
+				if (files != null && files.length > 0) {
+					for (File file : files) {
+						String fileName = file.getName();
+						for (String pattern : filePatterns) {
+							if (fileName.matches(pattern)) {
+								System.out.println("Deleted file name: " + fileName);
+								try {
+									if (file.isDirectory()) {
+										FileUtils.deleteDirectory(file);
+									}
+									else {
+										FileUtils.forceDelete(file);
+									}
+								} catch (IOException e) {
+									e.printStackTrace();
 								}
-								else {
-									FileUtils.forceDelete(file);
-								}
-							} catch (IOException e) {
-								e.printStackTrace();
+								break;
 							}
-							break;
 						}
 					}
 				}

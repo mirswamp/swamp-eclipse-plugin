@@ -95,7 +95,7 @@ public class Activator extends AbstractUIPlugin {
 				reader = new BufferedReader(filereader);
 				String host = reader.readLine();
 				reader.close();
-				if (!host.equals("")) {
+				if ((host != null) && (!host.equals(""))) {
 					api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, host);
 					if (api != null) {
 						hostname = host;
@@ -134,8 +134,12 @@ public class Activator extends AbstractUIPlugin {
 				System.err.println("Unable to read in assessments from file.");
 				e.printStackTrace();
 			} finally {
-				filereader.close();
-				reader.close();
+				if (filereader != null) {
+					filereader.close();
+				}
+				if (reader != null) {
+					reader.close();
+				}
 			}
 		}
 	}

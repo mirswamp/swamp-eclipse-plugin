@@ -188,6 +188,10 @@ public class Utils {
 		String filename;
 		String files[] = file.list();
 		
+		if (files == null || files.length == 0) {
+			return;
+		}
+		
 		for (int i = 0; i < files.length; i++) {
 			filename = pathname + SEPARATOR + files[i];
 			File f = new File(filename);

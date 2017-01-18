@@ -36,9 +36,13 @@ import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
+import org.eclipse.ui.IPageService;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IPartService;
+import org.eclipse.ui.IPerspectiveDescriptor;
 import org.eclipse.ui.IPerspectiveFactory;
+import org.eclipse.ui.IPerspectiveListener3;
+import org.eclipse.ui.IPerspectiveRegistry;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPart;
@@ -56,10 +60,16 @@ public class SwampPerspective implements IPerspectiveFactory {
 	public static String DETAIL_VIEW_DESCRIPTOR = "org.continuousassurance.swamp.eclipse.ui.views.detailview";
 	public static IWorkbenchWindow window;
 	
-	@Override
-	public void createInitialLayout(IPageLayout layout) {
+	public SwampPerspective() {
+		super();
 		IWorkbench wb = PlatformUI.getWorkbench();
 		window = wb.getActiveWorkbenchWindow();
+	}
+	
+	@Override
+	public void createInitialLayout(IPageLayout layout) {
+		//IWorkbench wb = PlatformUI.getWorkbench();
+		//window = wb.getActiveWorkbenchWindow();
 		defineActions(layout);
 		defineLayout(layout);
 	}
@@ -83,20 +93,12 @@ public class SwampPerspective implements IPerspectiveFactory {
 		service.addPartListener(new FileChangeListener());
 	}
 	
-	public void annotateEditor(IFile file, List<BugInstance> bugs) {
+	public void annotateEditor(IFile file, List<BugInstance> bugs, String toolName) {
 		
-		try {
-			// TODO Use SWAMP Specific Marker and stuff
-			file.deleteMarkers(IMarker.PROBLEM, true, IResource.DEPTH_INFINITE);
-		}
-		catch (CoreException e) {
-			e.printStackTrace();
-		}
-
 		try {
 			for (BugInstance bug : bugs) {
 				// System.out.println(bug);
-				createMarkerForResource(file, bug);
+				createMarkerForResource(file, bug, toolName);
 			}
 		}
 		catch (Exception e) {
@@ -105,12 +107,28 @@ public class SwampPerspective implements IPerspectiveFactory {
 		}
 	}
 	
-	public void createMarkerForResource(IFile resource, BugInstance bug) {
+	public void createMarkerForResource(IFile resource, BugInstance bug, String toolName) {
 		for (Location l : bug.getLocations()) {
 			try {
-				IMarker marker = resource.createMarker(IMarker.PROBLEM);
-				marker.setAttribute(IMarker.MESSAGE, bug.getBugMessage());
-				marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH); // TODO Get priority right here
+				//IMarker marker = resource.createMarker(IMarker.PROBLEM);
+				//IMarker marker = resource.createMarker("highseverity");
+				IMarker marker;
+				String severity = bug.getBugSeverity();
+				severity = severity == null ? "" : severity.toUpperCase();
+				if (severity.equals("HIGH")) {
+					marker = resource.createMarker("eclipseplugin.highseverity");
+				}
+				else if (severity.equals("MED")) {
+					marker = resource.createMarker("eclipseplugin.medseverity");
+				}
+				else if (severity.equals("LOW")) {
+					marker = resource.createMarker("eclipseplugin.lowseverity");
+				}
+				else {
+					marker = resource.createMarker("eclipseplugin.unknownseverity");
+				}
+				marker.setAttribute(IMarker.MESSAGE, toolName + ": " + bug.getBugMessage());
+				marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING); // TODO Get priority right here
 				marker.setAttribute(IMarker.LINE_NUMBER, l.getStartLine()); // TODO End line also / lines between also?
 			}
 			catch (CoreException e) {
@@ -130,6 +148,7 @@ public class SwampPerspective implements IPerspectiveFactory {
 
 		@Override
 		public void partActivated(IWorkbenchPartReference part) {
+
 			
 			System.out.println("Doing all of the part updating");
 			System.out.println("Part Activated");
@@ -151,19 +170,25 @@ public class SwampPerspective implements IPerspectiveFactory {
 					System.err.println("Exception occured");
 					return;
 				}
+				
 				File resultsDir = new File(ResultsUtils.constructFilepath(pkgThingUUID));
 				List<String[]> rows = new ArrayList<String[]>();
-				List<BugInstance> bugs = new ArrayList<>();
-				for (File r : resultsDir.listFiles()) {
-					ResultsParser rp = new ResultsParser(r);
-					rows.addAll(rp.getRows());
-					String filepath = file.getFullPath().toString();
-					filepath = filepath.substring(1);
-					bugs.addAll(rp.getFileBugs(filepath));
+				//List<BugInstance> bugs = new ArrayList<>();
+				File[] files = resultsDir.listFiles();
+				if (files != null && files.length > 0) {
+					for (File r : files) {
+						List<BugInstance> bugs = new ArrayList<>();
+						ResultsParser rp = new ResultsParser(r);
+						String toolName = rp.getToolName();
+						rows.addAll(rp.getRows());
+						String filepath = file.getFullPath().toString();
+						filepath = filepath.substring(1);
+						bugs.addAll(rp.getFileBugs(filepath));
+						annotateEditor(file, bugs, toolName);
+					}
 				}
-				
 				updateTableView(rows);
-				annotateEditor(file, bugs);
+				//annotateEditor(file, bugs);
 
 				if (rows.size() == 0) {
 					setDetailViewMessage("No bugs found");

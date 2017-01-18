@@ -112,8 +112,10 @@ public class PackageInfo {
 			writer = new PrintWriter(pkgConf.getAbsolutePath(), "UTF-8");
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
+			// TODO Throw a stronger error here
 			e.printStackTrace();
 		} catch (UnsupportedEncodingException e) {
+			// TODO Throw a stronger error here
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

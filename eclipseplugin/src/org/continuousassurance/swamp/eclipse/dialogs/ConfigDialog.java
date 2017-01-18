@@ -430,28 +430,30 @@ public class ConfigDialog extends TitleAreaDialog {
 		File file = new File(path);
 		String files[] = file.list();
 		
-		for (int i = 0; i < files.length; i++) {
-			String filename = files[i];
-			System.out.println("Filename: " + filename);
-			String filepath = path + SEPARATOR + filename;
-			File f = new File(filepath);
-			if (f.isDirectory()) {
-				continue;
-			}
-			if (filename.equals(ANT_BUILD)) {
-				setBuildSystem("ant");
-				buildPathText.setText(filepath);
-				return;
-			}
-			if (filename.equals(MAVEN_BUILD)) {
-				setBuildSystem("Maven");
-				buildPathText.setText(filepath);
-				return;
-			}
-			if ((filename.equals(MAKE_UPPERCASE)) || (filename.equals(MAKE_LOWERCASE))) {
-				setBuildSystem("make");
-				buildPathText.setText(filepath);
-				return;
+		if (files != null && files.length > 0) {
+			for (int i = 0; i < files.length; i++) {
+				String filename = files[i];
+				System.out.println("Filename: " + filename);
+				String filepath = path + SEPARATOR + filename;
+				File f = new File(filepath);
+				if (f.isDirectory()) {
+					continue;
+				}
+				if (filename.equals(ANT_BUILD)) {
+					setBuildSystem("ant");
+					buildPathText.setText(filepath);
+					return;
+				}
+				if (filename.equals(MAVEN_BUILD)) {
+					setBuildSystem("Maven");
+					buildPathText.setText(filepath);
+					return;
+				}
+				if ((filename.equals(MAKE_UPPERCASE)) || (filename.equals(MAKE_LOWERCASE))) {
+					setBuildSystem("make");
+					buildPathText.setText(filepath);
+					return;
+				}
 			}
 		}
 		// default to auto-generate
@@ -466,13 +468,16 @@ public class ConfigDialog extends TitleAreaDialog {
 	 */
 	private void setBuildPath(String dirPath, String filename) {
 		File file = new File(dirPath);
-		for (String f : file.list()) {
-			if (f.equals(filename)) {
-				buildPathText.setText(dirPath + SEPARATOR + file);
-				return;
+		String[] fileList = file.list();
+		if (fileList != null && fileList.length > 0) {
+			for (String f : fileList) {
+				if (f.equals(filename)) {
+					buildPathText.setText(dirPath + SEPARATOR + file);
+					return;
+				}
 			}
+			buildPathText.setText("");
 		}
-		buildPathText.setText("");
 	}
 
 	/**

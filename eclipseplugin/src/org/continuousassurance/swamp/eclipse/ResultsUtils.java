@@ -32,6 +32,10 @@ public class ResultsUtils {
 	}
 	
 	public static String constructFilepath(String pkgThingUUID) {
-		return System.getProperty("user.home") + SEPARATOR + SwampSubmitter.SWAMP_RESULTS_DIRNAME + SEPARATOR + pkgThingUUID;
+		return getTopLevelResultsDirectory() + SEPARATOR + pkgThingUUID;
+	}
+	
+	public static String getTopLevelResultsDirectory() {
+		return System.getProperty("user.home") + SEPARATOR + SwampSubmitter.SWAMP_RESULTS_DIRNAME;
 	}
 }

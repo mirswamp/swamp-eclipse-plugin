@@ -125,36 +125,40 @@ public class ImprovedClasspathHandler {
 		IClasspathEntry[] entries = null;
 		try {
 			entries = project.getRawClasspath();
+			if (entries == null || entries.length == 0) {
+				return;
+			}
 		} catch (JavaModelException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			return;
 		}
 		IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
 		try {
-		for (IClasspathEntry entry : entries) {
-			int kind = entry.getEntryKind();
-			if (this.subMonitor != null) {
-				if (this.subMonitor.isCanceled()) {
-					System.out.println("Sub monitor got cancelled!");
+			for (IClasspathEntry entry : entries) {
+				int kind = entry.getEntryKind();
+				if (this.subMonitor != null) {
+					if (this.subMonitor.isCanceled()) {
+						System.out.println("Sub monitor got cancelled!");
+					}
+					this.subMonitor.split(100 / SwampSubmitter.CLASSPATH_ENTRY_TICKS);
 				}
-				this.subMonitor.split(100 / SwampSubmitter.CLASSPATH_ENTRY_TICKS);
+				if (kind == IClasspathEntry.CPE_SOURCE) {
+					handleSource(entry, wsRoot);
+				}
+				else if (kind == IClasspathEntry.CPE_LIBRARY) {
+					handleLibrary(entry, wsRoot);
+				}
+				else if (kind == IClasspathEntry.CPE_PROJECT) {
+					handleProject(entry, wsRoot);
+				}
+				else if (kind == IClasspathEntry.CPE_VARIABLE) {
+					handleVariable(entry, wsRoot);
+				}
+				else { // kind == IClasspathEntry.CPE_CONTAINER
+					handleContainer(entry, wsRoot);
+				}
 			}
-			if (kind == IClasspathEntry.CPE_SOURCE) {
-				handleSource(entry, wsRoot);
-			}
-			else if (kind == IClasspathEntry.CPE_LIBRARY) {
-				handleLibrary(entry, wsRoot);
-			}
-			else if (kind == IClasspathEntry.CPE_PROJECT) {
-				handleProject(entry, wsRoot);
-			}
-			else if (kind == IClasspathEntry.CPE_VARIABLE) {
-				handleVariable(entry, wsRoot);
-			}
-			else { // kind == IClasspathEntry.CPE_CONTAINER
-				handleContainer(entry, wsRoot);
-			}
-		}
 		} catch (IOException | JavaModelException e) {
 			// TODO Report this error! This is very bad
 			e.printStackTrace();
@@ -395,8 +399,6 @@ public class ImprovedClasspathHandler {
 		OpenOption options[] = {StandardOpenOption.DSYNC , StandardOpenOption.CREATE , StandardOpenOption.WRITE};
 		System.out.println("Path we're writing to: " + destPath);
 		Files.write(destPath, bytes, options);
-		IPath path = new org.eclipse.core.runtime.Path(destStr);
-		//return path;
 		return new org.eclipse.core.runtime.Path(SEPARATOR + SWAMPBIN_DIR + SEPARATOR + filename);
 	}
 	

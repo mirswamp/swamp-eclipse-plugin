@@ -126,7 +126,7 @@ public class SubmissionInfo {
 		if (packageType.equals(JAVA_8_SRC) || packageType.equals(JAVA_8_BYTE)) {
 			return "java-8";
 		}
-		if (packageType.equals(JAVA_7_SRC) || packageType.equals(JAVA_7_SRC)) {
+		if (packageType.equals(JAVA_7_SRC) || packageType.equals(JAVA_7_BYTE)) {
 			return "java-7";
 		}
 		return "C/C++";
