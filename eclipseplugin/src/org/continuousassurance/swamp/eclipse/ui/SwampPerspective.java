@@ -105,9 +105,9 @@ public class SwampPerspective implements IPerspectiveFactory {
 		String editorArea = layout.getEditorArea();
 		IFolderLayout topLeft = layout.createFolder("topLeft", IPageLayout.LEFT, 0.25f, editorArea);
 		topLeft.addView(IPageLayout.ID_PROJECT_EXPLORER);
-		IFolderLayout bottom = layout.createFolder("bottom", IPageLayout.BOTTOM, 0.3f, editorArea);
+		IFolderLayout bottom = layout.createFolder("bottom", IPageLayout.BOTTOM, 0.70f, editorArea);
 		bottom.addView(TABLE_VIEW_DESCRIPTOR);
-		IFolderLayout right = layout.createFolder("right", IPageLayout.RIGHT, 0.2f, editorArea);
+		IFolderLayout right = layout.createFolder("right", IPageLayout.RIGHT, 0.60f, editorArea);
 		right.addView(DETAIL_VIEW_DESCRIPTOR);
 		IPartService service = window.getPartService();
 		service.addPartListener(new FileChangeListener());
@@ -202,6 +202,9 @@ public class SwampPerspective implements IPerspectiveFactory {
 			System.out.println("Doing all of the part updating");
 			System.out.println("Part Activated");
 			IProject project = HandlerUtilityMethods.getActiveProject(window);
+			if (project == null) {
+				return;
+			}
 			System.out.println("Project open: " + project.getName());
 			
 			String path = project.getProject().getWorkingLocation(PLUGIN_ID).toOSString() + Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
