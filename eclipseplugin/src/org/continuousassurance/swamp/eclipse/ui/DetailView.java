@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Malcolm Reid Jr.
+ * Copyright 2016-2017 Malcolm Reid Jr.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,62 +12,183 @@
  */
 package org.continuousassurance.swamp.eclipse.ui;
 
-import org.continuousassurance.swamp.eclipse.dialogs.DialogUtil;
+import java.util.List;
+
+import org.continuousassurance.swamp.eclipse.BugDetail;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.part.ViewPart;
 
+import dataStructures.BugInstance;
+
+/**
+ * This class shows detailed information about a bug selected in the TableView.
+ * We use an embedded browser widget to render HTML for more control of the
+ * styling of this view's content.
+ * @author reid-jr
+ */
 public class DetailView extends ViewPart {
-	Composite composite;
-	Label messageLabel;
-	Label filenameLabel;
-	Label lineNumLabel;
-	Label typeLabel;
-	Label toolLabel;
-	Label platformLabel;
+	/**
+	 * Label for bug message
+	 */
+	private static String MESSAGE_LABEL = "Message: ";
+	/**
+	 * Label for line number or line number range
+	 */
+	private static String LINE_NUMBER_LABEL = "Line number: ";
+	/**
+	 * Label for source file name
+	 */
+	private static String FILENAME_LABEL = "File name: ";
+	/**
+	 * Label for bug type
+	 */
+	private static String TYPE_LABEL = "Bug type: ";
+	/**
+	 * Label for tool name
+	 */
+	private static String TOOL_LABEL = "Tool: ";
+	/**
+	 * Label for platform name
+	 */
+	private static String PLATFORM_LABEL = "Platform: ";
+	
+	/**
+	 * Composite that this is built on
+	 */
+	private Composite composite;
+	/**
+	 * Embedded browser to render the HTML
+	 */
+	private Browser browser;
 	
 	@Override
+	/**
+	 * Creates view part
+	 * @param parent composite on which this is placed and positioned
+	 */
 	public void createPartControl(Composite parent) {
 		composite = parent;
-		parent.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
-		GridLayout layout = new GridLayout(1, false);
-		parent.setLayout(layout);
-		
-		messageLabel = DialogUtil.initializeLabelWidget("Message: <message>", SWT.NONE, composite);
-		 filenameLabel = DialogUtil.initializeLabelWidget("Filename: <filename>", SWT.NONE, composite);
-		 lineNumLabel = DialogUtil.initializeLabelWidget("Line Number: <line number>", SWT.NONE, composite);
-		 typeLabel = DialogUtil.initializeLabelWidget("Type: <type>", SWT.NONE, composite);
-		 toolLabel = DialogUtil.initializeLabelWidget("Tool: <tool>", SWT.NONE, composite);
-		 platformLabel = DialogUtil.initializeLabelWidget("Platform: <platform>", SWT.NONE, composite);
-
-		
-		// TODO: Add from SCARF data
-		/*
-		DialogUtil.initializeLabelWidget("Bug ID: <bug ID>", SWT.NONE, parent);
-		DialogUtil.initializeLabelWidget("Bug Group/Code: <bug group>", SWT.NONE, parent);
-		DialogUtil.initializeLabelWidget("Location: <filename>:<line number>", SWT.NONE, parent);
-		DialogUtil.initializeLabelWidget("Bug Message: <bug message>", SWT.NONE, parent);
-		DialogUtil.initializeLabelWidget("Bug Resolution: <bug resolution>", SWT.NONE, parent);
-		DialogUtil.initializeLabelWidget("Bug Severity: <bug severity>", SWT.NONE, parent);
-		DialogUtil.initializeLabelWidget("List of methods", SWT.NONE, parent);
-		*/
+		browser = new Browser(composite, SWT.NONE);
+		setDefaultHtml();
 	}
 
 	@Override
+	/**
+	 * Gives the composite focus
+	 */
 	public void setFocus() {
 		composite.setFocus();
 	}
 	
-	public void redrawPartControl(String message, String filename, String ln, String type, String tool, String platform) {
-		messageLabel.setText("Message: " + message);
-		filenameLabel.setText("Filename: " + filename);
-		lineNumLabel.setText("Line Number: " + ln);
-		typeLabel.setText("Type: " + type);
-		toolLabel.setText("Tool: " + tool);
-		platformLabel.setText("Platform: " + platform);
+	/**
+	 * Sets browser HTML for when no bug is selected
+	 */
+	private void setDefaultHtml() {
+		String html = getHeaderAndTitle();
+		html += getDefaultBody();
+		System.out.println(html);
+		browser.setText(html, true);
+	}
+	
+	/**
+	 * Sets browser HTML for a selected bug
+	 * @param bugInfo BugDetail object for the selected bug
+	 */
+	private void setHtml(BugDetail bugInfo) {
+		String html = getHeaderAndTitle();
+		html += getBody(bugInfo);
+		System.out.println(html);
+		
+		browser.setText(html, true);
+	}
+	
+	/**
+	 * Returns HTML header
+	 * @return String for start of HTML, title, and header
+	 */
+	private String getHeaderAndTitle() {
+		return "<html><header><title>Bug Details</title></header>";
+	}
+	
+	/**
+	 * Returns HTML body when no bug is selected
+	 * @return HTML string
+	 */
+	private String getDefaultBody() {
+		return "<body>Select a bug from the list of weaknesses</body></html>";
+	}
+	
+	/**
+	 * Returns HTML body when a bug is selected
+	 * @param bugInfo BugDetail object for the selected bug
+	 * @return HTML string
+	 */
+	private String getBody(BugDetail bugInfo) {
+		StringBuffer sb = new StringBuffer("<body>");
+		BugInstance bug = bugInfo.getBugInstance();
+		sb.append(constructParagraph(MESSAGE_LABEL, bug.getBugMessage()));
+		sb.append(constructParagraph(LINE_NUMBER_LABEL, bugInfo.getPrimaryLineNumber()));
+		sb.append(constructParagraph(FILENAME_LABEL, bugInfo.getPrimaryFilename()));
+		sb.append(constructParagraph(TYPE_LABEL, bug.getBugGroup()));
+		sb.append(constructParagraph(TOOL_LABEL, bugInfo.getTool()));
+		sb.append(constructParagraph(PLATFORM_LABEL, bugInfo.getPlatform()));
+		sb.append(constructFlowParagraphs(bugInfo.getFlow()));
+		sb.append("</body></html>");
+		return sb.toString();
+	}
+	
+	/**
+	 * Makes a paragraph element with label and value
+	 * @param label label for the field
+	 * @param value field's value
+	 * @return HTML paragraph element string
+	 */
+	private StringBuffer constructParagraph(String label, String value) {
+		StringBuffer sb = new StringBuffer("<p>");
+		sb.append(label);
+		sb.append(value);
+		sb.append("</p>");
+		return sb;
+	}
+	
+	/**
+	 * Makes HTML for displaying the flow
+	 * @param flow list of locations
+	 * @return HTML string
+	 */
+	private StringBuffer constructFlowParagraphs(List<String> flow) {
+		StringBuffer sb = new StringBuffer("");
+		if (flow.isEmpty()) {
+			return sb;
+		}
+		for (String location : flow) {
+			sb.append("<p>");
+			sb.append(location);
+			sb.append("</p>");
+		}
+		return sb;
+	}
+	
+	/**
+	 * Resets the browser to no bug being selected
+	 */
+	public void reset() {
+		setDefaultHtml();
+	}
+	
+	/**
+	 * Updates the view to show information on the currently selected bug
+	 * @param details BugDetail object for the currently selected bug
+	 */
+	public void update(BugDetail details) {
+		if (details == null) {
+			setDefaultHtml();
+		}
+		else {
+			setHtml(details);
+		}
 	}
 
 }

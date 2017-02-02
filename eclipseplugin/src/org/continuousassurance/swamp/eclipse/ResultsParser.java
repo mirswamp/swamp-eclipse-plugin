@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Malcolm Reid Jr.
+ * Copyright 2016-2017 Malcolm Reid Jr.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,29 +38,58 @@ import dataStructures.*;
 
 public class ResultsParser implements ScarfInterface {
 	
-	public static String RESULTS_INFO = "results_info.txt";
+	/**
+	 * Initial info from SCARF file
+	 */
 	private InitialInfo info;
+	/**
+	 * List of bugs in the SCARF file
+	 */
 	private List<BugInstance> bugs;
+	/**
+	 * List of metrics in the SCARF file
+	 */
 	private List<Metric> metrics;
+	/**
+	 * List of metric summaries in the SCARF file
+	 */
 	private List<MetricSummary> metricSummaries;
+	/**
+	 * List of bug summaries in the SCARF file
+	 */
 	private List<BugSummary> bugSummaries;
-	private List<String[]> rowElements;
+	/**
+	 * Name of tool that ran assessment
+	 */
 	private String tool;
+	/**
+	 * Name of platform on which assessment was run
+	 */
 	private String platform;
+	/**
+	 * Map from source file name to a list of bugs found in that file
+	 */
 	private Map<String, List<BugInstance>> fileBugs;
 	
+	/**
+	 * Constructor for ResultsParser
+	 * @param f SCARF file being read
+	 */
 	public ResultsParser(File f) {
 		ScarfXmlReader reader = new ScarfXmlReader(this);
 		bugs = new ArrayList<>();
 		metrics = new ArrayList<>();
 		metricSummaries = new ArrayList<>();
 		bugSummaries = new ArrayList<>();
-		rowElements = new ArrayList<>();
 		fileBugs = new HashMap<>();
 		reader.parseFromFile(f);
 	}
 	
 	@Override
+	/**
+	 * Callback for initial info in SCARF
+	 * @param initial InitialInfo object
+	 */
 	public void initialCallback(InitialInfo initial) {
 		info = initial;
 		tool = info.getToolName() + " " + info.getToolVersion();
@@ -68,37 +97,42 @@ public class ResultsParser implements ScarfInterface {
 	}
 	
 	@Override
+	/**
+	 * Callback for bug in SCARF
+	 * @param bug BugInstance that was just parsed from SCARF file
+	 */
 	public void bugCallback(BugInstance bug) {
-		bugs.add(bug);
 		for (Location l : bug.getLocations()) {
-			String[] elements = new String[TableView.COLUMN_NAMES.length];
-			String filename = l.getSourceFile();
-			List<BugInstance> bugs;
-			if (fileBugs.containsKey(filename)) {
-				bugs = fileBugs.get(filename);
+			if (l.isPrimary()) {
+				String filename = l.getSourceFile();
+				if (fileBugs.containsKey(filename)) {
+					bugs = fileBugs.get(filename);
+				}
+				else {
+					bugs = new ArrayList<>();
+					System.out.println("Filename used: " + filename);
+				}
+				bugs.add(bug);
+				fileBugs.put(filename, bugs);
+				break;
 			}
-			else {
-				bugs = new ArrayList<>();
-				System.out.println("Filename used: " + filename);
-			}
-			bugs.add(bug);
-			fileBugs.put(filename, bugs);
-			elements[0] = filename;
-			elements[1] = Integer.toString(l.getStartLine()); 
-			elements[2] = Integer.toString(l.getEndLine());
-			elements[3] = bug.getBugCode(); // TODO: Is bug type, bug code??
-			elements[4] = tool;
-			elements[5] = platform;
-			rowElements.add(elements);
 		}
 	}
 	
 	@Override
+	/**
+	 * Callback for metric in SCARF
+	 * @param metric Metric that was just parsed from SCARF file
+	 */
 	public void metricCallback(Metric metric) {
 		metrics.add(metric);
 	}
 	
 	@Override
+	/**
+	 * Callback for metric summary in SCARF
+	 * @param summary MetricSummary that was just parsed from SCARF file
+	 */
 	public void metricSummaryCallback(MetricSummary summary) {
 		metricSummaries.add(summary);
 	}
@@ -108,10 +142,11 @@ public class ResultsParser implements ScarfInterface {
 		bugSummaries.add(summary);
 	}
 	
-	public List<String[]> getRows() {
-		return rowElements;
-	}
-	
+	/**
+	 * Given the name of a file, returns the bugs found in that file
+	 * @param filename source code file name
+	 * @return list of bugs found in that file
+	 */
 	public List<BugInstance> getFileBugs(String filename) {
 		System.out.println("Filename queried: " + filename);
 		if (fileBugs.containsKey(filename)) {
@@ -122,8 +157,19 @@ public class ResultsParser implements ScarfInterface {
 		}
 	}
 	
+	/**
+	 * Getter for tool name
+	 * @return name of tool that ran the assessment
+	 */
 	public String getToolName() {
 		return tool;
 	}
 	
+	/**
+	 * Getter for platform name
+	 * @return name of platform assessment was run on
+	 */
+	public String getPlatformName() {
+		return platform;
+	}
 }
