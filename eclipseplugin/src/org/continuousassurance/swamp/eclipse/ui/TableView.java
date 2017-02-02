@@ -56,7 +56,7 @@ public class TableView extends ViewPart {
 	/**
 	 * Widths of the columns of the table
 	 */
-	private static final int[] COLUMN_WIDTHS = {500, 300, 300, 500, 500, 500};
+	private static final int[] COLUMN_WIDTHS = {400, 50, 50, 400, 200, 200};
 	/**
 	 * SWT Table widget
 	 */
