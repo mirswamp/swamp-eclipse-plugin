@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -206,7 +207,25 @@ public class ImprovedClasspathHandler {
 		IProject project = file.getProject();
 		IPath projectPath = project.getLocation();
 		System.out.println("Source location: " + projectPath.toOSString());
-		filesToArchive.add(projectPath.toOSString());
+		
+		// (1) Copy the files from here to plug-in area
+		File src = new File(projectPath.toOSString());
+		File dst = new File(getProjectPluginLocation() + SEPARATOR + project.getName());
+		System.out.println("Src path: " + src.getPath());
+		System.out.println("Dst path: " + dst.getPath());
+		try {
+			FileUtils.copyDirectory(src, dst);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			// TODO Handle this better!
+			e.printStackTrace();
+		}
+		filesToArchive.add(dst.getPath().toString());
+		
+		// (2) Name the directory the Eclipse project name
+		// (3) Add that path to filesToArchive
+		
+		//filesToArchive.add(projectPath.toOSString());
 	}
 	
 	/**
@@ -434,6 +453,7 @@ public class ImprovedClasspathHandler {
 	 * @return project name
 	 */
 	public String getProjectName() {
+		//return Utils.getProjectDirectory(project.getProject());
 		return project.getProject().getName();
 	}
 	
@@ -491,7 +511,9 @@ public class ImprovedClasspathHandler {
 	 */
 	public IPath getDefaultOutputLocation() {
 		try {
-			return project.getOutputLocation();
+			System.out.println("Absolute default output location: " + project.getOutputLocation().makeAbsolute());
+			System.out.println("Relative default output location: " + project.getOutputLocation().makeRelative());
+			return project.getOutputLocation().makeAbsolute();
 		} catch (JavaModelException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
