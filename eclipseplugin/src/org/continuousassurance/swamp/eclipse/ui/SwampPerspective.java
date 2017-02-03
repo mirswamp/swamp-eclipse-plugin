@@ -192,19 +192,22 @@ public class SwampPerspective implements IPerspectiveFactory {
 		 * TableView from here. Doing it here in the SwampPerspective class
 		 * makes the most sense as we can update the editor from here as well.
 		 */
-		@Override
-		/**
-		 * Parses SCARF and updates views as appropriate when file is changed
-		 * @param part reference to the workbench part
-		 */
-		public void partActivated(IWorkbenchPartReference part) {
-
-			System.out.println("Doing all of the part updating");
-			System.out.println("Part Activated");
-			IProject project = HandlerUtilityMethods.getActiveProject(window);
+		
+		private IProject currentlyOpenedProject;
+		
+		private void updatePerspective(IProject project) {
+			
 			if (project == null) {
+				System.out.println("Project null");
 				return;
 			}
+			if (project.equals(currentlyOpenedProject)) {
+				System.out.println("Project is the same!");
+				return;
+			}
+			currentlyOpenedProject = project;
+			
+			System.out.println("Switching projects!");
 			System.out.println("Project open: " + project.getName());
 			
 			String path = project.getProject().getWorkingLocation(PLUGIN_ID).toOSString() + Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
@@ -245,6 +248,17 @@ public class SwampPerspective implements IPerspectiveFactory {
 				resetTableView(page);
 				resetDetailView(page);
 			}
+		}
+
+		@Override
+		/**
+		 * Parses SCARF and updates views as appropriate when file is changed
+		 * @param part reference to the workbench part
+		 */
+		public void partActivated(IWorkbenchPartReference part) {
+			System.out.println("Part Activated");
+			IProject project = HandlerUtilityMethods.getActiveProject(window);
+			updatePerspective(project);
 		}
 		
 		/**
@@ -321,6 +335,7 @@ public class SwampPerspective implements IPerspectiveFactory {
 		
 		@Override
 		public void partBroughtToTop(IWorkbenchPartReference arg0) {
+			System.out.println("Part brought to the top #allthewayup");
 			// TODO Auto-generated method stub
 		}
 
@@ -347,8 +362,9 @@ public class SwampPerspective implements IPerspectiveFactory {
 
 		@Override
 		public void partOpened(IWorkbenchPartReference part) {
-			System.out.println("Part Opened");
-			//printPartInfo(part);
+			System.out.println("Part Activated");
+			IProject project = HandlerUtilityMethods.getActiveProject(window);
+			updatePerspective(project);;
 		}
 
 		@Override
