@@ -13,13 +13,9 @@
 package org.continuousassurance.swamp.eclipse.ui;
 
 import java.util.Comparator;
-import java.util.List;
-
 import org.continuousassurance.swamp.eclipse.BugDetail;
-import org.continuousassurance.swamp.eclipse.ResultsParser;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;

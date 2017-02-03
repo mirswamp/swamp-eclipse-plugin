@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Malcolm Reid Jr.
+ * Copyright 2016-2017 Malcolm Reid Jr.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,19 +12,15 @@
  */
 package org.continuousassurance.swamp.eclipse.handlers;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.ResultsUtils;
-import org.continuousassurance.swamp.eclipse.SwampSubmitter;
-import org.continuousassurance.swamp.eclipse.Utils;
 import org.continuousassurance.swamp.eclipse.dialogs.AuthenticationDialog;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.internal.resources.File;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;

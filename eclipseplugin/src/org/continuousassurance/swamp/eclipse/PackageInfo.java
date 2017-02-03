@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Malcolm Reid Jr.
+ * Copyright 2016-2017 Malcolm Reid Jr.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,12 +13,8 @@
 
 package org.continuousassurance.swamp.eclipse;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
@@ -27,12 +23,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 import org.apache.commons.codec.binary.Hex;
 import static org.eclipse.core.runtime.Path.SEPARATOR;
-
-import org.eclipse.core.runtime.IPath;
 
 /**
  * This class process information and generates the package.conf

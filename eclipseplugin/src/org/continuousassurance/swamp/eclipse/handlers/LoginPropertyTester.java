@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Malcolm Reid Jr.
+ * Copyright 2016-2017 Malcolm Reid Jr.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,9 +13,7 @@
 package org.continuousassurance.swamp.eclipse.handlers;
 
 import org.continuousassurance.swamp.eclipse.Activator;
-import org.continuousassurance.swamp.eclipse.SwampSubmitter;
 import org.eclipse.core.expressions.PropertyTester;
-import org.eclipse.ui.PlatformUI;
 
 /**
  * Tests whether user is logged into SWAMP

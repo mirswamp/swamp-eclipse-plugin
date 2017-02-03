@@ -16,24 +16,11 @@ package org.continuousassurance.swamp.eclipse;
 import javaSCARF.ScarfInterface;
 import javaSCARF.ScarfXmlReader;
 
-import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
-
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Set;
-
-import org.continuousassurance.swamp.eclipse.ui.TableView;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.ui.IWorkbenchWindow;
-
-import java.util.HashSet;
-
 import dataStructures.*;
 
 public class ResultsParser implements ScarfInterface {
