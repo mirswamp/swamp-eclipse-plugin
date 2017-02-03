@@ -16,11 +16,11 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
@@ -42,6 +42,12 @@ import static org.eclipse.core.runtime.IPath.SEPARATOR;
  * @since 07/2016 
  */
 public class Utils {
+	
+	/**
+	 * Private constructor to prevent subclassing
+	 */
+	private Utils() {
+	}
 
 	/**
 	 * Generates a timestamp without spaces for the current time 
@@ -76,7 +82,8 @@ public class Utils {
 	public static String convertListToDelimitedString(List<String> list, String delimiter) {
 		StringBuffer sb = new StringBuffer();
 		for (int i = 0; i < list.size()-1; i++) {
-			sb.append(list.get(i) + delimiter);
+			sb.append(list.get(i));
+			sb.append(delimiter);
 		}
 		sb.append(list.get(list.size()-1));
 		return sb.toString();
@@ -92,9 +99,7 @@ public class Utils {
 	public static List<String> convertDelimitedStringToList(String delimitedString, String delimiter) {
 		String[] array = delimitedString.split(delimiter);
 		List<String> list = new ArrayList<String>(array.length);
-		for (int i = 0; i < array.length; i++) {
-			list.add(array[i]);
-		}
+		list = Arrays.asList(array);
 		return list;
 	}
 	
@@ -157,9 +162,11 @@ public class Utils {
 			fileOS = new FileOutputStream(finalPath);
 			ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(fileOS));
 			// All of these files should be top level in the generated archive
+			File f;
+			String lastSegment;
 			for (String file : files) {
-				String lastSegment = new Path(file).lastSegment();
-				File f = new File(file);
+				lastSegment = new Path(file).lastSegment();
+				f = new File(file);
 				System.out.println(file);
 				if (f.isDirectory()) {
 					addEntries(file, lastSegment, out);
@@ -192,11 +199,12 @@ public class Utils {
 			return;
 		}
 		
+		File f;
 		for (int i = 0; i < files.length; i++) {
 			filename = pathname + SEPARATOR + files[i];
-			File f = new File(filename);
+			f = new File(filename);
 			if (f.isDirectory()) {
-				addEntries(filename, basePath.equals("") ? files[i]:basePath + SEPARATOR + files[i], out);
+				addEntries(filename, "".equals(basePath) ? files[i]:basePath + SEPARATOR + files[i], out);
 			}
 			else {
 				System.out.println("File name: " + filename);

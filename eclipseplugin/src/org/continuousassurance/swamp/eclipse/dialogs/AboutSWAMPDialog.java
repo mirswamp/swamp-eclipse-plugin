@@ -25,7 +25,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
-import org.osgi.framework.Bundle;
 
 /**
  * Implements About SWAMP
@@ -34,15 +33,15 @@ import org.osgi.framework.Bundle;
  */
 public class AboutSWAMPDialog extends TitleAreaDialog {
 	
-	private static String ABOUT_SWAMP_TITLE = "About SWAMP";
-	private static String ABOUT_SWAMP_NAME = "SWAMP Eclipse Plugin\n";
-	//private static String ABOUT_SWAMP_RELEASE_DATE = // Get release date
-	//private static String ABOUT_SWAMP_RELEASE_VERSION = // Get release version
-	//private static String ABOUT_SWAMP_LINK = "";
-	//private static String ABOUT_ECLIPSE_PLUGIN_LINK = "";
-	//private static String ABOUT_SWAMP_GITHUB_LINK = "";
-	private static String ABOUT_SWAMP_LICENSE_LINK = "Please visit <a href=\"https://www.apache.org/licenses/LICENSE-2.0\">Apache License</a> for licensing information.";
-	private static String ABOUT_SWAMP_SUPPORT_INFO = "Please visit <a href=\"https://continuousassurance.org/support/\"> Continuous Assurance Support</a> for technical support.\n";
+	private static final String ABOUT_SWAMP_TITLE = "About SWAMP";
+	private static final String ABOUT_SWAMP_NAME = "SWAMP Eclipse Plugin\n";
+	//private static final String ABOUT_SWAMP_RELEASE_DATE = // Get release date
+	//private static final String ABOUT_SWAMP_RELEASE_VERSION = // Get release version
+	//private static final String ABOUT_SWAMP_LINK = "";
+	//private static final String ABOUT_ECLIPSE_PLUGIN_LINK = "";
+	//private static final String ABOUT_SWAMP_GITHUB_LINK = "";
+	private static final String ABOUT_SWAMP_LICENSE_LINK = "Please visit <a href=\"https://www.apache.org/licenses/LICENSE-2.0\">Apache License</a> for licensing information.";
+	private static final String ABOUT_SWAMP_SUPPORT_INFO = "Please visit <a href=\"https://continuousassurance.org/support/\"> Continuous Assurance Support</a> for technical support.\n";
 	
 	public AboutSWAMPDialog(Shell parentShell) {
 		super(parentShell);

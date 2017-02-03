@@ -290,6 +290,7 @@ public class SwampSubmitter {
 				ImprovedClasspathHandler ich = new ImprovedClasspathHandler(jp, null, !si.packageSystemLibraries(), childSubMonitor);
 				Set<String> files = ich.getFilesToArchive();
 				
+				// TODO: Modularize these into a function call
 				if (subMonitor.isCanceled()) {
 					IStatus status = Status.CANCEL_STATUS;
 					done(status);

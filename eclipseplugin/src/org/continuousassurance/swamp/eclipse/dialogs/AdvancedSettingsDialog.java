@@ -38,14 +38,14 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 	private Text configScriptText;
 	private Button selectFileButton;
 
-	private static String ADVANCED_SETTINGS_TITLE = "Advanced Settings";
-	private static String BUILD_OPTIONS_HELP = "Add flags to be used when your package is built.";		
-	private static String CONFIG_COMMAND_HELP = "Write the command to be used prior to building your package";
-	private static String CONFIG_OPTIONS_HELP = "Add flags to be used when your package is configured.";
-	private static String SELECT_FILE_HELP = "Select your configure script";
+	private static final String ADVANCED_SETTINGS_TITLE = "Advanced Settings";
+	private static final String BUILD_OPTIONS_HELP = "Add flags to be used when your package is built.";		
+	private static final String CONFIG_COMMAND_HELP = "Write the command to be used prior to building your package";
+	private static final String CONFIG_OPTIONS_HELP = "Add flags to be used when your package is configured.";
+	private static final String SELECT_FILE_HELP = "Select your configure script";
 	
-	private Shell shell;
-	private ConfigDialog parentDialog;
+	private final Shell shell;
+	private final ConfigDialog parentDialog;
 	
 	public AdvancedSettingsDialog(Shell parentShell, ConfigDialog cd) {
 		super(parentShell);
@@ -123,9 +123,6 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 	 */
 	private class ClearButtonSelectionListener implements SelectionListener {
 		
-		public ClearButtonSelectionListener() {
-		}
-		
 		@Override
 		public void widgetSelected(SelectionEvent e) {
 			resetWidgets();
@@ -142,8 +139,6 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 	 *
 	 */
 	private class FileSelectionListener implements SelectionListener {
-		public FileSelectionListener() {
-		}
 		
 		@Override
 		public void widgetSelected(SelectionEvent e) {

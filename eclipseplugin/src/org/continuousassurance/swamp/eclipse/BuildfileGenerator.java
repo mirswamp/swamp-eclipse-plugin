@@ -15,7 +15,6 @@ package org.continuousassurance.swamp.eclipse;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -48,38 +47,79 @@ public class BuildfileGenerator {
 	/**
 	 * The name used for referencing the classpath for a project.
 	 */
-	private static String 	CLASSPATH_NAME 		= "project.classpath";
+	private static final String 	CLASSPATH_NAME 		= "project.classpath";
 	
 	/**
 	 * The name used for referencing the bootclasspath for a project.
 	 */	
-	private static String 	BOOTCLASSPATH_NAME	= "project.bootclasspath";
+	private static final String 	BOOTCLASSPATH_NAME	= "project.bootclasspath";
 	
 	/**
 	 * The name used for referencing the sourcepath for a project.
 	 */
-	private static String	SOURCEPATH_NAME		= "project.sourcepath";
+	private static final String	SOURCEPATH_NAME		= "project.sourcepath";
 	
 	/**
 	 * The name used for referencing the SWAMP binary directory.
 	 */
-	private static String 	SWAMPBIN_NAME 		= "swampbin";
+	private static final String 	SWAMPBIN_NAME 		= "swampbin";
 	
 	/**
 	 * The relative path of the SWAMP binary directory.
 	 */
-	private static String 	SWAMPBIN_REL_PATH 	= "swampbin";
+	private static final String 	SWAMPBIN_REL_PATH 	= "swampbin";
 	
 	/**
 	 * The name of the generated build file.
 	 */
-	public static String 	BUILDFILE_EXT		= ".xml";
+	public static final String 	BUILDFILE_EXT		= ".xml";
 	
 	/**
 	 * The number of spaces to indent per level in the generated XML 
 	 * file.
 	 */
-	private static int 		INDENT_SPACES 		= 4;
+	private static final int 	INDENT_SPACES 		= 4;
+	
+	/**
+	 * Variables for ant attributes
+	 */
+	private static final String ANT_INDENT_NUMBER = "indent-number";
+	private static final String ANT_YES = "yes";
+	private static final String ANT_PROJECT = "project";
+	private static final String ANT_DEFAULT = "default";
+	private static final String ANT_BUILD = "build";
+	private static final String ANT_NAME = "name";
+	private static final String ANT_SOURCE = "source";
+	private static final String ANT_TARGET = "target";
+	private static final String ANT_VALUE = "value";
+	private static final String ANT_PROPERTY = "property";
+	private static final String ANT_PATH = "path";
+	private static final String ANT_ID = "id";
+	private static final String ANT_PATH_ELEMENT = "pathelement";
+	private static final String ANT_LOCATION = "location";
+	private static final String ANT_INIT = "init";
+	private static final String ANT_MKDIR = "mkdir";
+	private static final String ANT_DIR = "dir";
+	private static final String ANT_DEPENDS = "depends";
+	private static final String ANT_ANT = "ant";
+	private static final String ANT_ANTFILE = "antfile";
+	private static final String ANT_JAVAC = "javac";
+	private static final String ANT_INCLUDE_ANT_RUNTIME = "includeantruntime";
+	private static final String ANT_FALSE = "false";
+	private static final String ANT_CLASSPATHREF = "classpathref";
+	private static final String ANT_BOOTCLASSPATHREF = "bootclasspathref";
+	private static final String ANT_SOURCEPATHREF = "sourcepathref";
+	private static final String ANT_SOURCEPATH = "sourcepath";
+	private static final String ANT_ENCODING = "encoding";
+	private static final String ANT_DESTDIR = "destdir";
+	private static final String ANT_INCLUDE = "include";
+	private static final String ANT_EXCLUDE = "exclude";
+	
+	/**
+	 * Private constructor so this class is not subclassed
+	 */
+	private BuildfileGenerator() {
+	}
 
 	/**
 	 * Generates a build file for the passed in project and saves the
@@ -111,9 +151,9 @@ public class BuildfileGenerator {
 			setBuildTarget(doc, root, project.getDefaultOutputLocation().toOSString(), project.getDependentProjects(), project.getSourceClasspath(), prjName, filePaths);	
 			
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
-			transformerFactory.setAttribute("indent-number", INDENT_SPACES);
+			transformerFactory.setAttribute(ANT_INDENT_NUMBER, INDENT_SPACES);
 			Transformer transformer = transformerFactory.newTransformer();
-			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty(OutputKeys.INDENT, ANT_YES);
 			DOMSource source = new DOMSource(doc);
 			String buildFilePath = project.getProjectPluginLocation() + SEPARATOR + project.getProjectName() + BUILDFILE_EXT;
 			File buildFile = new File(buildFilePath);
@@ -149,11 +189,11 @@ public class BuildfileGenerator {
 	 */
 	private static Element generateRoot(Document doc, String projectName) {
 		// project
-		Element root = doc.createElement("project");
-		Attr defaultTask = doc.createAttribute("default");
-		defaultTask.setValue("build");
+		Element root = doc.createElement(ANT_PROJECT);
+		Attr defaultTask = doc.createAttribute(ANT_DEFAULT);
+		defaultTask.setValue(ANT_BUILD);
 		root.setAttributeNode(defaultTask);
-		Attr prjName = doc.createAttribute("name");
+		Attr prjName = doc.createAttribute(ANT_NAME);
 		prjName.setValue(projectName);
 		root.setAttributeNode(prjName);
 		return root;
@@ -172,10 +212,10 @@ public class BuildfileGenerator {
 		Element swampbinProperty = getProperty(doc, SWAMPBIN_NAME, binPath);
 		root.appendChild(swampbinProperty);
 		
-		Element srcVersionProperty = getProperty(doc, "source", srcVersion); 
+		Element srcVersionProperty = getProperty(doc, ANT_SOURCE, srcVersion); 
 		root.appendChild(srcVersionProperty);
 		
-		Element targetVersionProperty = getProperty(doc, "target", targetVersion);
+		Element targetVersionProperty = getProperty(doc, ANT_TARGET, targetVersion);
 		root.appendChild(targetVersionProperty);
 	}
 	
@@ -187,9 +227,9 @@ public class BuildfileGenerator {
 	 * @return the image descriptor
 	 */
 	private static Element getProperty(Document doc, String name, String value) {
-		Element property = doc.createElement("property");
-		property.setAttribute("name", name);
-		property.setAttribute("value", value);
+		Element property = doc.createElement(ANT_PROPERTY);
+		property.setAttribute(ANT_NAME, name);
+		property.setAttribute(ANT_VALUE, value);
 		return property;
 	}
 	
@@ -203,8 +243,8 @@ public class BuildfileGenerator {
 	 * @param projectName the projectName
 	 */
 	private static void setLibraryClasspath(Document doc, Element root, List<IClasspathEntry> libEntries, List<IClasspathEntry> dependentProjectExports, List<IClasspathEntry> srcEntries, List<ImprovedClasspathHandler> dependentProjects, String defaultOutputDir) {
-		Element path = doc.createElement("path");
-		path.setAttribute("id", CLASSPATH_NAME);
+		Element path = doc.createElement(ANT_PATH);
+		path.setAttribute(ANT_ID, CLASSPATH_NAME);
 		addLibraryEntries(doc, path, libEntries);
 		addLibraryEntries(doc, path, dependentProjectExports);
 
@@ -243,8 +283,8 @@ public class BuildfileGenerator {
 	 * @param srcEntries list of source entries to be added
 	 */
 	private static void addSourceOutputEntries(Document doc, Element path, List<IClasspathEntry> srcEntries) {
-		Set<String> dirs = new HashSet<>();
 		if (srcEntries != null) {
+			Set<String> dirs = new HashSet<>();
 			for (IClasspathEntry entry : srcEntries) {
 				IPath outputPath = entry.getOutputLocation();
 				if (outputPath != null) {
@@ -266,8 +306,8 @@ public class BuildfileGenerator {
 	 * @param entries list of classpath entries
 	 */
 	private static void setBootClasspath(Document doc, Element root, List<IClasspathEntry> entries) {
-		Element path = doc.createElement("path");
-		path.setAttribute("id", BOOTCLASSPATH_NAME);
+		Element path = doc.createElement(ANT_PATH);
+		path.setAttribute(ANT_ID, BOOTCLASSPATH_NAME);
 		for (IClasspathEntry entry : entries) {
 			String rootedPath = entry.getPath().toOSString();
 			String relativePath = rootedPath.substring(1);
@@ -286,8 +326,8 @@ public class BuildfileGenerator {
 	 */
 	private static void setSourcepath(Document doc, Element root, List<IClasspathEntry> entries, List<ImprovedClasspathHandler> dependentProjects) {
 		// TODO Get rid of duplicate code
-		Element path = doc.createElement("path");
-		path.setAttribute("id", SOURCEPATH_NAME);
+		Element path = doc.createElement(ANT_PATH);
+		path.setAttribute(ANT_ID, SOURCEPATH_NAME);
 		addSourceEntries(doc, path, entries);
 		for (ImprovedClasspathHandler i : dependentProjects) {
 			addSourceEntries(doc, path, i.getSourceClasspath());
@@ -317,8 +357,8 @@ public class BuildfileGenerator {
 	 * @param strPath the actual path
 	 */
 	private static void addPathElement(Document doc, Element path, String strPath) {
-		Element pe = doc.createElement("pathelement");
-		pe.setAttribute("location", strPath);
+		Element pe = doc.createElement(ANT_PATH_ELEMENT);
+		pe.setAttribute(ANT_LOCATION, strPath);
 		path.appendChild(pe);
 	}
 	
@@ -333,12 +373,12 @@ public class BuildfileGenerator {
 	 * @return the element for "mkdir" of the output directory
 	 */
 	private static Element setInitTarget(Document doc, Element root, String relOutputDir) {
-		Element target = doc.createElement("target");
-		target.setAttribute("name", "init");
+		Element target = doc.createElement(ANT_TARGET);
+		target.setAttribute(ANT_NAME, ANT_INIT);
 		root.appendChild(target);
 		
-		Element mkdir = doc.createElement("mkdir");
-		mkdir.setAttribute("dir", relOutputDir);
+		Element mkdir = doc.createElement(ANT_MKDIR);
+		mkdir.setAttribute(ANT_DIR, relOutputDir);
 		target.appendChild(mkdir);
 		return target;
 	}
@@ -356,15 +396,15 @@ public class BuildfileGenerator {
 	 * @param isRoot is this project the root  
 	 * @return the image descriptor
 	 */
-	private static void setBuildTarget(Document doc, Element root, String prjOutputDirectory, List<ImprovedClasspathHandler> dependentProjects, List<IClasspathEntry> srcEntries, String projectName, Set<String> filePaths) {
+	private static void setBuildTarget(Document doc, Element root, String outputDirectory, List<ImprovedClasspathHandler> dependentProjects, List<IClasspathEntry> srcEntries, String projectName, Set<String> filePaths) {
 		
-		prjOutputDirectory = prjOutputDirectory.substring(1); // unroot it
+		String prjOutputDirectory = outputDirectory.substring(1); // unroot it
 		System.out.println("Relative output directory: " + prjOutputDirectory);
-		Element target = doc.createElement("target");
-		target.setAttribute("name", "build");
+		Element target = doc.createElement(ANT_TARGET);
+		target.setAttribute(ANT_NAME, ANT_BUILD);
 		//if (isRoot) {
 			Element init = setInitTarget(doc, root, prjOutputDirectory);
-			target.setAttribute("depends", "init");
+			target.setAttribute(ANT_DEPENDS, ANT_INIT);
 		//}
 		
 		root.appendChild(target);
@@ -372,9 +412,9 @@ public class BuildfileGenerator {
 		for (ImprovedClasspathHandler ich : dependentProjects) {
 			BuildfileGenerator.generateBuildFile(ich, filePaths);
 			String buildFilePath = ich.getProjectName() + BUILDFILE_EXT; // this will be in the same directory
-			Element ant = doc.createElement("ant");
-			ant.setAttribute("antfile", buildFilePath); 
-			ant.setAttribute("target", "build");
+			Element ant = doc.createElement(ANT_ANT);
+			ant.setAttribute(ANT_ANTFILE, buildFilePath); 
+			ant.setAttribute(ANT_TARGET, ANT_BUILD);
 			target.appendChild(ant);
 		}
 		
@@ -382,23 +422,23 @@ public class BuildfileGenerator {
 		for (IClasspathEntry entry : srcEntries) {
 			IPath[] inclusionPatterns = entry.getInclusionPatterns();
 			IPath[] exclusionPatterns = entry.getExclusionPatterns();
-			Element javac = doc.createElement("javac");
-			javac.setAttribute("includeantruntime", "false");
-			javac.setAttribute("classpathref", CLASSPATH_NAME);
-			javac.setAttribute("bootclasspathref", BOOTCLASSPATH_NAME);
+			Element javac = doc.createElement(ANT_JAVAC);
+			javac.setAttribute(ANT_INCLUDE_ANT_RUNTIME, ANT_FALSE);
+			javac.setAttribute(ANT_CLASSPATHREF, CLASSPATH_NAME);
+			javac.setAttribute(ANT_BOOTCLASSPATHREF, BOOTCLASSPATH_NAME);
 			if (inclusionPatterns.length == 0 && exclusionPatterns.length == 0) {
-				javac.setAttribute("sourcepathref", SOURCEPATH_NAME);
+				javac.setAttribute(ANT_SOURCEPATHREF, SOURCEPATH_NAME);
 			}
 			else {
-				javac.setAttribute("sourcepath", getModifiedSourcePath(entry, srcEntries));
+				javac.setAttribute(ANT_SOURCEPATH, getModifiedSourcePath(entry, srcEntries));
 			}
 			String encoding = getEncodingAttribute(entry);
-			if (!encoding.equals("")) {
-				javac.setAttribute("encoding", encoding);
+			if (!("".equals(encoding))) {
+				javac.setAttribute(ANT_ENCODING, encoding);
 			}
 			// Source entries may have a specific output location associated with them, otherwise, we use the project's default location
 			IPath destPath = entry.getOutputLocation();
-			String destDir = null;
+			String destDir;
 			if (destPath != null) {
 				String strPath = destPath.toOSString();
 				destDir = strPath.substring(1);
@@ -406,21 +446,21 @@ public class BuildfileGenerator {
 			else {
 				destDir = prjOutputDirectory;
 			}
-			Element mkdir = doc.createElement("mkdir");
-			mkdir.setAttribute("dir", destDir); // TODO Become smarter about when we actually need this
+			Element mkdir = doc.createElement(ANT_MKDIR);
+			mkdir.setAttribute(ANT_DIR, destDir); // TODO Become smarter about when we actually need this
 			init.appendChild(mkdir);
-			javac.setAttribute("destdir", destDir);
-			javac.setAttribute("source", "${source}");
-			javac.setAttribute("target", "${target}");
+			javac.setAttribute(ANT_DESTDIR, destDir);
+			javac.setAttribute(ANT_SOURCE, "${source}");
+			javac.setAttribute(ANT_TARGET, "${target}");
 			
-			Element src = doc.createElement("src");
-			addInclusionExclusionPatterns(doc, javac, "include", entry.getInclusionPatterns());
-			addInclusionExclusionPatterns(doc, javac, "exclude", entry.getExclusionPatterns());
+			Element src = doc.createElement(ANT_SOURCE);
+			addInclusionExclusionPatterns(doc, javac, ANT_INCLUDE, entry.getInclusionPatterns());
+			addInclusionExclusionPatterns(doc, javac, ANT_EXCLUDE, entry.getExclusionPatterns());
 			
 			String absPath = entry.getPath().toOSString();
 			String strRelPath = absPath.substring(1);
 			System.out.println("Relative path: " + strRelPath);
-			src.setAttribute("path", strRelPath);
+			src.setAttribute(ANT_PATH, strRelPath);
 			javac.appendChild(src);
 			target.appendChild(javac);
 		}
@@ -463,7 +503,7 @@ public class BuildfileGenerator {
 		}
 		for (IPath pattern : patterns) {
 			Element include = doc.createElement(taskName);
-			include.setAttribute("name", pattern.toString());
+			include.setAttribute(ANT_NAME, pattern.toString());
 			parent.appendChild(include);
 		}
 	}
