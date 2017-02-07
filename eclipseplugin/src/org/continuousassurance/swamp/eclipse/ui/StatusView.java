@@ -52,7 +52,7 @@ public class StatusView extends ViewPart {
 	/**
 	 * Message for user not logged in while attempting to view results status
 	 */
-	private static String NOT_LOGGED_IN_MSG = "You are not currently logged into the SWAMP. Please log in before trying to view the status of your assessments";
+	private static String NOT_LOGGED_IN_MSG = "You are not currently logged into the SWAMP. Please log in before trying to view the status of your assessments.";
 	
 	@Override
 	public void createPartControl(Composite parent) {
