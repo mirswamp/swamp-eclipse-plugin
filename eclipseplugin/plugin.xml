@@ -5,7 +5,7 @@
 <!-- Making SWAMP perspective -->
 <extension point="org.eclipse.ui.perspectives">
 	<perspective
-		name="SWAMP Perspective"
+		name="SWAMP"
 		class="org.continuousassurance.swamp.eclipse.ui.SwampPerspective" 
 		id="org.continuousassurance.swamp.eclipse.ui.perspective"
 		icon="icons/swamp-logo-square-height-20.png">
