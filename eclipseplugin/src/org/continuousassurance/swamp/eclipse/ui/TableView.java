@@ -53,22 +53,14 @@ public class TableView extends ViewPart {
 	 * Widths of the columns of the table
 	 */
 	private static final int[] COLUMN_WIDTHS = {400, 50, 50, 400, 200, 200};
+	
+	private static final String[] COLUMN_TYPES = {Utils.STR_TYPE, Utils.INT_TYPE, Utils.INT_TYPE, Utils.STR_TYPE, Utils.STR_TYPE, Utils.STR_TYPE};
 	/**
 	 * SWT Table widget
 	 */
 	private Table table;
 	
-	/**
-	 * Name of int type for table column
-	 */
-	private static String INT_TYPE = "INT";
-	
-	/**
-	 * Name of string type for table column 
-	 */
-	private static String STR_TYPE = "STR";
-	
-	// TODO: Make columns have more appropriate widths by default
+
 	
 	/**
 	 * Constructor for TableView
@@ -77,25 +69,7 @@ public class TableView extends ViewPart {
 		super();
 	}
 	
-	/**
-	 * Creates and returns a table column for the specified table
-	 * @param table SWT table widget for the view
-	 * @param index index for column name and width to be set properly
-	 * @param type "INT" or "STRING" (need to know for sorting the column properly)
-	 * @return newly created table column
-	 */
-	private static TableColumn getTableColumn(Table table, int index, String type) {
-		TableColumn col = new TableColumn(table, SWT.NONE);
-		col.setText(COLUMN_NAMES[index]);
-		col.setWidth(COLUMN_WIDTHS[index]);
-		if (type.equals(INT_TYPE)) {
-			col.setData(Utils.INT_CMP(index));
-		}
-		else {
-			col.setData(Utils.STR_CMP(index));
-		}
-		return col;
-	}
+
 	
 	/**
 	 * Getter for table (ideally this wouldn't be exposed but we need it to be
@@ -112,26 +86,11 @@ public class TableView extends ViewPart {
 	 * @param parent composite on which widgets will be placed and positioned
 	 */
 	public void createPartControl(Composite parent) {
-		table = new Table(parent, SWT.BORDER | SWT.FULL_SELECTION);
-		table.setLinesVisible(true);
-		table.setHeaderVisible(true);
-		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
-		table.setLayoutData(gd);
+		table = Utils.constructTable(parent);
 		
-		TableColumn fileColumn = getTableColumn(table, 0, STR_TYPE);
-		TableColumn startLineColumn = getTableColumn(table, 1, INT_TYPE);
-		TableColumn endLineColumn = getTableColumn(table, 2, INT_TYPE);
-		TableColumn typeColumn = getTableColumn(table, 3, STR_TYPE);
-		TableColumn toolColumn = getTableColumn(table, 4, STR_TYPE);
-		TableColumn platformColumn = getTableColumn(table, 5, STR_TYPE);
-		
-		fileColumn.addListener(SWT.Selection, new SortListener());
-		startLineColumn.addListener(SWT.Selection, new SortListener());
-		endLineColumn.addListener(SWT.Selection, new SortListener());
-		typeColumn.addListener(SWT.Selection, new SortListener());
-		toolColumn.addListener(SWT.Selection, new SortListener());
-		platformColumn.addListener(SWT.Selection, new SortListener());
-		
+		for (int i = 0; i < COLUMN_NAMES.length; i++) {
+			Utils.addTableColumn(table, COLUMN_NAMES[i], COLUMN_WIDTHS[i], i, COLUMN_TYPES[i]);
+		}
 		table.addSelectionListener(new RowSelectionListener(table));
 		table.addListener(SWT.MouseDoubleClick, new Listener() {
 			@Override
@@ -160,49 +119,7 @@ public class TableView extends ViewPart {
 		table.setFocus();
 	}
 	
-	/**
-	 * Listener that enables sorting of columns when the column header is clicked
-	 * @author reid-jr
-	 *
-	 */
-	private class SortListener implements Listener {
 
-		@Override
-		/**
-		 * Sorts the clicked on column as appropriate
-		 * @param e click event
-		 */
-		public void handleEvent(Event e) {
-			TableColumn selectedCol = (TableColumn) e.widget;
-			int dir = table.getSortDirection();
-			if (table.getSortColumn() == selectedCol) {
-				dir = (dir == SWT.UP) ? SWT.DOWN : SWT.UP;
-			}
-			else {
-				dir = SWT.UP;
-				table.setSortColumn(selectedCol);
-			}
-			table.setSortDirection(dir);
-			TableItem[] items = table.getItems();
-			@SuppressWarnings("unchecked")
-			Comparator<TableItem> comparator = (Comparator<TableItem>) selectedCol.getData();
-			for (int i = 1; i < items.length; i++) {
-				for (int j = 0; j < i; j++) {
-		            if ((comparator.compare(items[i], items[j]) < 0 && dir == SWT.UP) || (comparator.compare(items[i], items[j]) > 0 && dir == SWT.DOWN)) {
-		            	String[] values = new String[COLUMN_NAMES.length];
-		            	for (int k = 0; k < COLUMN_NAMES.length; k++) {
-		            		values[k] = items[i].getText(k);
-		            	}
-		            	items[i].dispose();
-		            	TableItem item = new TableItem(table, SWT.NONE, j);
-		            	item.setText(values);
-		            	items = table.getItems();
-		            	break;
-		            }
-				}
-			}
-		}
-	}
 	
 	/**
 	 * Listener for TableItem (i.e. row) selection in a table

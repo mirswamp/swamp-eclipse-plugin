@@ -63,6 +63,11 @@ public class SwampPerspective implements IPerspectiveFactory {
 	 * Descriptor for the detail view
 	 */
 	public static final String DETAIL_VIEW_DESCRIPTOR = "org.continuousassurance.swamp.eclipse.ui.views.detailview";
+	
+	/**
+	 * Descriptor for the status view
+	 */
+	public static final String STATUS_VIEW_DESCRIPTOR = "org.continuousassurance.swamp.eclipse.ui.views.statusview";
 	/**
 	 * Cached reference to the active window
 	 */
@@ -107,6 +112,7 @@ public class SwampPerspective implements IPerspectiveFactory {
 		topLeft.addView(IPageLayout.ID_PROJECT_EXPLORER);
 		IFolderLayout bottom = layout.createFolder("bottom", IPageLayout.BOTTOM, 0.70f, editorArea);
 		bottom.addView(TABLE_VIEW_DESCRIPTOR);
+		bottom.addView(STATUS_VIEW_DESCRIPTOR);
 		IFolderLayout right = layout.createFolder("right", IPageLayout.RIGHT, 0.60f, editorArea);
 		right.addView(DETAIL_VIEW_DESCRIPTOR);
 		IPartService service = window.getPartService();
