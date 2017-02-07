@@ -55,6 +55,11 @@ public class DetailView extends ViewPart {
 	private static String PLATFORM_LABEL = "Platform: ";
 	
 	/**
+	 * Label for flow
+	 */
+	private static String FLOW_LABEL = "Flow: ";
+	
+	/**
 	 * Composite that this is built on
 	 */
 	private Composite composite;
@@ -128,13 +133,13 @@ public class DetailView extends ViewPart {
 	private String getBody(BugDetail bugInfo) {
 		StringBuffer sb = new StringBuffer("<body>");
 		BugInstance bug = bugInfo.getBugInstance();
-		sb.append(constructParagraph(MESSAGE_LABEL, bug.getBugMessage()));
-		sb.append(constructParagraph(LINE_NUMBER_LABEL, bugInfo.getPrimaryLineNumber()));
-		sb.append(constructParagraph(FILENAME_LABEL, bugInfo.getPrimaryFilename()));
-		sb.append(constructParagraph(TYPE_LABEL, bug.getBugGroup()));
-		sb.append(constructParagraph(TOOL_LABEL, bugInfo.getTool()));
-		sb.append(constructParagraph(PLATFORM_LABEL, bugInfo.getPlatform()));
-		sb.append(constructFlowParagraphs(bugInfo.getFlow()));
+		sb.append(constructParagraph(fmtBold(MESSAGE_LABEL), bug.getBugMessage()));
+		sb.append(constructParagraph(fmtBold(LINE_NUMBER_LABEL), bugInfo.getPrimaryLineNumber()));
+		sb.append(constructParagraph(fmtBold(FILENAME_LABEL), bugInfo.getPrimaryFilename()));
+		sb.append(constructParagraph(fmtBold(TYPE_LABEL), bug.getBugGroup()));
+		sb.append(constructParagraph(fmtBold(TOOL_LABEL), bugInfo.getTool()));
+		sb.append(constructParagraph(fmtBold(PLATFORM_LABEL), bugInfo.getPlatform()));
+		sb.append(constructFlowParagraphs(fmtBold(FLOW_LABEL), bugInfo.getFlow()));
 		sb.append("</body></html>");
 		return sb.toString();
 	}
@@ -158,11 +163,12 @@ public class DetailView extends ViewPart {
 	 * @param flow list of locations
 	 * @return HTML string
 	 */
-	private StringBuffer constructFlowParagraphs(List<String> flow) {
+	private StringBuffer constructFlowParagraphs(String label, List<String> flow) {
 		StringBuffer sb = new StringBuffer("");
 		if (flow.isEmpty()) {
 			return sb;
 		}
+		sb.append(label);
 		for (String location : flow) {
 			sb.append("<p>");
 			sb.append(location);
@@ -189,6 +195,10 @@ public class DetailView extends ViewPart {
 		else {
 			setHtml(details);
 		}
+	}
+	
+	private static String fmtBold(String text) {
+		return "<b>" + text + "</b>";
 	}
 
 }
