@@ -16,11 +16,9 @@ package org.continuousassurance.swamp.eclipse.ui;
 import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 

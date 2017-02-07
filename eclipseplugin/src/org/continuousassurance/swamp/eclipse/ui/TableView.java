@@ -12,19 +12,16 @@
  */
 package org.continuousassurance.swamp.eclipse.ui;
 
-import java.util.Comparator;
 import org.continuousassurance.swamp.eclipse.BugDetail;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbench;
