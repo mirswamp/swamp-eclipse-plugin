@@ -77,10 +77,20 @@ public class BugDetail {
 	private static String formatLineNumber(Location l) {
 		int start = l.getStartLine();
 		int end = l.getEndLine();
+		if (start == 0) {
+			return "";
+		}
 		if (start == end) {
 			return Integer.toString(start);
 		}
 		return Integer.toString(start) + "-" + Integer.toString(end);
+	}
+	
+	public static String formatSingleLineNumber(int ln) {
+		if (ln == 0) {
+			return "";
+		}
+		return Integer.toString(ln);
 	}
 	
 	/**
