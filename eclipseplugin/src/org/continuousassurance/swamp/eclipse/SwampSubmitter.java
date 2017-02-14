@@ -218,11 +218,11 @@ public class SwampSubmitter {
 				}
 				
 				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
-				
+				AssessmentDetails details = new AssessmentDetails(prjUUID, si.getPackageName(), si.getPackageVersion(), si.getProjectName());
 				for (String toolUUID : si.getSelectedToolIDs()) {
 					for (String platformUUID : si.getSelectedPlatformIDs()) {
 						subMonitor.split(SUBMISSION_TICKS);
-						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
+						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID, details);
 					}
 				}
 
@@ -386,11 +386,12 @@ public class SwampSubmitter {
 				}
 				
 				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
+				AssessmentDetails details = new AssessmentDetails(prjUUID, si.getPackageName(), si.getPackageVersion(), si.getProjectName());
 				
 				for (String toolUUID : si.getSelectedToolIDs()) {
 					for (String platformUUID : si.getSelectedPlatformIDs()) {
 						subMonitor.split(SUBMISSION_TICKS);
-						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID);
+						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID, details);
 					}
 				}
 			
@@ -671,7 +672,6 @@ public class SwampSubmitter {
 	}
 	
 	public void logOutOfSwamp() {
-		Activator.saveResults();
 		Activator.setLoggedIn(false);
 		if (!initializeSwampApi()) {
 			return;
@@ -679,7 +679,7 @@ public class SwampSubmitter {
 		api.logout();
 	}
 	
-	private void submitAssessment(String pkgUUID, String toolUUID, String prjUUID, String pltUUID) {
+	private void submitAssessment(String pkgUUID, String toolUUID, String prjUUID, String pltUUID, AssessmentDetails details) {
 		// Submit assessment
 		System.out.println("Package UUID: " + pkgUUID);
 		System.out.println("Tool UUID: " + toolUUID);
@@ -703,10 +703,11 @@ public class SwampSubmitter {
 		try {
 			assessUUID = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
 		} catch (InvalidIdentifierException | IncompatibleAssessmentTupleException e) {
-			// This means that some UUID was invalid
-			// This really should never happen
-			// TODO Auto-generated catch block
+			out.println(Utils.getBracketedTimestamp() + "Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");
+			// TODO handle error here
+			System.err.println("Error in running assessment.");
 			e.printStackTrace();
+			return;
 		}
 		if (assessUUID == null) {
 			out.println(Utils.getBracketedTimestamp() + "Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");
@@ -714,14 +715,31 @@ public class SwampSubmitter {
 			System.err.println("Error in running assessment.");
 		}
 		else {
-			//File f = new File(System.getProperty("user.home") + File.separator + SWAMP_RESULTS_DIRNAME + File.separator + prjUUID + File.separator + pkgUUID);
-			//if (!f.exists()) {
-			//	f.mkdirs();
-			//}
+			details.setSubmissionTime();
+			details.setAssessmentUUID(assessUUID);
+			System.out.println("Project UUID: " + prjUUID + " Assessment UUID: " + assessUUID);
+			details.setStatus(api.getAssessmentRecord(prjUUID, assessUUID).getStatus());
+			try {
+				SwampSubmitter.appendToUnfinishedFile(details.serialize());
+			} catch (IOException e) {
+				out.println(Utils.getBracketedTimestamp() + "Error: There was an error in storing the assessment information for this submission. Your results for this assessment will not show in Eclipse but will show online.");
+				e.printStackTrace();
+			}
 			// TODO: Take snapshot of the codebase and put it here - possibly even use archive
 			out.println(Utils.getBracketedTimestamp() + "Status: Successfully submitted assessment with tool {" + toolName + "} on platform {" + platformName +"}");
-			Activator.addAssessment(prjUUID, assessUUID);
 		}
+	}
+	
+	private static void appendToUnfinishedFile(String info) throws IOException {
+		System.out.println("Unfinished assessments located at: " + Activator.getUnfinishedAssessmentsPath());
+		File file = new File(Activator.getUnfinishedAssessmentsPath());
+		if (!file.exists()) {
+			file.createNewFile();
+		}
+		FileWriter fw;
+		fw = new FileWriter(file);
+		fw.write(info);
+		fw.close();
 	}
 	
 	private class JobCancellationListener implements IJobChangeListener {

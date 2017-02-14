@@ -48,60 +48,15 @@ public class CheckResultsHandler extends AbstractHandler {
 	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		/*
 		String message = "Got results\n";
 		window = HandlerUtil.getActiveWorkbenchWindow(event);
 		MessageDialog.open(MessageDialog.CONFIRM, window.getShell(), "Results", message, SWT.NONE);
 		checkForResults();
 		// Eventually this will be refactored into some sort of SwampResultsHandler but for now, we'll do it all here
 		// need to be logged in
-		// then we can fetch - keep some persistent object with the Set<String> of assessment ids                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+		 */
 		return null;
-	}
-	
-	private void checkForResults() {
-		try {
-			api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, Activator.getLastHostname());
-		} catch (Exception e) {
-			e.printStackTrace();
-			return;
-		}
-		try {
-			if (!api.restoreSession()) {
-				// Add authentication dialog here
-				if (!authenticateUser()) {
-					return;
-				}
-			}
-		} catch (Exception e) {
-			if (!authenticateUser()) {
-				return;
-			}
-		}
-		Map<String, Set<String>> unfinishedMap = Activator.getUnfinishedAssessments();
-		for (String projectID : unfinishedMap.keySet()) {
-			Set<String> set = unfinishedMap.get(projectID);
-			for (String assessID : set) {
-				// TODO: Get SwampApiWrapper instance
-				// TODO: Construct filepath
-				String id = projectID + "-" + assessID;
-				AssessmentRecord record = api.getAssessmentRecord(projectID, assessID);
-				System.out.println("Status: " + record.getStatus());
-				if (record.getStatus().equals("Finished")) {
-					String filepath = ResultsUtils.constructFilepath(projectID, record.getPackageUUID(), record.getToolUUID(), record.getPlatformUUID());
-					java.io.File f = new java.io.File(filepath);
-					if (f.exists()) {
-						f.delete();
-					}
-					api.getAssessmentResults(projectID, record.getAssessmentResultUUID(), filepath);
-					System.out.println("Found results for " + id);
-					System.out.println("Written to filepath: " + filepath);
-					Activator.finish(projectID, assessID);
-				}
-				else {
-					System.out.println("Still waiting on " + id);
-				}
-			}
-		}
 	}
 	
 	/* TODO: This is actually code from SwampSubmitter -- need to refactor it! */
