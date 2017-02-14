@@ -737,7 +737,7 @@ public class SwampSubmitter {
 			file.createNewFile();
 		}
 		FileWriter fw;
-		fw = new FileWriter(file);
+		fw = new FileWriter(file, true);
 		fw.write(info);
 		fw.close();
 	}

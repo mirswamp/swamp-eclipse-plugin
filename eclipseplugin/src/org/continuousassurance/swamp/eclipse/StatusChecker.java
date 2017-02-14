@@ -31,8 +31,7 @@ public class StatusChecker extends Job {
 	@Override
 	protected IStatus run(IProgressMonitor monitor) {
 		System.out.println("\n\nRunning status checker background job\n\n");
-		// TODO: Change this to run every 30s or minute. This is just 15s for debugging purposes
-		schedule(15000); // runs once every 15s
+		schedule(30000); // runs once every 30s
 		// Here's where we do the work
 		// (1) If user's not logged in, quit out immediately
 		if (!Activator.getLoggedIn()) {
@@ -49,6 +48,10 @@ public class StatusChecker extends Job {
 		SwampApiWrapper api = null;
 		try {
 			api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, Activator.getLastHostname());
+			if (!api.restoreSession()) {
+				sc.close();
+				return Status.OK_STATUS;
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			sc.close();
@@ -60,7 +63,7 @@ public class StatusChecker extends Job {
 		}
 		FileWriter writer = null;
 		try {
-			writer = new FileWriter(tmp);
+			writer = new FileWriter(tmp, true);
 		} catch (IOException e) {
 			e.printStackTrace();
 			sc.close();
@@ -78,16 +81,42 @@ public class StatusChecker extends Job {
 			String assessUUID = parts[1];
 			String newStatusStr = updateStatus(writer, api, prjUUID, assessUUID, assessmentDetails);
 			System.out.println("New status string: " + newStatusStr);
-			statuses.add(newStatusStr);
+			if (newStatusStr != null) { // null indicates this status is no longer in the unfinished file
+				statuses.add(newStatusStr);
+			}
 		}
 		sc.close();
+		try {
+			writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		oldFile.delete();
 		
 		tmp.renameTo(oldFile);
 		
+		addFinishedFileStatuses(statuses);
+		
 		System.out.println("Updating status view");
 		updateStatusView(statuses);
 		return Status.OK_STATUS;
+	}
+	
+	private void addFinishedFileStatuses(List<String> statuses) {
+		File f = new File(Activator.getFinishedAssessmentsPath());
+		Scanner sc = null;
+		try {
+			sc = new Scanner(f);
+		} catch (FileNotFoundException e) {
+			System.err.println(e.getMessage());
+			return;
+		}
+		while (sc.hasNext()) {
+			String status = sc.nextLine();
+			statuses.add(status);
+		}
+		sc.close();
 	}
 	
 	private void updateStatusView(List<String> statuses) {
@@ -95,16 +124,19 @@ public class StatusChecker extends Job {
 			Display.getDefault().asyncExec(new Runnable() {
 				@Override
 				public void run() {
+					System.out.println("Actually attempting to update status view");
 					IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 					StatusView view = (StatusView) page.findView(SwampPerspective.STATUS_VIEW_DESCRIPTOR);
 					if (view != null) {
+						System.out.println("Actually updating status view!");
 						view.clearTable();
-						for (String s : statuses) {
-							view.addRowToStatusTable(s);
-						}
+						view.addRowsToStatusTable(statuses);
 					}
 				}
 			});
+		}
+		else {
+			System.out.println("No statuses");
 		}
 	}
 	
@@ -113,14 +145,19 @@ public class StatusChecker extends Job {
 		System.out.println("Querying for assessment record with project UUID " + prjUUID + " and assessment UUID " + assessUUID);
 		AssessmentRecord rec = api.getAssessmentRecord(prjUUID, assessUUID);
 		String status = rec.getStatus();
+		System.out.println("Status: " + status);
 		String newDetailInfo = AssessmentDetails.updateStatus(serializedAssessmentDetails, status);
 		FileWriter finishedWriter = null;
 		try {
 			if ("Complete".equals(status)) {
 				File f = new File(Activator.getFinishedAssessmentsPath());
-				finishedWriter = new FileWriter(f);
+				if (!f.exists()) {
+					f.createNewFile();
+				}
+				finishedWriter = new FileWriter(f, true);
 				finishedWriter.write(newDetailInfo);
 				finishedWriter.close();
+				return null;
 			}
 			else {
 				unfinishedWriter.write(newDetailInfo);

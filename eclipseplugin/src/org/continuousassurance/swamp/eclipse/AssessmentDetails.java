@@ -41,6 +41,11 @@ public class AssessmentDetails {
 	public static final String DELIMITER = ",";
 	
 	/**
+	 * Number of hidden fields in serialized assessment details
+	 */
+	public static int NUM_HIDDEN_FIELDS = 2;
+	
+	/**
 	 * Constructor for AssessmentDetails object
 	 * @param prjUUID UUID of the SWAMP project
 	 * @param assessUUID UUID of the assessment

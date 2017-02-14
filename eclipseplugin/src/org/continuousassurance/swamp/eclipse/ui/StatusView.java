@@ -13,6 +13,8 @@
 
 package org.continuousassurance.swamp.eclipse.ui;
 
+import java.util.List;
+
 import org.continuousassurance.swamp.eclipse.AssessmentDetails;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.eclipse.jface.action.Action;
@@ -28,12 +30,12 @@ public class StatusView extends ViewPart {
 	/**
 	 * Names of the columns of the table
 	 */
-	public static final String[] COLUMN_NAMES = {"SWAMP Package", "Version", "Eclipse Project", "Submission Time", "Status", "Number of Bugs" };
+	public static final String[] COLUMN_NAMES = {"SWAMP Package", "Version", "Eclipse Project", "Submission Time", "Status", "Bugs" };
 	
 	/**
 	 * Widths of the columns of the table
 	 */
-	private static final int[] COLUMN_WIDTHS = {300, 100, 300, 100, 200, 50};
+	private static final int[] COLUMN_WIDTHS = {200, 260, 260, 200, 260, 50};
 	
 	/**
 	 * Types (String vs. int) of the columns of the table (this is used for sorting properly)
@@ -98,16 +100,6 @@ public class StatusView extends ViewPart {
 	@Override
 	public void setFocus() {
 		table.setFocus();
-		/*
-		if (Activator.getLoggedIn()) {
-			table.setFocus();
-		}
-		else {
-			table.removeAll();
-			Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-			MessageDialog.openError(shell, ERROR_TITLE, NOT_LOGGED_IN_MSG);
-		}
-		*/
 	}
 	
 	public void clearTable() {
@@ -116,12 +108,13 @@ public class StatusView extends ViewPart {
 		}
 	}
 	
-	public void addRowToStatusTable(String statusStr) {
-		TableItem item = new TableItem(table, SWT.NONE);
-		String[] parts = statusStr.split(AssessmentDetails.DELIMITER);
-		for (int i = 2; i < parts.length; i++) {
-			item.setText(i, parts[i]);
+	public void addRowsToStatusTable(List<String> statuses) {
+		for (String s : statuses) {
+			TableItem item = new TableItem(table, SWT.NONE);
+			String[] parts = s.split(AssessmentDetails.DELIMITER);
+			for (int i = AssessmentDetails.NUM_HIDDEN_FIELDS; i < parts.length; i++) {
+				item.setText(i-AssessmentDetails.NUM_HIDDEN_FIELDS, parts[i]);
+			}
 		}
 	}
-
 }
