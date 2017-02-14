@@ -12,24 +12,16 @@
  */
 package org.continuousassurance.swamp.eclipse.handlers;
 
-import java.util.Map;
-import java.util.Set;
-
-import org.continuousassurance.swamp.eclipse.Activator;
-import org.continuousassurance.swamp.eclipse.ResultsUtils;
-import org.continuousassurance.swamp.eclipse.dialogs.AuthenticationDialog;
+import org.continuousassurance.swamp.eclipse.ResultsRetriever;
+import org.continuousassurance.swamp.eclipse.SwampSubmitter;
+import org.continuousassurance.swamp.eclipse.exceptions.ResultsRetrievalException;
+import org.continuousassurance.swamp.eclipse.exceptions.UserNotLoggedInException;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.window.Window;
-import org.eclipse.swt.SWT;
+import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.console.MessageConsole;
-import org.eclipse.ui.console.MessageConsoleStream;
-import org.eclipse.ui.handlers.HandlerUtil;
-
-import edu.uiuc.ncsa.swamp.api.AssessmentRecord;
+import org.eclipse.ui.PlatformUI;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 
 /**
@@ -39,38 +31,23 @@ import edu.wisc.cs.swamp.SwampApiWrapper;
  */
 public class CheckResultsHandler extends AbstractHandler {
 
-	private IWorkbenchWindow window;
-	SwampApiWrapper api = null;
-	
-	public CheckResultsHandler() {
-		window = null;
-	}
-	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		/*
-		String message = "Got results\n";
-		window = HandlerUtil.getActiveWorkbenchWindow(event);
-		MessageDialog.open(MessageDialog.CONFIRM, window.getShell(), "Results", message, SWT.NONE);
-		checkForResults();
-		// Eventually this will be refactored into some sort of SwampResultsHandler but for now, we'll do it all here
-		// need to be logged in
-		 */
+		try {
+			ResultsRetriever.retrieveResults();
+		} catch (UserNotLoggedInException e) {
+			IWorkbench wb = PlatformUI.getWorkbench();
+			if (wb != null) {
+				IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
+				if (window != null) {
+					SwampSubmitter ss = new SwampSubmitter(window);
+					ss.authenticateUser();
+				}
+			}
+		} catch (ResultsRetrievalException e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 	
-	/* TODO: This is actually code from SwampSubmitter -- need to refactor it! */
-	private boolean authenticateUser() {
-		AuthenticationDialog ad = new AuthenticationDialog(window.getShell(), new MessageConsoleStream(new MessageConsole("SWAMP Results", null)));
-		ad.create();
-		if (ad.open() != Window.OK) {
-			return false;
-		}
-		api = ad.getSwampApiWrapper();
-		Activator.setLoggedIn(true);
-		return true;
-	}
-	
-
-
 }

@@ -542,7 +542,7 @@ public class SwampSubmitter {
 		authenticateUser();
 	}
 	
-	private boolean authenticateUser() {
+	public boolean authenticateUser() {
 		AuthenticationDialog ad = new AuthenticationDialog(window.getShell(), this.out);
 		ad.create();
 		if (ad.open() != Window.OK) {

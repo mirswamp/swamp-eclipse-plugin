@@ -16,13 +16,18 @@ package org.continuousassurance.swamp.eclipse.ui;
 import java.util.List;
 
 import org.continuousassurance.swamp.eclipse.AssessmentDetails;
+import org.continuousassurance.swamp.eclipse.ResultsRetriever;
+import org.continuousassurance.swamp.eclipse.SwampSubmitter;
 import org.continuousassurance.swamp.eclipse.Utils;
+import org.continuousassurance.swamp.eclipse.exceptions.ResultsRetrievalException;
+import org.continuousassurance.swamp.eclipse.exceptions.UserNotLoggedInException;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 public class StatusView extends ViewPart {
@@ -86,7 +91,14 @@ public class StatusView extends ViewPart {
 	private void createActions() {
 		refreshItemAction = new Action(REFRESH_ACTION_LABEL) {
 			public void run() {
-				// TODO: Refresh things here
+				try {
+					ResultsRetriever.retrieveResults();
+				} catch (UserNotLoggedInException e) {
+					SwampSubmitter ss = new SwampSubmitter(PlatformUI.getWorkbench().getActiveWorkbenchWindow());
+					ss.authenticateUser();
+				} catch (ResultsRetrievalException e) {
+					e.printStackTrace();
+				}
 			}
 		};
 		// TODO: refreshItemAction.setImageDescriptor("icons/refresh.png");
