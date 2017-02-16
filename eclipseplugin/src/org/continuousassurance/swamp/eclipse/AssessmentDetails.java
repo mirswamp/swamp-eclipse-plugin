@@ -7,6 +7,12 @@ package org.continuousassurance.swamp.eclipse;
  */
 
 public class AssessmentDetails {
+	
+	/**
+	 * String file path where the results should be stored
+	 */
+	private String resultsFilepath;
+	
 	/**
 	 * UUID of SWAMP project that assessment is for
 	 */
@@ -43,7 +49,7 @@ public class AssessmentDetails {
 	/**
 	 * Number of hidden fields in serialized assessment details
 	 */
-	public static int NUM_HIDDEN_FIELDS = 2;
+	public static int NUM_HIDDEN_FIELDS = 3;
 	
 	/**
 	 * Constructor for AssessmentDetails object
@@ -83,12 +89,16 @@ public class AssessmentDetails {
 		this.status = status;
 	}
 	
+	public void setResultsFilepath(String filepath) {
+		resultsFilepath = filepath;
+	}
+	
 	/**
 	 * Serializes the AssessmentDetail
 	 * @return String with the info for the assessment
 	 */
 	public String serialize() {
-		String str = prjUUID + DELIMITER + assessUUID + DELIMITER + packageName + 
+		String str = resultsFilepath + DELIMITER + prjUUID + DELIMITER + assessUUID + DELIMITER + packageName + 
 				DELIMITER + packageVersion + DELIMITER + eclipseProject + DELIMITER + submissionTime + 
 				DELIMITER + status + "\n";
 		return str;
@@ -110,7 +120,7 @@ public class AssessmentDetails {
 	 */
 	public static String updateStatus(String serializedAssessmentDetails, String status) {
 		String[] parts = serializedAssessmentDetails.split(DELIMITER);
-		parts[6] = status;
+		parts[7] = status;
 		StringBuilder sb = new StringBuilder(parts[0]);
 		for (int i = 1; i < parts.length; i++) {
 			sb.append(DELIMITER);
@@ -118,5 +128,24 @@ public class AssessmentDetails {
 		}
 		sb.append("\n");
 		return sb.toString();
+	}
+	
+	/**
+	 * Takes a serialized AssessmentDetail String and adds a bug count
+	 * @param serializedAssessmentDetails
+	 * @param bugCount number of bugs found in this assessment
+	 * @return updated serialized AssessmentDetail
+	 */
+	public static String addBugCount(String serializedAssessmentDetails, String bugCount) {
+		StringBuffer sb = new StringBuffer(serializedAssessmentDetails.substring(0, serializedAssessmentDetails.length()-1));
+		sb.append(DELIMITER);
+		sb.append(bugCount);
+		sb.append("\n");
+		return sb.toString();
+	}
+	
+	public static String getFilepath(String serializedAssessmentDetails) {
+		String[] parts = serializedAssessmentDetails.split(DELIMITER);
+		return parts[0];
 	}
 }

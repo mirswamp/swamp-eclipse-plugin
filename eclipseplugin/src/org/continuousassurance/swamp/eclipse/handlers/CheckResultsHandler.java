@@ -22,7 +22,6 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
-import edu.wisc.cs.swamp.SwampApiWrapper;
 
 /**
  * Handler for checking for results
@@ -41,7 +40,13 @@ public class CheckResultsHandler extends AbstractHandler {
 				IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
 				if (window != null) {
 					SwampSubmitter ss = new SwampSubmitter(window);
-					ss.authenticateUser();
+					if (ss.authenticateUser()) {
+						try {
+							ResultsRetriever.retrieveResults();
+						} catch (UserNotLoggedInException e1) {
+						} catch (ResultsRetrievalException e1) {
+						}
+					}
 				}
 			}
 		} catch (ResultsRetrievalException e) {

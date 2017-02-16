@@ -95,7 +95,15 @@ public class StatusView extends ViewPart {
 					ResultsRetriever.retrieveResults();
 				} catch (UserNotLoggedInException e) {
 					SwampSubmitter ss = new SwampSubmitter(PlatformUI.getWorkbench().getActiveWorkbenchWindow());
-					ss.authenticateUser();
+					if (ss.authenticateUser()) {
+						try {
+							ResultsRetriever.retrieveResults();
+						} catch (UserNotLoggedInException e1) {
+							e1.printStackTrace();
+						} catch (ResultsRetrievalException e1) {
+							e1.printStackTrace();
+						}
+					}
 				} catch (ResultsRetrievalException e) {
 					e.printStackTrace();
 				}

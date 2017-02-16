@@ -60,6 +60,8 @@ public class Activator extends AbstractUIPlugin {
 	// Name of file that stores list of finished assessments
 	private static final String FINISHED_ASSESS_FILENAME = ".finished_assess";
 	
+	private static StatusChecker sc;
+	
 	/**
 	 * The constructor
 	 */
@@ -80,9 +82,6 @@ public class Activator extends AbstractUIPlugin {
 		loggedIn = false;
 		hostname = DEFAULT_HOST;
 
-		StatusChecker sc = new StatusChecker();
-		sc.schedule();
-		
 		if (file.exists()) {
 			FileReader filereader = null;
 			BufferedReader reader = null;
@@ -194,6 +193,13 @@ public class Activator extends AbstractUIPlugin {
 	 * @param loggedIn true if user is logged into SWAMP
 	 */
 	public static void setLoggedIn(boolean loggedIn) {
+		if ((sc != null) && !loggedIn) {
+			sc.cancel();
+			sc = null;
+		}
+		else if ((sc == null) && loggedIn) {
+			sc = new StatusChecker();
+		}
 		Activator.loggedIn = loggedIn;
 	}
 

@@ -120,6 +120,15 @@ public class SwampSubmitter {
 		printInitialInfo(stream);
 		return stream;
 	}
+	
+	private void printToConsole(String msg) {
+		//if (out == null) {
+		//	out = initializeConsole("SWAMP Plugin");
+		//}
+		//if (out != null) {
+		//	out.println(msg);
+		//}
+	}
 
 	private void submitPreConfiguredJob(SubmissionInfo si) {
 		Job job = new Job(SWAMP_JOB_TITLE) {
@@ -134,7 +143,7 @@ public class SwampSubmitter {
 				int total = calculateTotalTicks(true, 0, si.getSelectedToolIDs().size());
 				SubMonitor subMonitor = SubMonitor.convert(monitor, total);
 				
-				out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
+				printToConsole(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
 				String pluginLoc = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
 				Date date = new Date();
 				String timestamp = date.toString();
@@ -162,7 +171,7 @@ public class SwampSubmitter {
 				subMonitor.split(PKG_CONF_TICKS);
 				File pkgConf = PackageInfo.generatePkgConfFile(archivePath, pluginLoc, si.getPackageName(), si.getPackageVersion(), ".", si.getPackageLanguage(), si.getPkgConfPackageType(), si.getBuildSystem(), si.getBuildDirectory(), si.getBuildFile(), si.getBuildTarget(), si.getBuildOpts(), si.getConfigDir(), si.getConfigCmd(), si.getConfigOpts());
 				
-				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
+				printToConsole(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
 				
 				if (subMonitor.isCanceled()) {
@@ -217,11 +226,13 @@ public class SwampSubmitter {
 					return status;
 				}
 				
-				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
+				printToConsole(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
 				AssessmentDetails details = new AssessmentDetails(prjUUID, si.getPackageName(), si.getPackageVersion(), si.getProjectName());
+				String pkgThingUUID = si.getPackageThingUUID();
 				for (String toolUUID : si.getSelectedToolIDs()) {
 					for (String platformUUID : si.getSelectedPlatformIDs()) {
 						subMonitor.split(SUBMISSION_TICKS);
+						details.setResultsFilepath(ResultsUtils.constructFilepath(prjUUID, pkgThingUUID, toolUUID, platformUUID));
 						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID, details);
 					}
 				}
@@ -256,7 +267,7 @@ public class SwampSubmitter {
 					entries = jp.getRawClasspath();
 					numClasspathEntries = entries.length;
 				} catch (Exception e) {
-					out.println(Utils.getBracketedTimestamp() + "Error: Unable to parse classpath.");
+					printToConsole(Utils.getBracketedTimestamp() + "Error: Unable to parse classpath.");
 					Status status = new Status(IStatus.ERROR, "eclipsepluin", UNABLE_TO_GENERATE_BUILD, "Unable to generate build for this project", null);
 					done(status);
 					return status;
@@ -264,7 +275,6 @@ public class SwampSubmitter {
 				
 				total = calculateTotalTicks(false, numClasspathEntries, si.getSelectedToolIDs().size());
 				SubMonitor subMonitor = SubMonitor.convert(monitor, total);
-				System.out.println("Total ticks: " + total);
 				
 				if (subMonitor.isCanceled()) {
 					IStatus status = Status.CANCEL_STATUS;
@@ -273,7 +283,7 @@ public class SwampSubmitter {
 				}
 				
 				if (jp.hasClasspathCycle(entries)) {
-					out.println(Utils.getBracketedTimestamp() + "Error: Classpath has cyclical dependencies. Please resolve these issues and resubmit.");
+					printToConsole(Utils.getBracketedTimestamp() + "Error: Classpath has cyclical dependencies. Please resolve these issues and resubmit.");
 					Status status = new Status(IStatus.ERROR, "org.continuousassurance.swamp.eclipse", CYCLICAL_DEPENDENCIES, "Project has cyclical dependencies", null);
 					done(status);
 					return status;
@@ -285,7 +295,7 @@ public class SwampSubmitter {
 					return status;
 				}
 				
-				out.println(Utils.getBracketedTimestamp() + "Status: Generating build file");
+				printToConsole(Utils.getBracketedTimestamp() + "Status: Generating build file");
 				SubMonitor childSubMonitor = subMonitor.split(numClasspathEntries * CLASSPATH_ENTRY_TICKS);
 				ImprovedClasspathHandler ich = new ImprovedClasspathHandler(jp, null, !si.packageSystemLibraries(), childSubMonitor);
 				Set<String> files = ich.getFilesToArchive();
@@ -302,11 +312,11 @@ public class SwampSubmitter {
 				try {
 					cleanProjects(si.getProject());
 				} catch (CoreException e) {
-					out.println(Utils.getBracketedTimestamp() + "Error: Unable to clean project or dependent projects. The tools may be unable to assess this package.");
+					printToConsole(Utils.getBracketedTimestamp() + "Error: Unable to clean project or dependent projects. The tools may be unable to assess this package.");
 				}
 				
 				subMonitor.split(ZIP_TICKS);
-				out.println(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
+				printToConsole(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
 				String pluginLoc = ich.getProjectPluginLocation();
 				Date date = new Date();
 				String timestamp = date.toString();
@@ -329,11 +339,11 @@ public class SwampSubmitter {
 					return status;
 				}
 				
-				out.println(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
+				printToConsole(Utils.getBracketedTimestamp() + "Status: Uploading package " + si.getPackageName() + " to SWAMP");
 				String prjUUID = si.getSelectedProjectID();
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
+				String pkgThingUUID = api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing().getUUIDString();
 				if (si.isNewPackage()) { // All packages will need to be made new for this to be configured properly
-					String pkgThingUUID = api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing().getUUIDString();
 					System.out.println("PackageThingUUID: " + pkgThingUUID);
 					System.out.println("PackageVersionUUID: " + pkgVersUUID);
 					String path = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString() + org.eclipse.core.runtime.Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
@@ -385,12 +395,13 @@ public class SwampSubmitter {
 					return status;
 				}
 				
-				out.println(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
+				printToConsole(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
 				AssessmentDetails details = new AssessmentDetails(prjUUID, si.getPackageName(), si.getPackageVersion(), si.getProjectName());
 				
 				for (String toolUUID : si.getSelectedToolIDs()) {
 					for (String platformUUID : si.getSelectedPlatformIDs()) {
 						subMonitor.split(SUBMISSION_TICKS);
+						details.setResultsFilepath(ResultsUtils.constructFilepath(prjUUID, pkgThingUUID, toolUUID, platformUUID));
 						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID, details);
 					}
 				}
@@ -466,7 +477,7 @@ public class SwampSubmitter {
 			System.out.println("Initialized SWAMP API");
 			api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, Activator.getLastHostname());
 		} catch (Exception e) {
-			out.println(Utils.getBracketedTimestamp() + "Error: Unable to initialize SWAMP API.");
+			printToConsole(Utils.getBracketedTimestamp() + "Error: Unable to initialize SWAMP API.");
 			e.printStackTrace();
 			return false;
 		}
@@ -486,7 +497,6 @@ public class SwampSubmitter {
 	}
 	
 	public void launchBackgroundAssessment(IProject project) {
-		out = initializeConsole("SWAMP Plugin");
 		if (!initializeSwampApi()) {
 			return;
 		}
@@ -505,14 +515,14 @@ public class SwampSubmitter {
 		}
 		
 		if (project == null) {
-			out.println(Utils.getBracketedTimestamp() + "Error: No Eclipse project open.");
+			printToConsole(Utils.getBracketedTimestamp() + "Error: No Eclipse project open.");
 			return;
 		}
 	
 		configFilepath = project.getWorkingLocation(PLUGIN_ID).toOSString() + SEPARATOR + CONFIG_FILENAME;
 		SubmissionInfo si = new SubmissionInfo(this.api);
 		if ((configFilepath == null) || (!new File(configFilepath).exists())) {
-			out.println(Utils.getBracketedTimestamp() + "Error: No previous assessment found.");
+			printToConsole(Utils.getBracketedTimestamp() + "Error: No previous assessment found.");
 			System.out.println("No previous assessment found at " + configFilepath);
 			si.initializeProject(project.getName(), project.getLocation().toOSString());
 			launchConfiguration(si);
@@ -520,7 +530,7 @@ public class SwampSubmitter {
 		else if (!FileSerializer.deserializeSubmissionInfo(configFilepath, si)) {
 			File f = new File(configFilepath);
 			f.delete();
-			out.println(Utils.getBracketedTimestamp() + "Warning: Unable to reload previous assesment. Configuration dialog will popup now.");
+			printToConsole(Utils.getBracketedTimestamp() + "Warning: Unable to reload previous assesment. Configuration dialog will popup now.");
 			si.initializeProject(project.getName(), project.getLocation().toOSString());
 			launchConfiguration(si);
 		}
@@ -535,7 +545,6 @@ public class SwampSubmitter {
 	}
 	
 	public void logIntoSwamp() {
-		out = initializeConsole("SWAMP Plugin");
 		if (!initializeSwampApi()) {
 			return;
 		}
@@ -546,7 +555,7 @@ public class SwampSubmitter {
 		AuthenticationDialog ad = new AuthenticationDialog(window.getShell(), this.out);
 		ad.create();
 		if (ad.open() != Window.OK) {
-			out.println(Utils.getBracketedTimestamp() + "Status: User manually exited login dialog.");
+			printToConsole(Utils.getBracketedTimestamp() + "Status: User manually exited login dialog.");
 			return false;
 		}
 		api = ad.getSwampApiWrapper();
@@ -577,7 +586,7 @@ public class SwampSubmitter {
 			TitleAreaDialog dialog = stack.removeFirst();
 			int retCode = dialog.open();
 			if (retCode == Window.CANCEL) {
-				out.println(Utils.getBracketedTimestamp() + PLUGIN_EXIT_MANUAL);
+				printToConsole(Utils.getBracketedTimestamp() + PLUGIN_EXIT_MANUAL);
 				return;
 			}
 			else if (retCode == IDialogConstants.BACK_ID) {
@@ -621,8 +630,6 @@ public class SwampSubmitter {
 	}
 	
 	public void launch(IProject project) {
-		out = initializeConsole("SWAMP Plugin");
-
 		if (!initializeSwampApi()) {
 			return;
 		}
@@ -641,7 +648,7 @@ public class SwampSubmitter {
 		}
 		
 		if (project == null) {
-			out.println(Utils.getBracketedTimestamp() + "Error: No Eclipse project open.");
+			printToConsole(Utils.getBracketedTimestamp() + "Error: No Eclipse project open.");
 			return;
 		}
 		
@@ -703,14 +710,14 @@ public class SwampSubmitter {
 		try {
 			assessUUID = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
 		} catch (InvalidIdentifierException | IncompatibleAssessmentTupleException e) {
-			out.println(Utils.getBracketedTimestamp() + "Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");
+			printToConsole(Utils.getBracketedTimestamp() + "Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");
 			// TODO handle error here
 			System.err.println("Error in running assessment.");
 			e.printStackTrace();
 			return;
 		}
 		if (assessUUID == null) {
-			out.println(Utils.getBracketedTimestamp() + "Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");
+			printToConsole(Utils.getBracketedTimestamp() + "Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");
 			// TODO handle error here
 			System.err.println("Error in running assessment.");
 		}
@@ -722,11 +729,11 @@ public class SwampSubmitter {
 			try {
 				SwampSubmitter.appendToUnfinishedFile(details.serialize());
 			} catch (IOException e) {
-				out.println(Utils.getBracketedTimestamp() + "Error: There was an error in storing the assessment information for this submission. Your results for this assessment will not show in Eclipse but will show online.");
+				printToConsole(Utils.getBracketedTimestamp() + "Error: There was an error in storing the assessment information for this submission. Your results for this assessment will not show in Eclipse but will show online.");
 				e.printStackTrace();
 			}
 			// TODO: Take snapshot of the codebase and put it here - possibly even use archive
-			out.println(Utils.getBracketedTimestamp() + "Status: Successfully submitted assessment with tool {" + toolName + "} on platform {" + platformName +"}");
+			printToConsole(Utils.getBracketedTimestamp() + "Status: Successfully submitted assessment with tool {" + toolName + "} on platform {" + platformName +"}");
 		}
 	}
 	
