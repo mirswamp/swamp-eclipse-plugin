@@ -15,6 +15,7 @@ package org.continuousassurance.swamp.eclipse;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -114,6 +115,7 @@ public class BuildfileGenerator {
 	private static final String ANT_DESTDIR = "destdir";
 	private static final String ANT_INCLUDE = "include";
 	private static final String ANT_EXCLUDE = "exclude";
+	private static final String ANT_SRC = "src";
 	
 	/**
 	 * Private constructor so this class is not subclassed
@@ -453,7 +455,7 @@ public class BuildfileGenerator {
 			javac.setAttribute(ANT_SOURCE, "${source}");
 			javac.setAttribute(ANT_TARGET, "${target}");
 			
-			Element src = doc.createElement(ANT_SOURCE);
+			Element src = doc.createElement(ANT_SRC);
 			addInclusionExclusionPatterns(doc, javac, ANT_INCLUDE, entry.getInclusionPatterns());
 			addInclusionExclusionPatterns(doc, javac, ANT_EXCLUDE, entry.getExclusionPatterns());
 			
