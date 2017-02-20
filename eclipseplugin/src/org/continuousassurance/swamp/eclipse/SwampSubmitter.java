@@ -98,6 +98,7 @@ public class SwampSubmitter {
 	
 	public SwampSubmitter(IWorkbenchWindow window) {
 		this.window = window;
+		this.out = initializeConsole("SWAMP Plugin");
 		//configFilepath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + CONFIG_FILENAME;
 	}
 	
@@ -122,12 +123,12 @@ public class SwampSubmitter {
 	}
 	
 	private void printToConsole(String msg) {
-		//if (out == null) {
-		//	out = initializeConsole("SWAMP Plugin");
-		//}
-		//if (out != null) {
-		//	out.println(msg);
-		//}
+		if (out == null) {
+			out = initializeConsole("SWAMP Plugin");
+		}
+		if (out != null) {
+			out.println(msg);
+		}
 	}
 
 	private void submitPreConfiguredJob(SubmissionInfo si) {
