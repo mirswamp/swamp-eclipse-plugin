@@ -79,7 +79,7 @@ public class Activator extends AbstractUIPlugin {
 		String hostnamePath = getHostnamePath();
 		File file = new File(hostnamePath);
 		SwampApiWrapper api;
-		loggedIn = false;
+		setLoggedIn(false);
 		hostname = DEFAULT_HOST;
 
 		if (file.exists()) {
@@ -95,7 +95,7 @@ public class Activator extends AbstractUIPlugin {
 					api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, host);
 					if (api != null) {
 						hostname = host;
-						loggedIn = api.restoreSession();
+						setLoggedIn(api.restoreSession());
 					}
 				}
 			} catch (Exception e) {
@@ -199,6 +199,7 @@ public class Activator extends AbstractUIPlugin {
 		}
 		else if ((sc == null) && loggedIn) {
 			sc = new StatusChecker();
+			sc.schedule();
 		}
 		Activator.loggedIn = loggedIn;
 	}
