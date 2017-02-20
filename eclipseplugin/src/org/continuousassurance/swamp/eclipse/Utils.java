@@ -276,12 +276,22 @@ public class Utils {
 		Comparator<TableItem> cmp = new Comparator<TableItem>() {
 			@Override
 			public int compare(TableItem t1, TableItem t2) {
-				int i1 = Integer.parseInt(t1.getText(col));
-				int i2 = Integer.parseInt(t2.getText(col));
+				int i1 = getIntValue(t1.getText(col));
+				int i2 = getIntValue(t2.getText(col));
 				return Integer.compare(i1, i2);
 			}
 		};
 		return cmp;
+	}
+	
+	private static int getIntValue(String str) {
+		int val = -1;
+		try {
+			val = Integer.parseInt(str);
+		}
+		catch (NumberFormatException e) {
+		}
+		return val;
 	}
 	
 	/**
