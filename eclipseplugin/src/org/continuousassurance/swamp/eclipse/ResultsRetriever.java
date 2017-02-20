@@ -83,11 +83,11 @@ public class ResultsRetriever {
 			String assessmentDetails = sc.nextLine();
 			System.out.println("New line: " + assessmentDetails);
 			String[] parts = assessmentDetails.split(AssessmentDetails.DELIMITER);
-			String prjUUID = parts[0];
-			String assessUUID = parts[1];
+			String prjUUID = parts[1]; // TODO: Don't hardcode this
+			String assessUUID = parts[2]; // TODO: Don't hardcode this
 			String newStatusStr = updateStatus(writer, api, prjUUID, assessUUID, assessmentDetails);
 			System.out.println("New status string: " + newStatusStr);
-			if (newStatusStr != null) { // null indicates this status is no longer in the unfinished file
+			if (newStatusStr != null) { // null indicates this status is no longer in the unfinished file, don't want to double count, as we will go over finished file next
 				statuses.add(newStatusStr);
 			}
 		}
@@ -164,15 +164,18 @@ public class ResultsRetriever {
 		System.out.println("Status: " + status);
 		String newDetailInfo = AssessmentDetails.updateStatus(serializedAssessmentDetails, status);
 		try {
-			if ("Finished".equals(status)) { // TODO: Fix this when Vamshi modifies the AssessmentRecord.java API. This is NOT how we should be doing it
+			if (" Finished".equals(status)) { // TODO: Fix this when Vamshi modifies the AssessmentRecord.java API. This is NOT how we should be doing it
 				System.out.println("Finished with no errors!");
-				newDetailInfo = AssessmentDetails.addBugCount(serializedAssessmentDetails, Integer.toString(rec.getWeaknessCount()));
-				String filepath = AssessmentDetails.getFilepath(serializedAssessmentDetails);
+				newDetailInfo = AssessmentDetails.addBugCount(newDetailInfo, Integer.toString(rec.getWeaknessCount()));
+				String filepath = AssessmentDetails.getFilepath(newDetailInfo);
+				System.out.println("Saved results to filepath: " + filepath);
+				System.out.println("Alternative filepath: " + AssessmentDetails.getFilepath(newDetailInfo));
 				File f = new File(filepath);
 				if (f.exists()) {
 					f.delete();
 				}
 				api.getAssessmentResults(prjUUID, assessUUID, filepath);
+				System.out.println("Here's the details I just wrote out: " + newDetailInfo);
 				writeToFinishedFile(newDetailInfo);
 				return null;
 			}
