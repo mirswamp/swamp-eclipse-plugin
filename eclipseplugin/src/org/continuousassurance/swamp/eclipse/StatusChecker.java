@@ -38,5 +38,9 @@ public class StatusChecker extends Job {
 	public void stop() {
 		running = false;
 	}
+	
+	public boolean isRunning() {
+		return running;
+	}
 
 }

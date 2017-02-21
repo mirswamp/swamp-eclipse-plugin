@@ -12,7 +12,9 @@
  */
 package org.continuousassurance.swamp.eclipse.handlers;
 
+import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.ResultsRetriever;
+import org.continuousassurance.swamp.eclipse.StatusChecker;
 import org.continuousassurance.swamp.eclipse.SwampSubmitter;
 import org.continuousassurance.swamp.eclipse.exceptions.ResultsRetrievalException;
 import org.continuousassurance.swamp.eclipse.exceptions.UserNotLoggedInException;
@@ -32,6 +34,10 @@ public class CheckResultsHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		StatusChecker sc = Activator.getStatusChecker();
+		if (sc != null && sc.isRunning()) {
+			return null;
+		}
 		try {
 			ResultsRetriever.retrieveResults();
 		} catch (UserNotLoggedInException e) {

@@ -224,4 +224,8 @@ public class Activator extends AbstractUIPlugin {
 		return hostname;
 	}
 	
+	public static StatusChecker getStatusChecker() {
+		return sc;
+	}
+	
 }

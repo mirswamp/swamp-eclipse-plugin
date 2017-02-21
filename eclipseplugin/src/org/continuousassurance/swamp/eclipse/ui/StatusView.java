@@ -15,8 +15,10 @@ package org.continuousassurance.swamp.eclipse.ui;
 
 import java.util.List;
 
+import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.AssessmentDetails;
 import org.continuousassurance.swamp.eclipse.ResultsRetriever;
+import org.continuousassurance.swamp.eclipse.StatusChecker;
 import org.continuousassurance.swamp.eclipse.SwampSubmitter;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.continuousassurance.swamp.eclipse.exceptions.ResultsRetrievalException;
@@ -91,6 +93,11 @@ public class StatusView extends ViewPart {
 	private void createActions() {
 		refreshItemAction = new Action(REFRESH_ACTION_LABEL) {
 			public void run() {
+				StatusChecker sc = Activator.getStatusChecker();
+				if (sc != null && sc.isRunning()) {
+					System.out.println("Status checker already running");
+					return;
+				}
 				try {
 					ResultsRetriever.retrieveResults();
 				} catch (UserNotLoggedInException e) {
