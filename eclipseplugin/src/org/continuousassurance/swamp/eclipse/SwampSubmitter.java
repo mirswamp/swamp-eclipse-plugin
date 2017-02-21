@@ -213,6 +213,8 @@ public class SwampSubmitter {
 					for (String platformUUID : si.getSelectedPlatformIDs()) {
 						subMonitor.split(SUBMISSION_TICKS);
 						details.setResultsFilepath(ResultsUtils.constructFilepath(prjUUID, pkgThingUUID, toolUUID, platformUUID));
+						details.setToolName(api.getTool(toolUUID, prjUUID).getName());
+						details.setPlatformName(api.getPlatform(platformUUID).getName());
 						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID, details);
 					}
 				}
@@ -356,6 +358,8 @@ public class SwampSubmitter {
 					for (String platformUUID : si.getSelectedPlatformIDs()) {
 						subMonitor.split(SUBMISSION_TICKS);
 						details.setResultsFilepath(ResultsUtils.constructFilepath(prjUUID, pkgThingUUID, toolUUID, platformUUID));
+						details.setToolName(api.getTool(toolUUID, prjUUID).getName());
+						details.setPlatformName(api.getPlatform(platformUUID).getName());
 						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID, details);
 					}
 				}

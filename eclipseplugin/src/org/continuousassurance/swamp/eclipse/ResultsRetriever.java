@@ -82,10 +82,7 @@ public class ResultsRetriever {
 		while (sc.hasNextLine()) {
 			String assessmentDetails = sc.nextLine();
 			System.out.println("New line: " + assessmentDetails);
-			String[] parts = assessmentDetails.split(AssessmentDetails.DELIMITER);
-			String prjUUID = parts[1]; // TODO: Don't hardcode this
-			String assessUUID = parts[2]; // TODO: Don't hardcode this
-			String newStatusStr = updateStatus(writer, api, prjUUID, assessUUID, assessmentDetails);
+			String newStatusStr = updateStatus(writer, api, assessmentDetails);
 			System.out.println("New status string: " + newStatusStr);
 			if (newStatusStr != null) { // null indicates this status is no longer in the unfinished file, don't want to double count, as we will go over finished file next
 				statuses.add(newStatusStr);
@@ -123,7 +120,6 @@ public class ResultsRetriever {
 	}
 	
 	private static void updateStatusView(List<String> statuses) {
-		if (statuses.size() > 0) {
 			Display.getDefault().asyncExec(new Runnable() {
 				@Override
 				public void run() {
@@ -137,10 +133,6 @@ public class ResultsRetriever {
 					}
 				}
 			});
-		}
-		else {
-			System.out.println("No statuses");
-		}
 	}
 	
 	private static void writeToFinishedFile(String newDetailInfo) throws IOException {
@@ -153,38 +145,44 @@ public class ResultsRetriever {
 		finishedWriter.close();
 	}
 
-	private static String updateStatus(FileWriter unfinishedWriter, SwampApiWrapper api, String prjUUID, String assessUUID, 
-			String serializedAssessmentDetails) {
-		System.out.println("Querying for assessment record with project UUID " + prjUUID + " and assessment UUID " + assessUUID);
+	private static String updateStatus(FileWriter unfinishedWriter, SwampApiWrapper api, String serializedAssessmentDetails) {
+		AssessmentDetails ad = new AssessmentDetails(serializedAssessmentDetails);
 		if (api == null) {
-			return AssessmentDetails.updateStatus(serializedAssessmentDetails, USER_NOT_LOGGED_IN_STATUS);
+			ad.updateStatus(USER_NOT_LOGGED_IN_STATUS);
+			return ad.serialize();
 		}
+		String prjUUID = ad.getProjectUUID();
+		String assessUUID = ad.getAssessUUID();
 		AssessmentRecord rec = api.getAssessmentRecord(prjUUID, assessUUID);
 		String status = rec.getStatus();
 		System.out.println("Status: " + status);
-		String newDetailInfo = AssessmentDetails.updateStatus(serializedAssessmentDetails, status);
+		ad.updateStatus(status);
+		String newDetailInfo = "";
 		try {
 			if (" Finished".equals(status)) { // TODO: Fix this when Vamshi modifies the AssessmentRecord.java API. This is NOT how we should be doing it
 				System.out.println("Finished with no errors!");
-				newDetailInfo = AssessmentDetails.addBugCount(newDetailInfo, Integer.toString(rec.getWeaknessCount()));
-				String filepath = AssessmentDetails.getFilepath(newDetailInfo);
-				System.out.println("Saved results to filepath: " + filepath);
-				System.out.println("Alternative filepath: " + AssessmentDetails.getFilepath(newDetailInfo));
+				System.out.println("Bug count: " + rec.getWeaknessCount());
+				ad.setBugCount(rec.getWeaknessCount());
+				String filepath = ad.getFilepath();
 				File f = new File(filepath);
 				if (f.exists()) {
 					f.delete();
 				}
 				api.getAssessmentResults(prjUUID, assessUUID, filepath);
+				System.out.println("Saved results to filepath: " + filepath);
+				newDetailInfo = ad.serialize();
 				System.out.println("Here's the details I just wrote out: " + newDetailInfo);
 				writeToFinishedFile(newDetailInfo);
 				return null;
 			}
 			else if ("Finished with Errors".equals(status)) { // I've left these hardcoded and without a var as a reminder that this needs to be fixed ASAP. This will break as soon as they change the status labels
 				System.out.println("Finished with errors!");
+				newDetailInfo = ad.serialize();
 				writeToFinishedFile(newDetailInfo);
 				return null;
 			}
 			else {
+				newDetailInfo = ad.serialize();
 				unfinishedWriter.write(newDetailInfo);
 			}
 		}

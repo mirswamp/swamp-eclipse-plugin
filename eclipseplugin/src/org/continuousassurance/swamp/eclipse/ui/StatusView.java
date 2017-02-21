@@ -35,17 +35,17 @@ public class StatusView extends ViewPart {
 	/**
 	 * Names of the columns of the table
 	 */
-	public static final String[] COLUMN_NAMES = {"SWAMP Package", "Version", "Eclipse Project", "Submission Time", "Status", "Bugs" };
+	public static final String[] COLUMN_NAMES = {"SWAMP Package", "Version", "Tool", "Submission Time", "Status", "Bugs", "Eclipse Project", "Platform" };
 	
 	/**
 	 * Widths of the columns of the table
 	 */
-	private static final int[] COLUMN_WIDTHS = {200, 260, 260, 200, 260, 50};
+	private static final int[] COLUMN_WIDTHS = {200, 240, 240, 200, 260, 50, 240, 240};
 	
 	/**
 	 * Types (String vs. int) of the columns of the table (this is used for sorting properly)
 	 */
-	private static final String[] COLUMN_TYPES = {Utils.STR_TYPE, Utils.STR_TYPE, Utils.STR_TYPE, Utils.STR_TYPE, Utils.STR_TYPE, Utils.INT_TYPE};
+	private static final String[] COLUMN_TYPES = {Utils.STR_TYPE, Utils.STR_TYPE, Utils.STR_TYPE, Utils.STR_TYPE, Utils.STR_TYPE, Utils.INT_TYPE, Utils.STR_TYPE, Utils.STR_TYPE};
 	
 	/**
 	 * Label for refresh toolbar button

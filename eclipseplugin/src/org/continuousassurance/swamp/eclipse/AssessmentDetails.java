@@ -41,6 +41,22 @@ public class AssessmentDetails {
 	 * Most recent status
 	 */
 	private String status;
+	
+	/**
+	 * Tool assessment was run on
+	 */
+	private String tool;
+	
+	/**
+	 * Platform assessment was submitted on
+	 */
+	private String platform;
+	
+	/**
+	 * Number of bugs found by assessment
+	 */
+	private String bugCount;
+	
 	/**
 	 * DELIMITER for csv
 	 */
@@ -64,6 +80,28 @@ public class AssessmentDetails {
 		this.packageName = packageName;
 		this.packageVersion = packageVersion;
 		this.eclipseProject = eclipseProject;
+		this.resultsFilepath = "";
+		this.assessUUID = "";
+		this.submissionTime = "";
+		this.status = "";
+		this.tool = "";
+		this.platform = "";
+		this.bugCount = "";
+	}
+	
+	public AssessmentDetails(String serializedDetails) {
+		String[] parts = serializedDetails.split(DELIMITER);
+		this.resultsFilepath = parts[0];
+		this.prjUUID = parts[1];
+		this.assessUUID = parts[2];
+		this.packageName = parts[3];
+		this.packageVersion = parts[4];
+		this.tool = parts[5];
+		this.submissionTime = parts[6];
+		this.status = parts[7];
+		this.bugCount = parts[8];
+		this.eclipseProject = parts[9];
+		this.platform = parts[10];
 	}
 	
 	/**
@@ -90,7 +128,7 @@ public class AssessmentDetails {
 	}
 	
 	public void setResultsFilepath(String filepath) {
-		resultsFilepath = filepath;
+		this.resultsFilepath = filepath;
 	}
 	
 	/**
@@ -99,8 +137,9 @@ public class AssessmentDetails {
 	 */
 	public String serialize() {
 		String str = resultsFilepath + DELIMITER + prjUUID + DELIMITER + assessUUID + DELIMITER + packageName + 
-				DELIMITER + packageVersion + DELIMITER + eclipseProject + DELIMITER + submissionTime + 
-				DELIMITER + status + "\n";
+				DELIMITER + packageVersion + DELIMITER + tool + DELIMITER + submissionTime + 
+				DELIMITER + status + DELIMITER + bugCount + DELIMITER + eclipseProject + DELIMITER + 
+				platform + DELIMITER + "\n";
 		return str;
 	}
 	
@@ -112,40 +151,37 @@ public class AssessmentDetails {
 		return serialize();
 	}
 	
+	public void setToolName(String toolName) {
+		tool = toolName;
+	}
+	
+	public void setPlatformName(String platformName) {
+		platform = platformName;
+	}
+	
+	public String getProjectUUID() {
+		return prjUUID;
+	}
+	
+	public String getAssessUUID() {
+		return assessUUID;
+	}
+	
 	/**
 	 * Takes a serialized AssessmentDetail String and replaces old status with new status
 	 * @param serializedAssessmentDetails serialized AssessmentDetail
 	 * @param status new status
 	 * @return updated serialized AssessmentDetail
 	 */
-	public static String updateStatus(String serializedAssessmentDetails, String status) {
-		String[] parts = serializedAssessmentDetails.split(DELIMITER);
-		parts[7] = status;
-		StringBuilder sb = new StringBuilder(parts[0]);
-		for (int i = 1; i < parts.length; i++) {
-			sb.append(DELIMITER);
-			sb.append(parts[i]);
-		}
-		sb.append("\n");
-		return sb.toString();
+	public void updateStatus(String status) {
+		this.status = status;
 	}
 	
-	/**
-	 * Takes a serialized AssessmentDetail String and adds a bug count
-	 * @param serializedAssessmentDetails
-	 * @param bugCount number of bugs found in this assessment
-	 * @return updated serialized AssessmentDetail
-	 */
-	public static String addBugCount(String serializedAssessmentDetails, String bugCount) {
-		StringBuffer sb = new StringBuffer(serializedAssessmentDetails.substring(0, serializedAssessmentDetails.length()-1));
-		sb.append(DELIMITER);
-		sb.append(bugCount);
-		sb.append("\n");
-		return sb.toString();
+	public void setBugCount(int bugCount) {
+		this.bugCount = Integer.toString(bugCount);
 	}
 	
-	public static String getFilepath(String serializedAssessmentDetails) {
-		String[] parts = serializedAssessmentDetails.split(DELIMITER);
-		return parts[0];
+	public String getFilepath() {
+		return this.resultsFilepath;
 	}
 }
