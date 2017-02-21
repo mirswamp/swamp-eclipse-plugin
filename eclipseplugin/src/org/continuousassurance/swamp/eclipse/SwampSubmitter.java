@@ -183,29 +183,8 @@ public class SwampSubmitter {
 				
 				subMonitor.split(UPLOAD_TICKS);
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
-				File f = new File(pluginLoc + SEPARATOR + "swamp-package.txt");
-				if (f.exists()) {
-					f.delete();
-				}
-				try {
-					f.createNewFile();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				
-				FileWriter filewriter = null;
-				BufferedWriter writer = null;
-				
-				try {
-					filewriter = new FileWriter(f);
-					writer = new BufferedWriter(filewriter);
-					writer.write(prjUUID);
-					writer.close();
-				}
-				catch (Exception e) {
-					System.err.println("Unable to write Eclipse project to SWAMP package mapping to file");
-					e.printStackTrace();
+				if (si.isNewPackage()) { // All packages will need to be made new for this to be configured properly
+					doNewPackageResultsSetup(si);
 				}
 				
 				// Delete archive
@@ -345,33 +324,7 @@ public class SwampSubmitter {
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
 				String pkgThingUUID = api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing().getUUIDString();
 				if (si.isNewPackage()) { // All packages will need to be made new for this to be configured properly
-					System.out.println("PackageThingUUID: " + pkgThingUUID);
-					System.out.println("PackageVersionUUID: " + pkgVersUUID);
-					String path = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString() + org.eclipse.core.runtime.Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
-					File f = new File(path);
-					if (f.exists()) {
-						f.delete();
-					}
-					try {
-						f.createNewFile();
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-					// TODO Somehow get the PackageThing UUID
-					try {
-						PrintWriter pw = new PrintWriter(f);
-						pw.write(pkgThingUUID);
-						pw.close();
-					} catch (FileNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					String dirPath = ResultsUtils.constructFilepath(pkgThingUUID);
-					File dir = new File(dirPath);
-					if (!dir.exists()) {
-						dir.mkdir();
-					}
+					doNewPackageResultsSetup(si);
 				}
 				
 				/*
@@ -418,6 +371,36 @@ public class SwampSubmitter {
 		job.setUser(true);
 		job.schedule();
 		
+	}
+
+	private void doNewPackageResultsSetup(SubmissionInfo si) {
+		String pkgThingUUID = si.getPackageThingUUID();
+		System.out.println("PackageThingUUID: " + pkgThingUUID);
+		String path = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString() + org.eclipse.core.runtime.Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
+		File f = new File(path);
+		if (f.exists()) {
+			f.delete();
+		}
+		try {
+			f.createNewFile();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		// TODO Somehow get the PackageThing UUID
+		try {
+			PrintWriter pw = new PrintWriter(f);
+			pw.write(pkgThingUUID);
+			pw.close();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		String dirPath = ResultsUtils.constructFilepath(pkgThingUUID);
+		File dir = new File(dirPath);
+		if (!dir.exists()) {
+			dir.mkdir();
+		}
 	}
 	
 	private int calculateTotalTicks(boolean autoGen, int numClasspathEntries, int numSubmissions) {
