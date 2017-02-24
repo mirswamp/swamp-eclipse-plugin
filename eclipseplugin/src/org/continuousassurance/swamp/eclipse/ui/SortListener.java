@@ -28,6 +28,10 @@ import org.eclipse.swt.widgets.TableItem;
  *
  */
 public class SortListener implements Listener {
+	String[] keys;
+	public SortListener(String[] dataKeys) {
+		keys = dataKeys;
+	}
 
 	@Override
 	/**
@@ -57,9 +61,21 @@ public class SortListener implements Listener {
 	            	for (int k = 0; k < numCols; k++) {
 	            		values[k] = items[i].getText(k);
 	            	}
-	            	items[i].dispose();
 	            	TableItem item = new TableItem(table, SWT.NONE, j);
 	            	item.setText(values);
+	            	if (keys != null && keys.length > 0) {
+	            		for (String key : keys) {
+	            			Object obj = items[i].getData(key);
+	            			if (obj != null) {
+	            				item.setData(key, obj);
+	            			}
+	            		}
+	            	}
+	            	Object obj = items[i].getData();
+	            	if (obj != null) {
+	            		item.setData(obj);
+	            	}
+	            	items[i].dispose();
 	            	items = table.getItems();
 	            	break;
 	            }

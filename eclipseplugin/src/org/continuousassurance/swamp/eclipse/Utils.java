@@ -330,9 +330,10 @@ public class Utils {
 	 * @param width width of column
 	 * @param index column index in table
 	 * @param type whether this column should be string or int sorted
-	 * @return
+	 * @param dataKeys keys for arbitrary data objects associated with this column
+	 * @return sortable table column
 	 */
-	public static TableColumn addTableColumn(Table table, String name, int width, int index, String type) {
+	public static TableColumn addTableColumn(Table table, String name, int width, int index, String type, String... dataKeys) {		
 		TableColumn col = new TableColumn(table, SWT.NONE);
 		col.setText(name);
 		col.setWidth(width);
@@ -342,7 +343,7 @@ public class Utils {
 		else {
 			col.setData(Utils.STR_CMP(index));
 		}
-		col.addListener(SWT.Selection, new SortListener());
+		col.addListener(SWT.Selection, new SortListener(dataKeys));
 		return col;
 		
 	}

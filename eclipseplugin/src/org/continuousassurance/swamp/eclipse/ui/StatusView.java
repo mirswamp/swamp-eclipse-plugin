@@ -54,6 +54,10 @@ public class StatusView extends ViewPart {
 	 */
 	private static final String REFRESH_ACTION_LABEL = "Refresh";
 	
+	private static final String ASSESS_UUID = "assess_uuid";
+	
+	private static final String RESULTS_FILEPATH = "results_filepath";
+	
 	/**
 	 * Action for refreshing assessment statuses
 	 */
@@ -142,6 +146,8 @@ public class StatusView extends ViewPart {
 			for (int i = AssessmentDetails.NUM_HIDDEN_FIELDS; i < parts.length; i++) {
 				item.setText(i-AssessmentDetails.NUM_HIDDEN_FIELDS, parts[i]);
 			}
+			item.setData(ASSESS_UUID, parts[AssessmentDetails.ASSESS_UUID_PART]);
+			item.setData(RESULTS_FILEPATH, parts[AssessmentDetails.RESULTS_FILEPATH_PART]);
 		}
 	}
 }

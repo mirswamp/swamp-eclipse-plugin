@@ -86,7 +86,7 @@ public class TableView extends ViewPart {
 		table = Utils.constructTable(parent);
 		
 		for (int i = 0; i < COLUMN_NAMES.length; i++) {
-			Utils.addTableColumn(table, COLUMN_NAMES[i], COLUMN_WIDTHS[i], i, COLUMN_TYPES[i]);
+			Utils.addTableColumn(table, COLUMN_NAMES[i], COLUMN_WIDTHS[i], i, COLUMN_TYPES[i], SwampPerspective.MARKER_OBJ, SwampPerspective.BUG_DETAIL_OBJ);
 		}
 		table.addSelectionListener(new RowSelectionListener(table));
 		table.addListener(SWT.MouseDoubleClick, new Listener() {
