@@ -183,6 +183,7 @@ public class SwampSubmitter {
 				
 				subMonitor.split(UPLOAD_TICKS);
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
+				si.setPackageThing(api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing());
 				if (si.isNewPackage()) { // All packages will need to be made new for this to be configured properly
 					doNewPackageResultsSetup(si);
 				}
@@ -325,6 +326,7 @@ public class SwampSubmitter {
 				String prjUUID = si.getSelectedProjectID();
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
 				String pkgThingUUID = api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing().getUUIDString();
+				si.setPackageThing(api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing());
 				if (si.isNewPackage()) { // All packages will need to be made new for this to be configured properly
 					doNewPackageResultsSetup(si);
 				}
