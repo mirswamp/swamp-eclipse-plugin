@@ -65,7 +65,9 @@ public class AssessmentDetails {
 	/**
 	 * Number of hidden fields in serialized assessment details
 	 */
-	public static int NUM_HIDDEN_FIELDS = 3;
+	public static final int NUM_HIDDEN_FIELDS = 3;
+	
+	public static final int ASSESS_UUID_PART = 2;
 	
 	/**
 	 * Constructor for AssessmentDetails object
