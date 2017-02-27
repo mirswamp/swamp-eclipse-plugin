@@ -37,7 +37,7 @@ public class StatusView extends ViewPart {
 	/**
 	 * Names of the columns of the table
 	 */
-	public static final String[] COLUMN_NAMES = {"SWAMP Package", "Version", "Tool", "Submission Time", "Status", "Bugs", "Eclipse Project", "Platform" };
+	public static final String[] COLUMN_NAMES = {"SWAMP Package", "Version", "Tool", "Submission Time", "Status", "Count", "Eclipse Project", "Platform" };
 	
 	/**
 	 * Widths of the columns of the table
