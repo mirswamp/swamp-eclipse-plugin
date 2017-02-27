@@ -150,6 +150,8 @@ public class SwampPerspective implements IPerspectiveFactory {
 	public IMarker createMarkerForResource(IFile resource, BugInstance bug, String toolName) {
 		for (Location l : bug.getLocations()) {
 			if (l.isPrimary()) {
+				System.out.println("Primary bug!");
+				System.out.println(bug);
 				try {
 					//IMarker marker = resource.createMarker(IMarker.PROBLEM);
 					//IMarker marker = resource.createMarker("highseverity");
@@ -177,6 +179,9 @@ public class SwampPerspective implements IPerspectiveFactory {
 					System.err.println("Core exception when creating marker");
 					e.printStackTrace();
 				}
+			}
+			else {
+				System.out.println("Non-primary bug!");
 			}
 			// TODO Maybe add some marker for non-primary bugs? This would probably get too noisy
 		}
@@ -230,7 +235,9 @@ public class SwampPerspective implements IPerspectiveFactory {
 					System.err.println("Exception occured");
 					return;
 				}
+			
 				
+				resetTable();
 				File resultsDir = new File(ResultsUtils.constructFilepath(pkgThingUUID));
 				File[] files = resultsDir.listFiles();
 				if (files != null && files.length > 0) {
@@ -247,12 +254,46 @@ public class SwampPerspective implements IPerspectiveFactory {
 						updateEditorAndViews(file, bugs, rp.getToolName(), rp.getPlatformName());
 					}
 				}
+				else {
+					resetViewsAndEditor();
+				}
 			}
 			else {
 				System.out.println("No results found");
-				IWorkbenchPage page = window.getActivePage();
+				resetViewsAndEditor();
+			}
+		}
+		
+		private void resetViewsAndEditor() {
+			IWorkbenchPage page = window.getActivePage();
+			if (page != null) {
 				resetTableView(page);
 				resetDetailView(page);
+			}
+			IFile file = HandlerUtilityMethods.getActiveFile(window);
+			if (file != null) {
+				try {
+					file.deleteMarkers(null, false, 1);
+					file.deleteMarkers("eclipseplugin.highseverity", true, 1);
+					file.deleteMarkers("eclipseplugin.medseverity", true, 1);
+					file.deleteMarkers("eclipseplugin.lowseverity", true, 1);
+					file.deleteMarkers("eclipseplugin.unknownseverity", true, 1);
+				} catch (CoreException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		private void resetTable() {
+			Table table = null;
+			IWorkbenchPage page = window.getActivePage();
+			TableView view = (TableView) page.findView(TABLE_VIEW_DESCRIPTOR);
+			if (view != null) {
+				table = view.getTable();
+			}
+			if (table != null) {
+				table.removeAll();
 			}
 		}
 
@@ -307,9 +348,6 @@ public class SwampPerspective implements IPerspectiveFactory {
 			TableView view = (TableView) page.findView(TABLE_VIEW_DESCRIPTOR);
 			if (view != null) {
 				table = view.getTable();
-			}
-			if (table != null) {
-				table.removeAll();
 			}
 			List<TableItem> rows = new ArrayList<>();
 			for (BugInstance bug : bugs) {
