@@ -40,7 +40,7 @@ public class StatusChecker extends Job {
 	}
 	
 	public boolean isRunning() {
-		return running;
+		return this.getState() == Job.RUNNING;
 	}
 
 }
