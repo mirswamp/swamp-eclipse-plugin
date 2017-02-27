@@ -13,6 +13,7 @@
 
 package org.continuousassurance.swamp.eclipse.ui;
 
+import java.io.File;
 import java.util.List;
 
 import org.continuousassurance.swamp.eclipse.Activator;
@@ -27,6 +28,10 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.PlatformUI;
@@ -68,27 +73,44 @@ public class StatusView extends ViewPart {
 	 */
 	private Table table;
 	
-	/**
-	 * Title of error dialog
-	 */
-	/*
-	private static String ERROR_TITLE = "Error";
-	*/
 	
-	/**
-	 * Message for user not logged in while attempting to view results status
-	 */
-	/*
-	private static String NOT_LOGGED_IN_MSG = "You are not currently logged into the SWAMP. Please log in before trying to view the status of your assessments.";
-	*/
+	private static final String REMOVE_ASSESSMENT = "Remove Assessment";
 	
 	@Override
 	public void createPartControl(Composite parent) {
 		table = Utils.constructTable(parent);
 		
 		for (int i = 0; i < COLUMN_NAMES.length; i++) {
-			Utils.addTableColumn(table, COLUMN_NAMES[i], COLUMN_WIDTHS[i], i, COLUMN_TYPES[i]);
+			Utils.addTableColumn(table, COLUMN_NAMES[i], COLUMN_WIDTHS[i], i, COLUMN_TYPES[i], ASSESS_UUID, RESULTS_FILEPATH);
 		}
+		
+		Menu menu = new Menu(table);
+		table.setMenu(menu);
+		MenuItem item = new MenuItem(menu, SWT.PUSH);
+		item.setText(REMOVE_ASSESSMENT);
+		item.addListener(SWT.Selection, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				for (int i : table.getSelectionIndices()) {
+					// TODO: In future, use SwampApiWrapper to remove a package
+					TableItem row = table.getItem(i);
+					String assessUUID = (String)row.getData(ASSESS_UUID);
+					if (assessUUID != null) {
+						ResultsRetriever.addAssessmentToDelete(assessUUID);
+					}
+					String filepath = (String)row.getData(RESULTS_FILEPATH);
+					if (filepath != null) {
+						System.out.println("Non-null filepath at: " + filepath);
+						File f = new File(filepath);
+						if (f.exists()) {
+							System.out.println("File exists at: " + filepath);
+							f.delete();
+						}
+					}
+					table.remove(i);
+				}
+			}
+		});
 		
 		createActions();
 		createToolbar();

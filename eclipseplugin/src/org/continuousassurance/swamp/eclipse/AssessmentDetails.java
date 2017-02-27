@@ -69,6 +69,8 @@ public class AssessmentDetails {
 	
 	public static final int ASSESS_UUID_PART = 2;
 	
+	public static final int RESULTS_FILEPATH_PART = 0;
+	
 	/**
 	 * Constructor for AssessmentDetails object
 	 * @param prjUUID UUID of the SWAMP project
