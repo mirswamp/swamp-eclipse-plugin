@@ -5,8 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.continuousassurance.swamp.eclipse.exceptions.ResultsRetrievalException;
 import org.continuousassurance.swamp.eclipse.exceptions.UserNotLoggedInException;
 import org.continuousassurance.swamp.eclipse.ui.StatusView;
@@ -21,8 +26,16 @@ import edu.wisc.cs.swamp.SwampApiWrapper;
 public class ResultsRetriever {
 	
 	private static final String USER_NOT_LOGGED_IN_STATUS = "User not logged in";
+	
+	private static final String FINISHED = "Finished";
+	
+	private static final String FINISHED_WITH_ERRORS = "Finished with Errors";
+	
+	private static final Set<String> assessmentsToDelete = new HashSet<>();
+	
+	private static final Lock lock = new ReentrantLock();
 
-	public static void retrieveResults() throws UserNotLoggedInException, ResultsRetrievalException {
+	public static synchronized void retrieveResults() throws UserNotLoggedInException, ResultsRetrievalException {
 		// (1) If user's not logged in, quit out immediately
 		if (!Activator.getLoggedIn()) {
 			throw new UserNotLoggedInException();
@@ -40,6 +53,7 @@ public class ResultsRetriever {
 		}
 
 		List<String> statuses = new ArrayList<>();
+		
 		addUnfinishedFileStatuses(statuses, api);
 		addFinishedFileStatuses(statuses);
 		
@@ -50,6 +64,12 @@ public class ResultsRetriever {
 	
 	public static void retrieveResultsNotLoggedIn() {
 		
+	}
+	
+	public static void addAssessmentToDelete(String assessUUID) {
+		lock.lock();
+		assessmentsToDelete.add(assessUUID);
+		lock.unlock();
 	}
 	
 	public static void addUnfinishedFileStatuses(List<String> statuses, SwampApiWrapper api) throws ResultsRetrievalException {
@@ -100,7 +120,8 @@ public class ResultsRetriever {
 		tmp.renameTo(oldFile);
 	}
 	
-	private static void addFinishedFileStatuses(List<String> statuses) {
+	private static void addFinishedFileStatuses(List<String> statuses) throws ResultsRetrievalException {
+		System.out.println("Now reading stuff from finished file");
 		File f = new File(Activator.getFinishedAssessmentsPath());
 		if (!f.exists()) {
 			return;
@@ -112,11 +133,45 @@ public class ResultsRetriever {
 			System.err.println(e.getMessage());
 			return;
 		}
+		
+		File tmp = new File(Activator.getFinishedAssessmentsPath() + ".tmp");
+		if (tmp.exists()) {
+			tmp.delete();
+		}
+		
+		FileWriter writer = null;
+		try {
+			writer = new FileWriter(tmp, true);
+		} catch (IOException e) {
+			e.printStackTrace();
+			sc.close();
+			throw new ResultsRetrievalException();
+		}
+		
 		while (sc.hasNext()) {
 			String status = sc.nextLine();
-			statuses.add(status);
+			AssessmentDetails ad = new AssessmentDetails(status);
+			String assessUUID = ad.getAssessUUID();
+			lock.lock();
+			if (!assessmentsToDelete.contains(assessUUID)) {
+				statuses.add(status);
+				try {
+				writer.write(status + "\n");
+				} catch (IOException e) {
+				}
+			}
+			else {
+				assessmentsToDelete.remove(assessUUID);
+			}
+			lock.unlock();
 		}
 		sc.close();
+		try {
+			writer.close();
+		} catch (IOException e) {
+		}
+		f.delete();
+		tmp.renameTo(f);
 	}
 	
 	private static void updateStatusView(List<String> statuses) {
@@ -125,11 +180,13 @@ public class ResultsRetriever {
 				public void run() {
 					System.out.println("Actually attempting to update status view");
 					IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-					StatusView view = (StatusView) page.findView(SwampPerspective.STATUS_VIEW_DESCRIPTOR);
-					if (view != null) {
-						System.out.println("Actually updating status view!");
-						view.clearTable();
-						view.addRowsToStatusTable(statuses);
+					if (page != null) {
+						StatusView view = (StatusView) page.findView(SwampPerspective.STATUS_VIEW_DESCRIPTOR);
+						if (view != null) {
+							System.out.println("Actually updating status view!");
+							view.clearTable();
+							view.addRowsToStatusTable(statuses);
+						}
 					}
 				}
 			});
@@ -153,13 +210,19 @@ public class ResultsRetriever {
 		}
 		String prjUUID = ad.getProjectUUID();
 		String assessUUID = ad.getAssessUUID();
+		lock.lock();
+		if (assessmentsToDelete.contains(assessUUID)) {
+			assessmentsToDelete.remove(assessUUID);
+			return null;
+		}
+		lock.unlock();
 		AssessmentRecord rec = api.getAssessmentRecord(prjUUID, assessUUID);
 		String status = rec.getStatus();
 		System.out.println("Status: " + status);
 		ad.updateStatus(status);
 		String newDetailInfo = "";
 		try {
-			if (" Finished".equals(status)) { // TODO: Fix this when Vamshi modifies the AssessmentRecord.java API. This is NOT how we should be doing it
+			if (FINISHED.equals(status)) { // Note: This will break if the labels are changed, so MIR shouldn't do that
 				System.out.println("Finished with no errors!");
 				System.out.println("Bug count: " + rec.getWeaknessCount());
 				ad.setBugCount(rec.getWeaknessCount());
@@ -168,14 +231,16 @@ public class ResultsRetriever {
 				if (f.exists()) {
 					f.delete();
 				}
-				api.getAssessmentResults(prjUUID, assessUUID, filepath);
-				System.out.println("Saved results to filepath: " + filepath);
 				newDetailInfo = ad.serialize();
-				System.out.println("Here's the details I just wrote out: " + newDetailInfo);
-				writeToFinishedFile(newDetailInfo);
-				return null;
+				if (api.getAssessmentResults(prjUUID, rec.getAssessmentResultUUID(), filepath)) {
+					System.out.println("Saved results to filepath: " + filepath);
+					System.out.println("Here's the details I just wrote out: " + newDetailInfo);
+					writeToFinishedFile(newDetailInfo);
+					return null;
+				} // TODO: Catch file not found exception
+				unfinishedWriter.write(newDetailInfo);
 			}
-			else if ("Finished with Errors".equals(status)) { // I've left these hardcoded and without a var as a reminder that this needs to be fixed ASAP. This will break as soon as they change the status labels
+			else if (FINISHED_WITH_ERRORS.equals(status)) { // Note: This will break if the labels are changed, so MIR shouldn't do that
 				System.out.println("Finished with errors!");
 				newDetailInfo = ad.serialize();
 				writeToFinishedFile(newDetailInfo);
