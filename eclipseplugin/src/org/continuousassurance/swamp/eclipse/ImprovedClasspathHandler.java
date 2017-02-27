@@ -206,7 +206,7 @@ public class ImprovedClasspathHandler {
 		
 		// (1) Copy the files from here to plug-in area
 		File src = new File(projectPath.toOSString());
-		File dst = new File(getProjectPluginLocation() + SEPARATOR + project.getName());
+		File dst = new File(getRootProjectPluginLocation() + SEPARATOR + project.getName());
 		System.out.println("Src path: " + src.getPath());
 		System.out.println("Dst path: " + dst.getPath());
 		try {
@@ -521,8 +521,12 @@ public class ImprovedClasspathHandler {
 	 * Get project plugin location (this is a directory in which we can store project-specific files for this plug-in)
 	 * @return project plugin location
 	 */
-	public String getProjectPluginLocation() {
+	public String getRootProjectPluginLocation() {
 		return root.project.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
+	}
+	
+	public String getProjectPluginLocation() {
+		return project.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
 	}
 	
 	/**

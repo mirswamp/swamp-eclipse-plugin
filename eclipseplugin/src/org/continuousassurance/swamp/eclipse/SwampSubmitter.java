@@ -185,8 +185,11 @@ public class SwampSubmitter {
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
 				si.setPackageThing(api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing());
 				if (si.isNewPackage()) { // All packages will need to be made new for this to be configured properly
-					doNewPackageResultsSetup(si);
+					doNewPackageResultsSetup(si.getPackageThingUUID());
 				}
+				
+				// TODO: Add results for dependent projects
+				
 				
 				// Delete archive
 				// Delete package.conf
@@ -300,12 +303,12 @@ public class SwampSubmitter {
 				
 				subMonitor.split(ZIP_TICKS);
 				printToConsole(Utils.getBracketedTimestamp() + "Status: Packaging project " + si.getProjectName());
-				String pluginLoc = ich.getProjectPluginLocation();
+				String pluginLoc = ich.getRootProjectPluginLocation();
 				Date date = new Date();
 				String timestamp = date.toString();
 				String filename = timestamp + "-" + si.getPackageName() + ".zip";
 				String archiveName = filename.replace(" ", "-").replace(":", "").toLowerCase(); 
-				Path archivePath = Utils.zipFiles(files, ich.getProjectPluginLocation(), archiveName);
+				Path archivePath = Utils.zipFiles(files, ich.getRootProjectPluginLocation(), archiveName);
 				
 				if (subMonitor.isCanceled()) {
 					IStatus status = Status.CANCEL_STATUS;
@@ -328,7 +331,12 @@ public class SwampSubmitter {
 				String pkgThingUUID = api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing().getUUIDString();
 				si.setPackageThing(api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing());
 				if (si.isNewPackage()) { // All packages will need to be made new for this to be configured properly
-					doNewPackageResultsSetup(si);
+					doNewPackageResultsSetup(pkgThingUUID);
+				}
+				
+				setEclipseProjectToPackageThingMapping(pkgThingUUID, ich.getRootProjectPluginLocation());
+				for (ImprovedClasspathHandler i : ich.getDependentProjects()) {
+					setEclipseProjectToPackageThingMapping(pkgThingUUID, i.getProjectPluginLocation());
 				}
 				
 				/*
@@ -378,11 +386,9 @@ public class SwampSubmitter {
 		job.schedule();
 		
 	}
-
-	private void doNewPackageResultsSetup(SubmissionInfo si) {
-		String pkgThingUUID = si.getPackageThingUUID();
-		System.out.println("PackageThingUUID: " + pkgThingUUID);
-		String path = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString() + org.eclipse.core.runtime.Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
+	
+	private void setEclipseProjectToPackageThingMapping(String pkgThingUUID, String projectPluginLoc) {
+		String path = projectPluginLoc + org.eclipse.core.runtime.Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
 		File f = new File(path);
 		if (f.exists()) {
 			f.delete();
@@ -402,6 +408,9 @@ public class SwampSubmitter {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+
+	private void doNewPackageResultsSetup(String pkgThingUUID) {
 		String dirPath = ResultsUtils.constructFilepath(pkgThingUUID);
 		File dir = new File(dirPath);
 		if (!dir.exists()) {

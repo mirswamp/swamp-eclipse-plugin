@@ -157,7 +157,7 @@ public class BuildfileGenerator {
 			Transformer transformer = transformerFactory.newTransformer();
 			transformer.setOutputProperty(OutputKeys.INDENT, ANT_YES);
 			DOMSource source = new DOMSource(doc);
-			String buildFilePath = project.getProjectPluginLocation() + SEPARATOR + project.getProjectName() + BUILDFILE_EXT;
+			String buildFilePath = project.getRootProjectPluginLocation() + SEPARATOR + project.getProjectName() + BUILDFILE_EXT;
 			File buildFile = new File(buildFilePath);
 			if (buildFile.exists()) {
 				System.out.println("Build file exists");
