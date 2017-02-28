@@ -97,7 +97,7 @@ public class ResultsParser implements ScarfInterface {
 				}
 				else {
 					bugs = new ArrayList<>();
-					System.out.println("Filename used: " + filename);
+					//System.out.println("Filename used: " + filename);
 				}
 				bugs.add(bug);
 				fileBugs.put(filename, bugs);
@@ -135,7 +135,7 @@ public class ResultsParser implements ScarfInterface {
 	 * @return list of bugs found in that file
 	 */
 	public List<BugInstance> getFileBugs(String filename) {
-		System.out.println("Filename queried: " + filename);
+		//System.out.println("Filename queried: " + filename);
 		if (fileBugs.containsKey(filename)) {
 			return fileBugs.get(filename);
 		}

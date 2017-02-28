@@ -44,7 +44,7 @@ public class DetailView extends ViewPart {
 	/**
 	 * Label for bug type
 	 */
-	private static String TYPE_LABEL = "Bug type: ";
+	private static String TYPE_LABEL = "Type: ";
 	/**
 	 * Label for tool name
 	 */
@@ -67,6 +67,8 @@ public class DetailView extends ViewPart {
 	 * Embedded browser to render the HTML
 	 */
 	private Browser browser;
+	
+	public static final String ID = "org.continuousassurance.swamp.eclipse.ui.views.detailview";
 	
 	@Override
 	/**
@@ -114,7 +116,7 @@ public class DetailView extends ViewPart {
 	 * @return String for start of HTML, title, and header
 	 */
 	private String getHeaderAndTitle() {
-		return "<html><header><title>Bug Details</title></header>";
+		return "<html><header><title>Weakness Details</title></header>";
 	}
 	
 	/**
@@ -122,7 +124,7 @@ public class DetailView extends ViewPart {
 	 * @return HTML string
 	 */
 	private String getDefaultBody() {
-		return "<body>Select a bug from the list of weaknesses</body></html>";
+		return "<body>Select a weakness from the list of weaknesses</body></html>";
 	}
 	
 	/**

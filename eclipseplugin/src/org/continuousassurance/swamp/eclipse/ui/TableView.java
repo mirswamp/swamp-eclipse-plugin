@@ -12,19 +12,17 @@
  */
 package org.continuousassurance.swamp.eclipse.ui;
 
-import java.util.Comparator;
+import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.BugDetail;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
-import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbench;
@@ -48,53 +46,25 @@ public class TableView extends ViewPart {
 	/**
 	 * Names of the columns of the table
 	 */
-	public static final String[] COLUMN_NAMES = {"File", "Start Line", "End Line", "Bug Type", "Tool", "Platform"};
+	public static final String[] COLUMN_NAMES = {"File", "Start Line", "End Line", "Type", "Tool", "Platform"};
 	/**
 	 * Widths of the columns of the table
 	 */
 	private static final int[] COLUMN_WIDTHS = {400, 50, 50, 400, 200, 200};
+	
+	private static final String[] COLUMN_TYPES = {Utils.STR_TYPE, Utils.INT_TYPE, Utils.INT_TYPE, Utils.STR_TYPE, Utils.STR_TYPE, Utils.STR_TYPE};
 	/**
 	 * SWT Table widget
 	 */
 	private Table table;
 	
-	/**
-	 * Name of int type for table column
-	 */
-	private static String INT_TYPE = "INT";
-	
-	/**
-	 * Name of string type for table column 
-	 */
-	private static String STR_TYPE = "STR";
-	
-	// TODO: Make columns have more appropriate widths by default
+	public static final String ID = "org.continuousassurance.swamp.eclipse.ui.views.tableview";
 	
 	/**
 	 * Constructor for TableView
 	 */
 	public TableView() {
 		super();
-	}
-	
-	/**
-	 * Creates and returns a table column for the specified table
-	 * @param table SWT table widget for the view
-	 * @param index index for column name and width to be set properly
-	 * @param type "INT" or "STRING" (need to know for sorting the column properly)
-	 * @return newly created table column
-	 */
-	private static TableColumn getTableColumn(Table table, int index, String type) {
-		TableColumn col = new TableColumn(table, SWT.NONE);
-		col.setText(COLUMN_NAMES[index]);
-		col.setWidth(COLUMN_WIDTHS[index]);
-		if (type.equals(INT_TYPE)) {
-			col.setData(Utils.INT_CMP(index));
-		}
-		else {
-			col.setData(Utils.STR_CMP(index));
-		}
-		return col;
 	}
 	
 	/**
@@ -112,26 +82,12 @@ public class TableView extends ViewPart {
 	 * @param parent composite on which widgets will be placed and positioned
 	 */
 	public void createPartControl(Composite parent) {
-		table = new Table(parent, SWT.BORDER | SWT.FULL_SELECTION);
-		table.setLinesVisible(true);
-		table.setHeaderVisible(true);
-		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
-		table.setLayoutData(gd);
+		System.out.println("Table View actually created");
+		table = Utils.constructTable(parent);
 		
-		TableColumn fileColumn = getTableColumn(table, 0, STR_TYPE);
-		TableColumn startLineColumn = getTableColumn(table, 1, INT_TYPE);
-		TableColumn endLineColumn = getTableColumn(table, 2, INT_TYPE);
-		TableColumn typeColumn = getTableColumn(table, 3, STR_TYPE);
-		TableColumn toolColumn = getTableColumn(table, 4, STR_TYPE);
-		TableColumn platformColumn = getTableColumn(table, 5, STR_TYPE);
-		
-		fileColumn.addListener(SWT.Selection, new SortListener());
-		startLineColumn.addListener(SWT.Selection, new SortListener());
-		endLineColumn.addListener(SWT.Selection, new SortListener());
-		typeColumn.addListener(SWT.Selection, new SortListener());
-		toolColumn.addListener(SWT.Selection, new SortListener());
-		platformColumn.addListener(SWT.Selection, new SortListener());
-		
+		for (int i = 0; i < COLUMN_NAMES.length; i++) {
+			Utils.addTableColumn(table, COLUMN_NAMES[i], COLUMN_WIDTHS[i], i, COLUMN_TYPES[i], SwampPerspective.MARKER_OBJ, SwampPerspective.BUG_DETAIL_OBJ);
+		}
 		table.addSelectionListener(new RowSelectionListener(table));
 		table.addListener(SWT.MouseDoubleClick, new Listener() {
 			@Override
@@ -140,16 +96,17 @@ public class TableView extends ViewPart {
 				if (items.length > 0) {
 					TableItem item = items[0];
 					IMarker marker = (IMarker)item.getData(SwampPerspective.MARKER_OBJ);
-					IWorkbench wb = PlatformUI.getWorkbench();
-					IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
-					IWorkbenchPage page = window.getActivePage();
-					IEditorPart editor = page.getActiveEditor();
-					if ((marker != null) && (editor != null)) {
-						IDE.gotoMarker(editor, marker);
-					}
+					Activator.controller.jumpToLocation(marker);
 				}
 			}
 		});
+		Activator.controller.refreshWorkspace();
+	}
+	
+	public void resetTable() {
+		if (table != null) {
+			table.removeAll();
+		}
 	}
 	
 	@Override
@@ -160,49 +117,7 @@ public class TableView extends ViewPart {
 		table.setFocus();
 	}
 	
-	/**
-	 * Listener that enables sorting of columns when the column header is clicked
-	 * @author reid-jr
-	 *
-	 */
-	private class SortListener implements Listener {
 
-		@Override
-		/**
-		 * Sorts the clicked on column as appropriate
-		 * @param e click event
-		 */
-		public void handleEvent(Event e) {
-			TableColumn selectedCol = (TableColumn) e.widget;
-			int dir = table.getSortDirection();
-			if (table.getSortColumn() == selectedCol) {
-				dir = (dir == SWT.UP) ? SWT.DOWN : SWT.UP;
-			}
-			else {
-				dir = SWT.UP;
-				table.setSortColumn(selectedCol);
-			}
-			table.setSortDirection(dir);
-			TableItem[] items = table.getItems();
-			@SuppressWarnings("unchecked")
-			Comparator<TableItem> comparator = (Comparator<TableItem>) selectedCol.getData();
-			for (int i = 1; i < items.length; i++) {
-				for (int j = 0; j < i; j++) {
-		            if ((comparator.compare(items[i], items[j]) < 0 && dir == SWT.UP) || (comparator.compare(items[i], items[j]) > 0 && dir == SWT.DOWN)) {
-		            	String[] values = new String[COLUMN_NAMES.length];
-		            	for (int k = 0; k < COLUMN_NAMES.length; k++) {
-		            		values[k] = items[i].getText(k);
-		            	}
-		            	items[i].dispose();
-		            	TableItem item = new TableItem(table, SWT.NONE, j);
-		            	item.setText(values);
-		            	items = table.getItems();
-		            	break;
-		            }
-				}
-			}
-		}
-	}
 	
 	/**
 	 * Listener for TableItem (i.e. row) selection in a table
@@ -232,13 +147,8 @@ public class TableView extends ViewPart {
 			TableItem[] items = table.getSelection();
 			if (items.length > 0) {
 				TableItem selectedRow = items[0];
-				// TODO: Store a reference to detail view, so we don't keep on having to do this!
-				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-				DetailView view = (DetailView) page.findView(SwampPerspective.DETAIL_VIEW_DESCRIPTOR);
 				BugDetail details = (BugDetail)selectedRow.getData(SwampPerspective.BUG_DETAIL_OBJ);
-				if (view != null) {
-					view.update(details);
-				}
+				Activator.controller.updateDetailView(details);
 			}
 		}
 

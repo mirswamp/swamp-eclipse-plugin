@@ -57,16 +57,18 @@ public class Activator extends AbstractUIPlugin {
 	// Name of file that stores list of unfinished assessments
 	private static final String UNFINISHED_ASSESS_FILENAME = ".unfinished_assess";
 	
-	// Map of <SWAMP project ID, set of assessment IDs> for assessments that have not yet been retrieved
-	private static Map<String, Set<String>> assessIDs;
+	// Name of file that stores list of finished assessments
+	private static final String FINISHED_ASSESS_FILENAME = ".finished_assess";
 	
-	// Map of <SWAMP project ID, set of assessment IDs> for retrieved assessments
-	private static Map<String, Set<String>> finishedIDs;
+	private static StatusChecker sc;
+	
+	public static Controller controller;
 	
 	/**
 	 * The constructor
 	 */
 	public Activator() {
+		controller = new Controller();
 	}
 
 	/*
@@ -80,11 +82,9 @@ public class Activator extends AbstractUIPlugin {
 		String hostnamePath = getHostnamePath();
 		File file = new File(hostnamePath);
 		SwampApiWrapper api;
-		loggedIn = false;
+		setLoggedIn(false);
 		hostname = DEFAULT_HOST;
-		assessIDs = new HashMap<>();
-		finishedIDs = new HashMap<>();
-		
+
 		if (file.exists()) {
 			FileReader filereader = null;
 			BufferedReader reader = null;
@@ -98,49 +98,13 @@ public class Activator extends AbstractUIPlugin {
 					api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, host);
 					if (api != null) {
 						hostname = host;
-						loggedIn = api.restoreSession();
+						setLoggedIn(api.restoreSession());
 					}
 				}
 			} catch (Exception e) {
 			}
 		}
 		
-		File f = new File(getUnfinishedAssessmentsPath());
-		if (f.exists()) {
-			FileReader filereader = null;
-			BufferedReader reader = null;
-			try {
-				filereader = new FileReader(f);
-				reader = new BufferedReader(filereader);
-				String str = reader.readLine();
-				while (str != null && !str.equals("")) {
-					String[] array = str.split(":");
-					String prjID = array[0];
-					String assessID = array[1];
-					Set<String> set;
-					if (assessIDs.containsKey(prjID)) {
-						set = assessIDs.get(prjID);
-						set.add(assessID);
-					}
-					else {
-						set = new HashSet<>();
-						set.add(assessID);
-					}
-					assessIDs.put(prjID, set);
-				}
-				
-			} catch (IOException e) {
-				System.err.println("Unable to read in assessments from file.");
-				e.printStackTrace();
-			} finally {
-				if (filereader != null) {
-					filereader.close();
-				}
-				if (reader != null) {
-					reader.close();
-				}
-			}
-		}
 	}
 	
 	/**
@@ -189,8 +153,16 @@ public class Activator extends AbstractUIPlugin {
 	 * Gets path of unfinished assessments file
 	 * @return path
 	 */
-	private static String getUnfinishedAssessmentsPath() {
-		return SwampApiWrapper.SWAMP_DIR_PATH + System.getProperty("file.separator") + UNFINISHED_ASSESS_FILENAME;
+	public static String getUnfinishedAssessmentsPath() {
+		return SwampApiWrapper.SWAMP_DIR_PATH + UNFINISHED_ASSESS_FILENAME;
+	}
+	
+	/**
+	 * Gets path of finished assessments file
+	 * @return path
+	 */
+	public static String getFinishedAssessmentsPath() {
+		return SwampApiWrapper.SWAMP_DIR_PATH +  FINISHED_ASSESS_FILENAME;
 	}
 
 	/*
@@ -198,7 +170,9 @@ public class Activator extends AbstractUIPlugin {
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
 	 */
 	public void stop(BundleContext context) throws Exception {
-		saveResults();
+		if (sc != null) {
+			sc.cancel();
+		}
 		plugin = null;
 		super.stop(context);
 	}
@@ -225,6 +199,14 @@ public class Activator extends AbstractUIPlugin {
 	 * @param loggedIn true if user is logged into SWAMP
 	 */
 	public static void setLoggedIn(boolean loggedIn) {
+		if ((sc != null) && !loggedIn) {
+			sc.cancel();
+			sc = null;
+		}
+		else if ((sc == null) && loggedIn) {
+			sc = new StatusChecker();
+			sc.schedule();
+		}
 		Activator.loggedIn = loggedIn;
 	}
 
@@ -248,89 +230,8 @@ public class Activator extends AbstractUIPlugin {
 		return hostname;
 	}
 	
-	/**
-	 * Save unfinished results to file (should be called when Eclipse is exited or user is logged out)
-	 */
-	public static void saveResults() {
-		String path = getUnfinishedAssessmentsPath();
-		File f = new File(path);
-		if (f.exists()) {
-			f.delete();
-		}
-		FileWriter filewriter = null;
-		BufferedWriter writer = null;
-		
-		try {
-			filewriter = new FileWriter(f);
-			writer = new BufferedWriter(filewriter);
-			for (String prjID : assessIDs.keySet()) {
-				for (String assessID : assessIDs.get(prjID)) {
-					writer.write(prjID + ":" + assessID);
-				}
-			}
-			filewriter.close();
-			writer.close();
-			
-		} catch (Exception e) {
-			System.err.println("Unabled to write results file");
-			e.printStackTrace();
-		} 
+	public static StatusChecker getStatusChecker() {
+		return sc;
 	}
 	
-	/**
-	 * Utility method for adding a (project ID, assessment ID) pair to a map
-	 * @param map
-	 * @param projectID the UUID of the SWAMP project
-	 * @param assessID the UUID of the SWAMP assessment
-	 */
-	private static void addAssessment(Map<String, Set<String>> map, String projectID, String assessID) {
-		if (map.containsKey(projectID)) {
-			map.get(projectID).add(assessID);
-		}
-		else {
-			Set<String> set = new HashSet<>();
-			set.add(assessID);
-			map.put(projectID, set);
-		}
-	}
-	
-	/**
-	 * Marks an assessment as finished
-	 * @param projectID the UUID of the SWAMP project
-	 * @param assessID the UUID of the SWAMP assessment
-	 */
-	public static void finish(String projectID, String assessID) {
-		if (assessIDs.containsKey(projectID)) {
-			Set<String> set = assessIDs.get(projectID);
-			if (set.contains(assessID)) {
-				set.remove(assessID);
-			}
-		}
-		addAssessment(finishedIDs, projectID, assessID);
-	}
-	
-	/**
-	 * Adds an assessment to the list of assessments being waited on (unfinishedAssessmentsMap)
-	 * @param projectID the UUID of the SWAMP project
-	 * @param assessID the UUID of the SWAMP assessment
-	 */
-	public static void addAssessment(String projectID, String assessID) {
-		addAssessment(assessIDs, projectID, assessID);
-	}
-	
-	/**
-	 * Getter for finished assessments
-	 * @return map of finished assessment UUIDs
-	 */
-	public static Map<String, Set<String>> getFinishedAssessments() {
-		return new HashMap<String, Set<String>>(finishedIDs);
-	}
-	
-	/**
-	 * Getter for unfininished assessments
-	 * @return map of unfinished assessment UUIDs
-	 */
-	public static Map<String, Set<String>> getUnfinishedAssessments() {
-		return new HashMap<String, Set<String>>(assessIDs);
-	}
 }

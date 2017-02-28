@@ -59,7 +59,7 @@ public class BugDetail {
 	 * @param platform the name of the platform
 	 * @param tool the name of the tool
 	 */
-	public BugDetail(BugInstance bug, String platform, String tool) {
+	public BugDetail(BugInstance bug, String tool, String platform) {
 		this.bug = bug;
 		this.platform = platform;
 		this.tool = tool;

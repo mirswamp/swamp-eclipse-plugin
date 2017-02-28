@@ -28,9 +28,17 @@ import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.continuousassurance.swamp.eclipse.ui.SortListener;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
 import static org.eclipse.core.runtime.IPath.SEPARATOR;
@@ -42,6 +50,16 @@ import static org.eclipse.core.runtime.IPath.SEPARATOR;
  * @since 07/2016 
  */
 public class Utils {
+	
+	/**
+	 * Name of int type for table column
+	 */
+	public static String INT_TYPE = "INT";
+	
+	/**
+	 * Name of string type for table column 
+	 */
+	public static String STR_TYPE = "STR";
 	
 	/**
 	 * Private constructor to prevent subclassing
@@ -258,12 +276,22 @@ public class Utils {
 		Comparator<TableItem> cmp = new Comparator<TableItem>() {
 			@Override
 			public int compare(TableItem t1, TableItem t2) {
-				int i1 = Integer.parseInt(t1.getText(col));
-				int i2 = Integer.parseInt(t2.getText(col));
+				int i1 = getIntValue(t1.getText(col));
+				int i2 = getIntValue(t2.getText(col));
 				return Integer.compare(i1, i2);
 			}
 		};
 		return cmp;
+	}
+	
+	private static int getIntValue(String str) {
+		int val = -1;
+		try {
+			val = Integer.parseInt(str);
+		}
+		catch (NumberFormatException e) {
+		}
+		return val;
 	}
 	
 	/**
@@ -280,4 +308,44 @@ public class Utils {
 		};
 		return cmp;
 	}
+	
+	/**
+	 * Utility method for constructing a table to be used in a view
+	 * @param parent composite that the table will be placed on
+	 * @return SWT table
+	 */
+	public static Table constructTable(Composite parent) {
+		Table table = new Table(parent, SWT.BORDER | SWT.FULL_SELECTION);
+		table.setLinesVisible(true);
+		table.setHeaderVisible(true);
+		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+		table.setLayoutData(gd);
+		return table;
+	}
+	
+	/**
+	 * Utility method for constructing a column and adding it to the specified table
+	 * @param table SWT table
+	 * @param name name of the column
+	 * @param width width of column
+	 * @param index column index in table
+	 * @param type whether this column should be string or int sorted
+	 * @param dataKeys keys for arbitrary data objects associated with this column
+	 * @return sortable table column
+	 */
+	public static TableColumn addTableColumn(Table table, String name, int width, int index, String type, String... dataKeys) {		
+		TableColumn col = new TableColumn(table, SWT.NONE);
+		col.setText(name);
+		col.setWidth(width);
+		if (type.equals(INT_TYPE)) {
+			col.setData(Utils.INT_CMP(index));
+		}
+		else {
+			col.setData(Utils.STR_CMP(index));
+		}
+		col.addListener(SWT.Selection, new SortListener(dataKeys));
+		return col;
+		
+	}
+	
 }

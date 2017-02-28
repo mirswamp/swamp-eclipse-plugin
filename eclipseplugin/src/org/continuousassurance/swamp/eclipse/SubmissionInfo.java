@@ -669,4 +669,8 @@ public class SubmissionInfo {
 		}
 		return packageThing.getUUIDString();
 	}
+	
+	public void setPackageThing(PackageThing p) {
+		packageThing = p;
+	}
 }
