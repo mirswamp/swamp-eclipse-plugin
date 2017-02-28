@@ -68,7 +68,6 @@ import edu.wisc.cs.swamp.exceptions.SessionRestoreException;
 
 import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
 import static org.eclipse.core.runtime.Path.SEPARATOR;
-import java.io.BufferedWriter;
 import java.io.FileWriter;
 
 public class SwampSubmitter {

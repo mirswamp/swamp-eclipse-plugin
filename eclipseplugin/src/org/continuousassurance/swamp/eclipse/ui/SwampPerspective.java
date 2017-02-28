@@ -13,39 +13,19 @@
 
 package org.continuousassurance.swamp.eclipse.ui;
 
-import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.continuousassurance.swamp.eclipse.Activator;
-import org.continuousassurance.swamp.eclipse.BugDetail;
-import org.continuousassurance.swamp.eclipse.ResultsParser;
-import org.continuousassurance.swamp.eclipse.ResultsUtils;
 import org.continuousassurance.swamp.eclipse.handlers.HandlerUtilityMethods;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
-import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPartListener2;
 import org.eclipse.ui.IPartService;
 import org.eclipse.ui.IPerspectiveFactory;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchPartReference;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
-import dataStructures.BugInstance;
-import dataStructures.Location;
 
 /**
  * Class for implementing SWAMP perspective, which is composed of a Project
