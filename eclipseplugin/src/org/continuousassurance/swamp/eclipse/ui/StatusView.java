@@ -63,6 +63,8 @@ public class StatusView extends ViewPart {
 	
 	private static final String RESULTS_FILEPATH = "results_filepath";
 	
+	public static final String ID = "org.continuousassurance.swamp.eclipse.ui.views.statusview";
+	
 	/**
 	 * Action for refreshing assessment statuses
 	 */
@@ -155,13 +157,11 @@ public class StatusView extends ViewPart {
 		table.setFocus();
 	}
 	
-	public void clearTable() {
-		if (table != null) {
-			table.removeAll();
-		}
-	}
-	
 	public void addRowsToStatusTable(List<String> statuses) {
+		if (table == null) {
+			return;
+		}
+		table.removeAll();
 		for (String s : statuses) {
 			TableItem item = new TableItem(table, SWT.NONE);
 			String[] parts = s.split(AssessmentDetails.DELIMITER);

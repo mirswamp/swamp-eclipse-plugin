@@ -21,6 +21,7 @@ import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.BugDetail;
 import org.continuousassurance.swamp.eclipse.ResultsParser;
 import org.continuousassurance.swamp.eclipse.ResultsUtils;
@@ -56,24 +57,6 @@ import dataStructures.Location;
 public class SwampPerspective implements IPerspectiveFactory {
 
 	/**
-	 * Descriptor for the table view 
-	 */
-	public static final String TABLE_VIEW_DESCRIPTOR = "org.continuousassurance.swamp.eclipse.ui.views.tableview";
-	/**
-	 * Descriptor for the detail view
-	 */
-	public static final String DETAIL_VIEW_DESCRIPTOR = "org.continuousassurance.swamp.eclipse.ui.views.detailview";
-	
-	/**
-	 * Descriptor for the status view
-	 */
-	public static final String STATUS_VIEW_DESCRIPTOR = "org.continuousassurance.swamp.eclipse.ui.views.statusview";
-	/**
-	 * Cached reference to the active window
-	 */
-	public static IWorkbenchWindow window;
-	
-	/**
 	 * Key for storing IMarker object with row (TableItem)
 	 */
 	public static final String MARKER_OBJ = "marker";
@@ -83,13 +66,13 @@ public class SwampPerspective implements IPerspectiveFactory {
 	 */
 	public static final String BUG_DETAIL_OBJ = "bugdetail";
 	
+	public static final String ID = "org.continuousassurance.swamp.eclipse.ui.perspective";
+	
 	/**
 	 * Constructor for SwampPerspective
 	 */
 	public SwampPerspective() {
 		super();
-		IWorkbench wb = PlatformUI.getWorkbench();
-		window = wb.getActiveWorkbenchWindow();
 	}
 	
 	@Override
@@ -100,6 +83,7 @@ public class SwampPerspective implements IPerspectiveFactory {
 	 */
 	public void createInitialLayout(IPageLayout layout) {
 		defineLayout(layout);
+		Activator.controller.refreshWorkspace();
 	}
 	
 	/**
@@ -111,82 +95,20 @@ public class SwampPerspective implements IPerspectiveFactory {
 		IFolderLayout topLeft = layout.createFolder("topLeft", IPageLayout.LEFT, 0.25f, editorArea);
 		topLeft.addView(IPageLayout.ID_PROJECT_EXPLORER);
 		IFolderLayout bottom = layout.createFolder("bottom", IPageLayout.BOTTOM, 0.70f, editorArea);
-		bottom.addView(TABLE_VIEW_DESCRIPTOR);
-		bottom.addView(STATUS_VIEW_DESCRIPTOR);
+		bottom.addView(TableView.ID);
+		bottom.addView(StatusView.ID);
 		IFolderLayout right = layout.createFolder("right", IPageLayout.RIGHT, 0.60f, editorArea);
-		right.addView(DETAIL_VIEW_DESCRIPTOR);
-		IPartService service = window.getPartService();
-		service.addPartListener(new FileChangeListener());
-	}
-	
-	/**
-	 * Takes a given file and adds bug markers to the left hand side ruler of the file
-	 * @param file file to add markers to
-	 * @param bugs list of bugs
-	 * @param toolName name of the tool
-	 */
-	/*
-	public void annotateEditor(IFile file, List<BugInstance> bugs, String toolName) {
-		
-		try {
-			for (BugInstance bug : bugs) {
-				createMarkerForResource(file, bug, toolName);
+		right.addView(DetailView.ID);
+		IWorkbench wb = PlatformUI.getWorkbench();
+		if (wb != null) {
+			IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
+			if (window != null) {
+				IPartService service = window.getPartService();
+				service.addPartListener(new FileChangeListener());
 			}
 		}
-		catch (Exception e) {
-			System.out.println("Failed to create marker");
-			e.printStackTrace();
-		}
 	}
-	*/
-	
-	/**
-	 * Adds a single bug marker to the specified file
-	 * @param resource file that marker will be added to
-	 * @param bug bug that we are adding a marker for
-	 * @param toolName name of tool
-	 * @return IMarker object
-	 */
-	public IMarker createMarkerForResource(IFile resource, BugInstance bug, String toolName) {
-		for (Location l : bug.getLocations()) {
-			if (l.isPrimary()) {
-				System.out.println("Primary bug!");
-				System.out.println(bug);
-				try {
-					//IMarker marker = resource.createMarker(IMarker.PROBLEM);
-					//IMarker marker = resource.createMarker("highseverity");
-					IMarker marker;
-					String severity = bug.getBugSeverity();
-					severity = severity == null ? "" : severity.toUpperCase();
-					if (severity.equals("HIGH")) {
-						marker = resource.createMarker("eclipseplugin.highseverity");
-					}
-					else if (severity.equals("MED")) {
-						marker = resource.createMarker("eclipseplugin.medseverity");
-					}
-					else if (severity.equals("LOW")) {
-						marker = resource.createMarker("eclipseplugin.lowseverity");
-					}
-					else {
-						marker = resource.createMarker("eclipseplugin.unknownseverity");
-					}
-					marker.setAttribute(IMarker.MESSAGE, toolName + ": " + bug.getBugMessage());
-					marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING); // TODO Get priority right here
-					marker.setAttribute(IMarker.LINE_NUMBER, l.getStartLine()); // TODO End line also / lines between also?
-					return marker;
-				}
-				catch (CoreException e) {
-					System.err.println("Core exception when creating marker");
-					e.printStackTrace();
-				}
-			}
-			else {
-				System.out.println("Non-primary bug!");
-			}
-			// TODO Maybe add some marker for non-primary bugs? This would probably get too noisy
-		}
-		return null;
-	}
+
 	
 	/**
 	 * Listener for file open in editor being changed.
@@ -204,216 +126,59 @@ public class SwampPerspective implements IPerspectiveFactory {
 		 * makes the most sense as we can update the editor from here as well.
 		 */
 		
-		private IProject currentlyOpenedProject;
+		private IFile currentlyOpenedFile = null;
 		
-		private void updatePerspective(IProject project) {
-			
-			if (project == null) {
-				System.out.println("Project null");
-				return;
-			}
-			if (project.equals(currentlyOpenedProject)) {
-				System.out.println("Project is the same!");
-				return;
-			}
-			currentlyOpenedProject = project;
-			
-			System.out.println("Switching projects!");
-			System.out.println("Project open: " + project.getName());
-			
-			String path = project.getProject().getWorkingLocation(PLUGIN_ID).toOSString() + Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
-			
-			File f = new File(path); // TODO Change the filepath used here
-			if (f.exists()) {
-				String pkgThingUUID = "";
-				try {
-					FileReader filereader = new FileReader(f);
-					BufferedReader reader = new BufferedReader(filereader);
-					pkgThingUUID = reader.readLine();
-				}
-				catch (Exception e) {
-					System.err.println("Exception occured");
-					return;
-				}
-			
-				
-				resetTable();
-				File resultsDir = new File(ResultsUtils.constructFilepath(pkgThingUUID));
-				File[] files = resultsDir.listFiles();
-				if (files != null && files.length > 0) {
+		private void refreshWS() {
+			IWorkbench wb = PlatformUI.getWorkbench();
+			if (wb != null) {
+				IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
+				if (window != null) {
+					IProject project = HandlerUtilityMethods.getActiveProject(window);
 					IFile file = HandlerUtilityMethods.getActiveFile(window);
-					List<BugInstance> bugs;
-					ResultsParser rp;
-					String filepath;
-					for (File r : files) {
-						bugs = new ArrayList<>();
-						rp = new ResultsParser(r);
-						filepath = file.getFullPath().toString();
-						filepath = filepath.substring(1);
-						bugs.addAll(rp.getFileBugs(filepath));
-						updateEditorAndViews(file, bugs, rp.getToolName(), rp.getPlatformName());
+					if ((project != null) && (file != null) && (!file.equals(currentlyOpenedFile))) {
+						currentlyOpenedFile = file;
+						Activator.controller.refreshWorkspace();
 					}
 				}
-				else {
-					resetViewsAndEditor();
-				}
-			}
-			else {
-				System.out.println("No results found");
-				resetViewsAndEditor();
 			}
 		}
 		
-		private void resetViewsAndEditor() {
-			IWorkbenchPage page = window.getActivePage();
-			if (page != null) {
-				resetTableView(page);
-				resetDetailView(page);
-			}
-			IFile file = HandlerUtilityMethods.getActiveFile(window);
-			if (file != null) {
-				try {
-					file.deleteMarkers(null, false, 1);
-					file.deleteMarkers("eclipseplugin.highseverity", true, 1);
-					file.deleteMarkers("eclipseplugin.medseverity", true, 1);
-					file.deleteMarkers("eclipseplugin.lowseverity", true, 1);
-					file.deleteMarkers("eclipseplugin.unknownseverity", true, 1);
-				} catch (CoreException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-		
-		private void resetTable() {
-			Table table = null;
-			IWorkbenchPage page = window.getActivePage();
-			TableView view = (TableView) page.findView(TABLE_VIEW_DESCRIPTOR);
-			if (view != null) {
-				table = view.getTable();
-			}
-			if (table != null) {
-				table.removeAll();
-			}
-		}
-
 		@Override
 		/**
 		 * Parses SCARF and updates views as appropriate when file is changed
 		 * @param part reference to the workbench part
 		 */
 		public void partActivated(IWorkbenchPartReference part) {
-			System.out.println("Part Activated");
-			IProject project = HandlerUtilityMethods.getActiveProject(window);
-			updatePerspective(project);
-		}
-		
-		/**
-		 * Resets DetailView so it no longer shows info on a bug
-		 * @param page reference to workbench page
-		 */
-		private void resetDetailView(IWorkbenchPage page) {
-			DetailView view = (DetailView) page.findView(DETAIL_VIEW_DESCRIPTOR);
-			if (view != null) {
-				view.update(null);
-			}
-		}
-		
-		/**
-		 * Resets table view so it no longer has any bugs/rows
-		 * @param page reference to workbench page
-		 */
-		private void resetTableView(IWorkbenchPage page) {
-			TableView view = (TableView) page.findView(TABLE_VIEW_DESCRIPTOR);
-			Table table = null;
-			if (view != null) {
-				table = view.getTable();
-			}
-			if (table != null) {
-				table.removeAll();
-			}
-		}
-		
-		/**
-		 * Updates editor (with markers) and TableView (with rows). Also, creates
-		 * BugDetail objects and adds them to the rows as appropriate
-		 * @param file file currently active in editor
-		 * @param bugs list of bugs found in that file
-		 * @param toolName name of tool
-		 * @param platformName name of platform
-		 */
-		private void updateEditorAndViews(IFile file, List<BugInstance> bugs, String toolName, String platformName) {
-			Table table = null;
-			IWorkbenchPage page = window.getActivePage();
-			TableView view = (TableView) page.findView(TABLE_VIEW_DESCRIPTOR);
-			if (view != null) {
-				table = view.getTable();
-			}
-			List<TableItem> rows = new ArrayList<>();
-			for (BugInstance bug : bugs) {
-				IMarker marker = createMarkerForResource(file, bug, toolName);
-				if (table != null) {
-					BugDetail details = new BugDetail(bug, toolName, platformName);
-					TableItem item = new TableItem(table, SWT.NONE);
-					for (Location loc : bug.getLocations()) {
-						if (loc.isPrimary()) {
-							String filename = loc.getSourceFile();
-							details.setPrimaryFilename(filename);
-							details.setPrimaryLineNumber(loc);
-							item.setText(0, filename);
-							item.setText(1, Integer.toString(loc.getStartLine()));
-							item.setText(2, Integer.toString(loc.getEndLine()));
-							item.setText(3, bug.getBugCode());
-							item.setText(4, toolName);
-							item.setText(5, platformName);
-						}
-						details.addLocation(loc);
-					}
-					item.setData(MARKER_OBJ, marker);
-					item.setData(BUG_DETAIL_OBJ, details);
-					rows.add(item);
-				}
-			}
-			resetDetailView(page);
+			refreshWS();
 		}
 		
 		@Override
 		public void partBroughtToTop(IWorkbenchPartReference arg0) {
-			System.out.println("Part brought to the top #allthewayup");
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void partClosed(IWorkbenchPartReference arg0) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void partDeactivated(IWorkbenchPartReference arg0) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void partHidden(IWorkbenchPartReference arg0) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void partInputChanged(IWorkbenchPartReference part) {
-			System.out.println("Part Input Changed");
-			printPartInfo(part);
 		}
 
 		@Override
 		public void partOpened(IWorkbenchPartReference part) {
-			System.out.println("Part Activated");
-			IProject project = HandlerUtilityMethods.getActiveProject(window);
-			updatePerspective(project);;
+			refreshWS();
 		}
 
 		@Override
 		public void partVisible(IWorkbenchPartReference arg0) {
-			// TODO Auto-generated method stub
 		}
 		
 		/**
@@ -428,8 +193,6 @@ public class SwampPerspective implements IPerspectiveFactory {
 			System.out.println("Part Content description: " + part.getContentDescription());
 			System.out.println("Part name: " + part.getPartName());
 		}
-		
-
 		
 	}
 	

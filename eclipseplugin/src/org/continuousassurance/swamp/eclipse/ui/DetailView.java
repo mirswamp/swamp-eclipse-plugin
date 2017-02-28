@@ -68,6 +68,8 @@ public class DetailView extends ViewPart {
 	 */
 	private Browser browser;
 	
+	public static final String ID = "org.continuousassurance.swamp.eclipse.ui.views.detailview";
+	
 	@Override
 	/**
 	 * Creates view part

@@ -54,8 +54,15 @@ public class ResultsRetriever {
 
 		List<String> statuses = new ArrayList<>();
 		
-		addUnfinishedFileStatuses(statuses, api);
-		addFinishedFileStatuses(statuses);
+		boolean refreshNeeded = addUnfinishedFileStatuses(statuses, api);
+		refreshNeeded = (addFinishedFileStatuses(statuses) || refreshNeeded);
+		if (refreshNeeded) {
+			System.out.println("Refresh Needed!");
+			refreshWS();
+		}
+		else {
+			System.out.println("No refresh needed!");
+		}
 		
 		System.out.println("Updating status view");
 		updateStatusView(statuses);
@@ -72,16 +79,17 @@ public class ResultsRetriever {
 		lock.unlock();
 	}
 	
-	public static void addUnfinishedFileStatuses(List<String> statuses, SwampApiWrapper api) throws ResultsRetrievalException {
+	// Returns whether workspace needs to be refreshed
+	public static boolean addUnfinishedFileStatuses(List<String> statuses, SwampApiWrapper api) throws ResultsRetrievalException {
 		File oldFile = new File(Activator.getUnfinishedAssessmentsPath());
 		if (!oldFile.exists()) {
-			return;
+			return false;
 		}
 		Scanner sc = null;
 		try {
 			sc = new Scanner(oldFile);
 		} catch (FileNotFoundException e) {
-			return;
+			return false;
 		}
 		
 		File tmp = new File(Activator.getUnfinishedAssessmentsPath() + ".tmp");
@@ -97,15 +105,19 @@ public class ResultsRetriever {
 			throw new ResultsRetrievalException();
 		}
 		
-	
 		System.out.println("Now to parse stuff from unfinished file");
+		boolean refreshNeeded = false;
 		while (sc.hasNextLine()) {
 			String assessmentDetails = sc.nextLine();
 			System.out.println("New line: " + assessmentDetails);
 			String newStatusStr = updateStatus(writer, api, assessmentDetails);
 			System.out.println("New status string: " + newStatusStr);
-			if (newStatusStr != null) { // null indicates this status is no longer in the unfinished file, don't want to double count, as we will go over finished file next
+			if (newStatusStr != null) { // null indicates this status is no longer in the unfinished file, don't want to double count, as we will go over finished file next.
+				// also possible that null assessment was removed by the user
 				statuses.add(newStatusStr);
+			}
+			else {
+				refreshNeeded = true;
 			}
 		}
 		sc.close();
@@ -118,20 +130,21 @@ public class ResultsRetriever {
 		oldFile.delete();
 		
 		tmp.renameTo(oldFile);
+		return refreshNeeded;
 	}
 	
-	private static void addFinishedFileStatuses(List<String> statuses) throws ResultsRetrievalException {
+	private static boolean addFinishedFileStatuses(List<String> statuses) throws ResultsRetrievalException {
 		System.out.println("Now reading stuff from finished file");
 		File f = new File(Activator.getFinishedAssessmentsPath());
 		if (!f.exists()) {
-			return;
+			return false;
 		}
 		Scanner sc = null;
 		try {
 			sc = new Scanner(f);
 		} catch (FileNotFoundException e) {
 			System.err.println(e.getMessage());
-			return;
+			return false;
 		}
 		
 		File tmp = new File(Activator.getFinishedAssessmentsPath() + ".tmp");
@@ -147,6 +160,7 @@ public class ResultsRetriever {
 			sc.close();
 			throw new ResultsRetrievalException();
 		}
+		boolean refreshNeeded = false;
 		
 		while (sc.hasNext()) {
 			String status = sc.nextLine();
@@ -161,6 +175,7 @@ public class ResultsRetriever {
 				}
 			}
 			else {
+				refreshNeeded = true;
 				assessmentsToDelete.remove(assessUUID);
 			}
 			lock.unlock();
@@ -172,6 +187,7 @@ public class ResultsRetriever {
 		}
 		f.delete();
 		tmp.renameTo(f);
+		return refreshNeeded;
 	}
 	
 	private static void updateStatusView(List<String> statuses) {
@@ -179,17 +195,19 @@ public class ResultsRetriever {
 				@Override
 				public void run() {
 					System.out.println("Actually attempting to update status view");
-					IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-					if (page != null) {
-						StatusView view = (StatusView) page.findView(SwampPerspective.STATUS_VIEW_DESCRIPTOR);
-						if (view != null) {
-							System.out.println("Actually updating status view!");
-							view.clearTable();
-							view.addRowsToStatusTable(statuses);
-						}
-					}
+					Activator.controller.updateStatusView(statuses);
 				}
 			});
+	}
+	
+	private static void refreshWS() {
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				System.out.println("Actually attempting to refresh workspace");
+				Activator.controller.refreshWorkspace();
+			}
+		});
 	}
 	
 	private static void writeToFinishedFile(String newDetailInfo) throws IOException {
@@ -213,9 +231,11 @@ public class ResultsRetriever {
 		lock.lock();
 		if (assessmentsToDelete.contains(assessUUID)) {
 			assessmentsToDelete.remove(assessUUID);
+			lock.unlock();
 			return null;
 		}
 		lock.unlock();
+		
 		AssessmentRecord rec = api.getAssessmentRecord(prjUUID, assessUUID);
 		String status = rec.getStatus();
 		System.out.println("Status: " + status);

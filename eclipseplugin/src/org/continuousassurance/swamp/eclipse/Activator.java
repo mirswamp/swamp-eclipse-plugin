@@ -62,10 +62,13 @@ public class Activator extends AbstractUIPlugin {
 	
 	private static StatusChecker sc;
 	
+	public static Controller controller;
+	
 	/**
 	 * The constructor
 	 */
 	public Activator() {
+		controller = new Controller();
 	}
 
 	/*

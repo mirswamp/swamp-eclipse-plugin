@@ -12,6 +12,7 @@
  */
 package org.continuousassurance.swamp.eclipse.ui;
 
+import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.BugDetail;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.eclipse.core.resources.IMarker;
@@ -57,7 +58,7 @@ public class TableView extends ViewPart {
 	 */
 	private Table table;
 	
-
+	public static final String ID = "org.continuousassurance.swamp.eclipse.ui.views.tableview";
 	
 	/**
 	 * Constructor for TableView
@@ -65,8 +66,6 @@ public class TableView extends ViewPart {
 	public TableView() {
 		super();
 	}
-	
-
 	
 	/**
 	 * Getter for table (ideally this wouldn't be exposed but we need it to be
@@ -83,6 +82,7 @@ public class TableView extends ViewPart {
 	 * @param parent composite on which widgets will be placed and positioned
 	 */
 	public void createPartControl(Composite parent) {
+		System.out.println("Table View actually created");
 		table = Utils.constructTable(parent);
 		
 		for (int i = 0; i < COLUMN_NAMES.length; i++) {
@@ -96,16 +96,17 @@ public class TableView extends ViewPart {
 				if (items.length > 0) {
 					TableItem item = items[0];
 					IMarker marker = (IMarker)item.getData(SwampPerspective.MARKER_OBJ);
-					IWorkbench wb = PlatformUI.getWorkbench();
-					IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
-					IWorkbenchPage page = window.getActivePage();
-					IEditorPart editor = page.getActiveEditor();
-					if ((marker != null) && (editor != null)) {
-						IDE.gotoMarker(editor, marker);
-					}
+					Activator.controller.jumpToLocation(marker);
 				}
 			}
 		});
+		Activator.controller.refreshWorkspace();
+	}
+	
+	public void resetTable() {
+		if (table != null) {
+			table.removeAll();
+		}
 	}
 	
 	@Override
@@ -146,13 +147,8 @@ public class TableView extends ViewPart {
 			TableItem[] items = table.getSelection();
 			if (items.length > 0) {
 				TableItem selectedRow = items[0];
-				// TODO: Store a reference to detail view, so we don't keep on having to do this!
-				IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-				DetailView view = (DetailView) page.findView(SwampPerspective.DETAIL_VIEW_DESCRIPTOR);
 				BugDetail details = (BugDetail)selectedRow.getData(SwampPerspective.BUG_DETAIL_OBJ);
-				if (view != null) {
-					view.update(details);
-				}
+				Activator.controller.updateDetailView(details);
 			}
 		}
 
