@@ -12,10 +12,16 @@
  */
 package org.continuousassurance.swamp.eclipse.exceptions;
 
+/**
+ * This class implements an exception that is thrown when there is some problem
+ * in retrieving results.
+ * @author reid-jr
+ *
+ */
 public class ResultsRetrievalException extends Exception {
 
 	/**
-	 * 
+	 * Serial version UID (see Java Serializable interface for details)
 	 */
 	private static final long serialVersionUID = 1563505878060561955L;
 

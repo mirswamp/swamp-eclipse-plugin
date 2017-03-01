@@ -20,6 +20,11 @@ package org.continuousassurance.swamp.eclipse.exceptions;
 public class CyclicDependenciesException extends RuntimeException {
 
 	/**
+	 * Serial version UID (see Java Serializable interface for details)
+	 */
+	private static final long serialVersionUID = 7949231262296631262L;
+
+	/**
 	 * Constructor for CyclicDependenciesException
 	 *
 	 * @param msg the error message for the exception

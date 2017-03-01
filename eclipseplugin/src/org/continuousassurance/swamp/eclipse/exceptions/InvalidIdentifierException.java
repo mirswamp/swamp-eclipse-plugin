@@ -13,12 +13,16 @@
 
 package org.continuousassurance.swamp.eclipse.exceptions;
 
+/**
+ * Exception for when program uses an invalid identifier
+ * @author reid-jr
+ *
+ */
 public class InvalidIdentifierException extends Exception {
 
 	/**
-	 * 
+	 * Serial version UID (see Java Serializable interface for details)
 	 */
-	// TODO what is this?
 	private static final long serialVersionUID = -8220444090313184142L;
 
 }

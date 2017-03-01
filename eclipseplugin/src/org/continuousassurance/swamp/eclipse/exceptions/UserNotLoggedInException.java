@@ -12,10 +12,16 @@
  */
 package org.continuousassurance.swamp.eclipse.exceptions;
 
+/**
+ * Exception for when plug-in tries to do an action when user is logged in that
+ * should only be done when a user is logged in 
+ * @author reid-jr
+ *
+ */
 public class UserNotLoggedInException extends Exception {
 
 	/**
-	 * 
+	 * Serial version UID (see Java Serializable interface for details)
 	 */
 	private static final long serialVersionUID = -8770059401215592649L;
 
