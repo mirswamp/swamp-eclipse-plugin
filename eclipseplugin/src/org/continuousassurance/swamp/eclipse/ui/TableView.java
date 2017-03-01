@@ -40,19 +40,29 @@ public class TableView extends ViewPart {
 	/**
 	 * Names of the columns of the table
 	 */
-	public static final String[] COLUMN_NAMES = {"File", "Start Line", "End Line", "Type", "Tool", "Platform"};
+	public static final String[] COLUMN_NAMES = {"File", "Start Line", 
+			"End Line", "Type", "Tool", "Platform"};
 	/**
 	 * Widths of the columns of the table
 	 */
 	private static final int[] COLUMN_WIDTHS = {400, 50, 50, 400, 200, 200};
 	
-	private static final String[] COLUMN_TYPES = {Utils.STR_TYPE, Utils.INT_TYPE, Utils.INT_TYPE, Utils.STR_TYPE, Utils.STR_TYPE, Utils.STR_TYPE};
+	/**
+	 * The type (either String or int) of the columns. This information is used for sorting
+	 */
+	private static final String[] COLUMN_TYPES = {Utils.STR_TYPE, 
+			Utils.INT_TYPE, Utils.INT_TYPE, Utils.STR_TYPE, Utils.STR_TYPE, 
+			Utils.STR_TYPE};
 	/**
 	 * SWT Table widget
 	 */
 	private Table table;
 	
-	public static final String ID = "org.continuousassurance.swamp.eclipse.ui.views.tableview";
+	/**
+	 * ID for this view (matches id in plugin.xml)
+	 */
+	public static final String ID = 
+			"org.continuousassurance.swamp.eclipse.ui.views.tableview";
 	
 	/**
 	 * Constructor for TableView
@@ -97,6 +107,9 @@ public class TableView extends ViewPart {
 		Activator.controller.refreshWorkspace();
 	}
 	
+	/**
+	 * Removes all rows in the table in this TableView
+	 */
 	public void resetTable() {
 		if (table != null) {
 			table.removeAll();
@@ -110,9 +123,7 @@ public class TableView extends ViewPart {
 	public void setFocus() {
 		table.setFocus();
 	}
-	
 
-	
 	/**
 	 * Listener for TableItem (i.e. row) selection in a table
 	 * @author reid-jr
@@ -147,9 +158,11 @@ public class TableView extends ViewPart {
 		}
 
 		@Override
+		/**
+		 * Method that gets called for default selection
+		 * @param event selection event
+		 */
 		public void widgetDefaultSelected(SelectionEvent event) {
 		}
-		
 	}
-	
 }

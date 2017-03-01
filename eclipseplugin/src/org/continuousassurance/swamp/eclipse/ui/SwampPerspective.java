@@ -46,6 +46,9 @@ public class SwampPerspective implements IPerspectiveFactory {
 	 */
 	public static final String BUG_DETAIL_OBJ = "bugdetail";
 	
+	/**
+	 * ID for this perspective (matches id in plugin.xml)
+	 */
 	public static final String ID = "org.continuousassurance.swamp.eclipse.ui.perspective";
 	
 	/**
@@ -105,9 +108,16 @@ public class SwampPerspective implements IPerspectiveFactory {
 		 * TableView from here. Doing it here in the SwampPerspective class
 		 * makes the most sense as we can update the editor from here as well.
 		 */
-		
+	
+		/**
+		 * Cached reference to the most recent source file that we displayed
+		 * results for
+		 */
 		private IFile currentlyOpenedFile = null;
 		
+		/**
+		 * Method for refreshing the workspace if the file has changed
+		 */
 		private void refreshWS() {
 			IWorkbench wb = PlatformUI.getWorkbench();
 			if (wb != null) {
@@ -115,7 +125,8 @@ public class SwampPerspective implements IPerspectiveFactory {
 				if (window != null) {
 					IProject project = HandlerUtilityMethods.getActiveProject(window);
 					IFile file = HandlerUtilityMethods.getActiveFile(window);
-					if ((project != null) && (file != null) && (!file.equals(currentlyOpenedFile))) {
+					if ((project != null) && (file != null) && 
+							(!file.equals(currentlyOpenedFile))) {
 						currentlyOpenedFile = file;
 						Activator.controller.refreshWorkspace();
 					}
@@ -160,20 +171,5 @@ public class SwampPerspective implements IPerspectiveFactory {
 		@Override
 		public void partVisible(IWorkbenchPartReference arg0) {
 		}
-		
-		/**
-		 * Helpful method for debugging what's happening with the listener
-		 * @param part reference to workbench part
-		 */
-		private void printPartInfo(IWorkbenchPartReference part) {
-			System.out.println("Part Opened");
-			System.out.println("Part class: " + part.getClass());
-			System.out.println("Part ID: " + part.getId());
-			System.out.println("Part title: " + part.getTitle());
-			System.out.println("Part Content description: " + part.getContentDescription());
-			System.out.println("Part name: " + part.getPartName());
-		}
-		
 	}
-	
 }

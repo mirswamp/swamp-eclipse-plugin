@@ -32,32 +32,32 @@ public class DetailView extends ViewPart {
 	/**
 	 * Label for bug message
 	 */
-	private static String MESSAGE_LABEL = "Message: ";
+	private static final String MESSAGE_LABEL = "Message: ";
 	/**
 	 * Label for line number or line number range
 	 */
-	private static String LINE_NUMBER_LABEL = "Line number: ";
+	private static final String LINE_NUMBER_LABEL = "Line number: ";
 	/**
 	 * Label for source file name
 	 */
-	private static String FILENAME_LABEL = "File name: ";
+	private static final String FILENAME_LABEL = "File name: ";
 	/**
 	 * Label for bug type
 	 */
-	private static String TYPE_LABEL = "Type: ";
+	private static final String TYPE_LABEL = "Type: ";
 	/**
 	 * Label for tool name
 	 */
-	private static String TOOL_LABEL = "Tool: ";
+	private static final String TOOL_LABEL = "Tool: ";
 	/**
 	 * Label for platform name
 	 */
-	private static String PLATFORM_LABEL = "Platform: ";
+	private static final String PLATFORM_LABEL = "Platform: ";
 	
 	/**
 	 * Label for flow
 	 */
-	private static String FLOW_LABEL = "Flow: ";
+	private static final String FLOW_LABEL = "Flow: ";
 	
 	/**
 	 * Composite that this is built on
@@ -68,7 +68,23 @@ public class DetailView extends ViewPart {
 	 */
 	private Browser browser;
 	
-	public static final String ID = "org.continuousassurance.swamp.eclipse.ui.views.detailview";
+	/**
+	 * ID for this view (matches id in plugin.xml)
+	 */
+	public static final String ID = 
+			"org.continuousassurance.swamp.eclipse.ui.views.detailview";
+	
+	/**
+	 * User-viewable name for this view
+	 */
+	private static final String VIEW_NAME = "Weakness Details";
+	
+	/**
+	 * Default message for this view. This is displayed if no weakness has been
+	 * selected
+	 */
+	private static final String VIEW_DEFAULT_MESSAGE = 
+			"Select a weakness from the list of weaknesses";
 	
 	@Override
 	/**
@@ -116,7 +132,7 @@ public class DetailView extends ViewPart {
 	 * @return String for start of HTML, title, and header
 	 */
 	private String getHeaderAndTitle() {
-		return "<html><header><title>Weakness Details</title></header>";
+		return "<html><header><title>" + VIEW_NAME + "</title></header>";
 	}
 	
 	/**
@@ -124,7 +140,7 @@ public class DetailView extends ViewPart {
 	 * @return HTML string
 	 */
 	private String getDefaultBody() {
-		return "<body>Select a weakness from the list of weaknesses</body></html>";
+		return "<body>" + VIEW_DEFAULT_MESSAGE + "</body></html>";
 	}
 	
 	/**
@@ -199,6 +215,11 @@ public class DetailView extends ViewPart {
 		}
 	}
 	
+	/**
+	 * Utility method for bolding some text in HTML
+	 * @param text the text to be emphasized
+	 * @return HTML String for bolding the given text
+	 */
 	private static String fmtBold(String text) {
 		return "<b>" + text + "</b>";
 	}
