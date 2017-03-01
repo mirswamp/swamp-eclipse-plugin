@@ -33,6 +33,11 @@ import org.eclipse.ui.PlatformUI;
 public class CheckResultsHandler extends AbstractHandler {
 
 	@Override
+	/**
+	 * Checks for results
+	 * @param event click event
+	 * @return null
+	 */
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		StatusChecker sc = Activator.getStatusChecker();
 		if (sc != null && sc.isRunning()) {

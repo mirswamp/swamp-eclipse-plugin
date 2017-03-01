@@ -24,14 +24,17 @@ import org.eclipse.ui.handlers.HandlerUtil;
  *
  */
 public class LogoutHandler extends AbstractHandler {
-	SwampSubmitter ss;
 	@Override
+	/**
+	 * This method logs the user out of the SWAMP
+	 * @param event click event
+	 * @throws ExecutionException
+	 * @returns null
+	 */
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		System.out.println("Executed Logout Handler");
-		ss = new SwampSubmitter(HandlerUtil.getActiveWorkbenchWindow(event));
-		// TODO: Save the results that we're currently waiting on
+		SwampSubmitter ss = new SwampSubmitter(HandlerUtil.getActiveWorkbenchWindow(event));
 		ss.logOutOfSwamp();	
 		return null;
 	}
-
 }

@@ -24,11 +24,14 @@ import org.eclipse.ui.handlers.HandlerUtil;
  *
  */
 public class LoginHandler extends AbstractHandler {
-	SwampSubmitter ss;
 	@Override
+	/**
+	 * Attempts to log user into the SWAMP
+	 * @param event click event
+	 */
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		System.out.println("Executed Login Handler");
-		ss = new SwampSubmitter(HandlerUtil.getActiveWorkbenchWindow(event));
+		SwampSubmitter ss = new SwampSubmitter(HandlerUtil.getActiveWorkbenchWindow(event));
 		ss.logIntoSwamp();
 		return null;
 	}

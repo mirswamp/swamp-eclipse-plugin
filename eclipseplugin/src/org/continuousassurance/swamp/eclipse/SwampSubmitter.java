@@ -97,7 +97,7 @@ public class SwampSubmitter {
 	
 	public SwampSubmitter(IWorkbenchWindow window) {
 		this.window = window;
-		this.out = initializeConsole("SWAMP Plugin");
+		this.out = initializeConsole(Activator.SWAMP_PLUGIN_CONSOLE_NAME);
 		//configFilepath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + CONFIG_FILENAME;
 	}
 	

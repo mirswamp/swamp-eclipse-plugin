@@ -21,13 +21,19 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 /**
- * Handler for showing AboutSWAMP dialog
+ * Handler for showing AboutSWAMP dialog (which has information about the SWAMP
+ * and this plug-in)
  * @author reid-jr
  *
  */
 public class AboutSwampHandler extends AbstractHandler {
 
 		@Override
+		/**
+		 * Opens AboutSWAMP dialog
+		 * @param event click event
+		 * @return null
+		 */
 		public Object execute(ExecutionEvent event) throws ExecutionException {
 			// gets workbench window
 			IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);

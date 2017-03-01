@@ -30,6 +30,7 @@ import org.eclipse.ui.console.IConsoleView;
 import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.SwampSubmitter;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.eclipse.cdt.core.model.ICProject;
@@ -43,6 +44,12 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 public class RightClickHandler extends AbstractHandler {
 
 	@Override
+	/**
+	 * This method executes when the click event occurs. It submits
+	 * the project on which the "Submit Assessment" click took place 
+	 * @param event the click event
+	 * @return null
+	 */
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		// gets workbench window
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
@@ -55,7 +62,6 @@ public class RightClickHandler extends AbstractHandler {
 		System.out.println("Selection: " + structured);
 		System.out.println("Type of selection: " + structured.getFirstElement().getClass());
 		
-		// TODO Add handling for C Project
 		Object proj = structured.getFirstElement();
 		IJavaProject javaProject = null;
 		ICProject cProject = null;
@@ -88,14 +94,13 @@ public class RightClickHandler extends AbstractHandler {
 	private void writeClosedProjectMessage(IWorkbenchWindow window) {
 		ConsolePlugin plugin = ConsolePlugin.getDefault();
 		IConsoleManager conMgr = plugin.getConsoleManager();
-		MessageConsole console = new MessageConsole("SWAMP Plugin", null);
+		MessageConsole console = new MessageConsole(Activator.SWAMP_PLUGIN_CONSOLE_NAME, null);
 		conMgr.addConsoles(new IConsole[]{console});
 		IWorkbenchPage page = window.getActivePage();
 		try {
 			IConsoleView view = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
 			view.display(console);
 		} catch (PartInitException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		MessageConsoleStream stream = console.newMessageStream();

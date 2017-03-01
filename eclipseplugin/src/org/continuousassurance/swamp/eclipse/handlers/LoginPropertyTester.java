@@ -16,19 +16,31 @@ import org.continuousassurance.swamp.eclipse.Activator;
 import org.eclipse.core.expressions.PropertyTester;
 
 /**
- * Tests whether user is logged into SWAMP
+ * Tests whether user is logged into SWAMP. This uses an Eclipse property to
+ * determine whether the user is logged in. Does not require any clicks to be
+ * activated
  * @author reid-jr
  *
  */
 public class LoginPropertyTester extends PropertyTester {
 	
+	/**
+	 * Property that is being checked
+	 */
 	public static final String PROPERTY_NAME = "loggedIn";
 	
+	/**
+	 * Constructor for LoginPropertyTester
+	 */
 	public LoginPropertyTester() {
 		System.out.println("Login property initialized");
 	}
 
 	@Override
+	/**
+	 * Test method for Property Tester. Basically just checks whether user is
+	 * logged in
+	 */
 	public boolean test(Object receiver, String property, Object[] args, Object expectedValue) {
 		return Activator.getLoggedIn();
 	}

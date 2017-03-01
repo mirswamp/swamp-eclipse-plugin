@@ -26,19 +26,22 @@ import org.eclipse.ui.handlers.HandlerUtil;
  */
 public class ResubmitHandler extends AbstractHandler {
 	
-	private IWorkbenchWindow window;
-	private SwampSubmitter submitter;
-
+	/**
+	 * Constructor for ResubmitHandler
+	 */
 	public ResubmitHandler() {
 		super();
-		window = null;
-		submitter = null;
 	}
 
 	@Override
+	/**
+	 * This method resubmits the previously submitted set of assessments for
+	 * the currently-opened project
+	 * @param event click event
+	 */
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		window = HandlerUtil.getActiveWorkbenchWindow(event);
-		submitter = new SwampSubmitter(window);
+		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindow(event);
+		SwampSubmitter submitter = new SwampSubmitter(window);
 		submitter.launchBackgroundAssessment(HandlerUtilityMethods.getActiveProject(window));
 		return null;
 	}

@@ -58,6 +58,16 @@ public class Controller {
 	 */
 	public static final String BUG_DETAIL_OBJ = "bugdetail";
 	
+	private static final String HIGH_SEVERITY = "eclipseplugin.highseverity";
+	
+	private static final String MED_SEVERITY = "eclipseplugin.medseverity";
+	
+	private static final String LOW_SEVERITY = "eclipseplugin.lowseverity";
+	
+	private static final String UNKNOWN_SEVERITY = "eclipseplugin.unknownseverity";
+	
+	private static final String[] MARKER_TYPES = {HIGH_SEVERITY, MED_SEVERITY, LOW_SEVERITY, UNKNOWN_SEVERITY}; 
+	
 	//private IProject currentProject; // TODO Project caching
 
 	public static IViewPart getView(IWorkbenchWindow window, String viewID) {
@@ -190,6 +200,7 @@ public class Controller {
 		resetDetailView(page);
 	}
 	
+	
 	private IMarker createMarkerForResource(IFile resource, BugInstance bug, String toolName) {
 		for (Location l : bug.getLocations()) {
 			if (l.isPrimary()) {
@@ -202,16 +213,16 @@ public class Controller {
 					String severity = bug.getBugSeverity();
 					severity = severity == null ? "" : severity.toUpperCase();
 					if (severity.equals("HIGH")) {
-						marker = resource.createMarker("eclipseplugin.highseverity");
+						marker = resource.createMarker(HIGH_SEVERITY);
 					}
 					else if (severity.equals("MED")) {
-						marker = resource.createMarker("eclipseplugin.medseverity");
+						marker = resource.createMarker(MED_SEVERITY);
 					}
 					else if (severity.equals("LOW")) {
-						marker = resource.createMarker("eclipseplugin.lowseverity");
+						marker = resource.createMarker(LOW_SEVERITY);
 					}
 					else {
-						marker = resource.createMarker("eclipseplugin.unknownseverity");
+						marker = resource.createMarker(UNKNOWN_SEVERITY);
 					}
 					marker.setAttribute(IMarker.MESSAGE, toolName + ": " + bug.getBugMessage());
 					marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING); // TODO Get priority right here
@@ -251,16 +262,18 @@ public class Controller {
 		}
 	}
 	
+	public static String[] getMarkerTypes() {
+		return MARKER_TYPES;
+	}
+	
 	private void resetFileMarkers(IWorkbenchWindow window) {
 		System.out.println("Attempting to reset file markers");
 		IFile file = HandlerUtilityMethods.getActiveFile(window);
 		if (file != null) {
 			System.out.println("Removing file markers for file " + file.getName());
 			try {
-				file.deleteMarkers("eclipseplugin.unknownseverity", true, 1);
-				file.deleteMarkers("eclipseplugin.highseverity", true, 1);
-				file.deleteMarkers("eclipseplugin.medseverity", true, 1);
-				file.deleteMarkers("eclipseplugin.lowseverity", true, 1);
+				for (String markerType : getMarkerTypes())
+				file.deleteMarkers(markerType, true, 1);
 			} catch (CoreException e) {
 				e.printStackTrace();
 			}

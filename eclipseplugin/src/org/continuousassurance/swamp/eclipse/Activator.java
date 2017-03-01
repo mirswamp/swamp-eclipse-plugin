@@ -59,6 +59,8 @@ public class Activator extends AbstractUIPlugin {
 	
 	public static Controller controller;
 	
+	public static final String SWAMP_PLUGIN_CONSOLE_NAME = "SWAMP Plugin";
+	
 	/**
 	 * The constructor
 	 */

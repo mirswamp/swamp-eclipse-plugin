@@ -22,9 +22,9 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 
 /**
- * Utility methods for the Handler classes
+ * Utility methods for the Handler classes. Primarily, these get what's 
+ * currently active in the window (e.g. project, editor input).
  * @author reid-jr
- *
  */
 public class HandlerUtilityMethods {
 
