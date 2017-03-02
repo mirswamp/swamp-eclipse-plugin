@@ -33,20 +33,73 @@ import org.eclipse.swt.widgets.Text;
  *
  */
 public class AdvancedSettingsDialog extends TitleAreaDialog {
+	/**
+	 * Text widget for entering build options
+	 */
 	private Text buildOptText;
+	/**
+	 * Text widget for entering configuration options
+	 */
 	private Text configOptText;
+	/**
+	 * Text widget for showing the file path of the configuration script
+	 */
 	private Text configScriptText;
+	/**
+	 * Button widget for selecting a file
+	 */
 	private Button selectFileButton;
 
+	/**
+	 * Title of the dialog
+	 */
 	private static final String ADVANCED_SETTINGS_TITLE = "Advanced Settings";
+	/**
+	 * Help info for build options
+	 */
 	private static final String BUILD_OPTIONS_HELP = "Add flags to be used when your package is built.";		
+	/**
+	 * Help info for configuration command
+	 */
 	private static final String CONFIG_COMMAND_HELP = "Write the command to be used prior to building your package";
+	/**
+	 * Help info for configuration options
+	 */
 	private static final String CONFIG_OPTIONS_HELP = "Add flags to be used when your package is configured.";
+	/**
+	 * Help information for selecting a configure script
+	 */
 	private static final String SELECT_FILE_HELP = "Select your configure script";
-	
+	/**
+	 * Label for build options
+	 */
+	private static final String BUILD_OPTIONS_LABEL = "Build Options: ";
+	/**
+	 * Label for configuration script
+	 */
+	private static final String CONFIG_SCRIPT_LABEL = "Configuration Script: ";
+	/**
+	 * Label for browse
+	 */
+	private static final String BROWSE_LABEL = "...";
+	/**
+	 * Label for configuration options
+	 */
+	private static final String CONFIG_OPTIONS_LABEL = "Configuration Options: ";
+	/**
+	 * Shell widget that this dialog is placed on
+	 */
 	private final Shell shell;
+	/**
+	 * ConfigDialog object that launched this AdvancedSettings dialog
+	 */
 	private final ConfigDialog parentDialog;
 	
+	/**
+	 * Constructor for AdvancedSettingsDialog
+	 * @param parentShell shell
+	 * @param cd parent ConfigDialog that launched this
+	 */
 	public AdvancedSettingsDialog(Shell parentShell, ConfigDialog cd) {
 		super(parentShell);
 		shell = new Shell(parentShell);
@@ -54,7 +107,7 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 	}
 	
 	/**
-	 * Resets widgets
+	 * Resets widgets in this dialog
 	 */
 	private void resetWidgets() {
 		buildOptText.setText("");
@@ -63,6 +116,11 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 	}
 	
 	@Override
+	/**
+	 * This method creates all of the UI for the AdvancedSettingsDialog
+	 * @param parent the parent Composite on which the UI will be placed
+	 * @return Control with the AdvancedSettingsDialog UI on it
+	 */
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite container = new Composite(area, SWT.NONE);
@@ -74,22 +132,22 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 		GridLayout layout = new GridLayout(4, false);
 		container.setLayout(layout);
 		
-		DialogUtil.initializeLabelWidget("Build Options: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(BUILD_OPTIONS_LABEL, SWT.NONE, container, horizontalSpan);
 		buildOptText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
 		buildOptText.setText(parentDialog.getBuildOpts());
 		buildOptText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, BUILD_OPTIONS_HELP));
 		
-		DialogUtil.initializeLabelWidget("Configuration Script: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(CONFIG_SCRIPT_LABEL, SWT.NONE, container, horizontalSpan);
 		configScriptText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), 1);
 		configScriptText.setText(parentDialog.getConfigScriptPath());
 		configScriptText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, CONFIG_COMMAND_HELP));
 		
-		selectFileButton = DialogUtil.initializeButtonWidget(container, " ...", new GridData(SWT.FILL, SWT.NONE, false, false), 1);
+		selectFileButton = DialogUtil.initializeButtonWidget(container, BROWSE_LABEL, new GridData(SWT.FILL, SWT.NONE, false, false), 1);
 		selectFileButton.addSelectionListener(new FileSelectionListener());
 		selectFileButton.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, SELECT_FILE_HELP));
 
 		
-		DialogUtil.initializeLabelWidget("Configuration Options: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(CONFIG_OPTIONS_LABEL, SWT.NONE, container, horizontalSpan);
 		configOptText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
 		configOptText.setText(parentDialog.getConfigOpts());
 		configOptText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, CONFIG_OPTIONS_HELP));
@@ -98,6 +156,10 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 	}
 	
 	@Override
+	/**
+	 * Sets settings in the parent ConfigDialog when ok is pressed. User is
+	 * also returned to that dialog
+	 */
 	protected void okPressed() {
 		parentDialog.setBuildOpts(buildOptText.getText());
 		parentDialog.setConfigOpts(configOptText.getText());
@@ -106,6 +168,10 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 	}
 	
 	@Override
+	/**
+	 * Adds buttons to the buttons bar
+	 * @param parent Composite on which these buttons will be placed
+	 */
 	protected void createButtonsForButtonBar(Composite parent) {
 		
 		parent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
@@ -124,6 +190,10 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 	private class ClearButtonSelectionListener implements SelectionListener {
 		
 		@Override
+		/**
+		 * Resets widgets when user clicks "Clear"
+		 * @param e click event
+		 */
 		public void widgetSelected(SelectionEvent e) {
 			resetWidgets();
 		}
@@ -141,6 +211,12 @@ public class AdvancedSettingsDialog extends TitleAreaDialog {
 	private class FileSelectionListener implements SelectionListener {
 		
 		@Override
+		/**
+		 * This method causes a FileDialog to pop-up when the user selects
+		 * browse button and then sets other widgets appropriately based on
+		 * what the user selected in that FileDialog
+		 * @param e click event on browse button
+		 */
 		public void widgetSelected(SelectionEvent e) {
 			FileDialog dialog = new FileDialog(shell);
 			String rc = dialog.open();

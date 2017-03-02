@@ -67,6 +67,14 @@ public class ToolDialog extends TitleAreaDialog {
 	 * Help text for the tool List
 	 */
 	private static final String TOOL_HELP 	= "Select one or more tools to run your assessment on.";
+	/**
+	 * Label for tools
+	 */
+	private static final String TOOLS_LABEL = "Tools: ";
+	/**
+	 * Message telling users to select 1 or more tools
+	 */
+	private static final String SELECT_AT_LEAST_ONE_TOOL_MESSAGE = "Select at least one tool.";
 
 	/**
 	 * Constructor for ToolDialog
@@ -100,7 +108,7 @@ public class ToolDialog extends TitleAreaDialog {
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		container.setLayout(new GridLayout(2, false));
 
-		DialogUtil.initializeLabelWidget("Tools: ", SWT.NONE, container);
+		DialogUtil.initializeLabelWidget(TOOLS_LABEL, SWT.NONE, container);
 		tools = api.getTools(submissionInfo.getPackageType(), submissionInfo.getSelectedProjectID());
 		swtToolList = DialogUtil.initializeListWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), convertToolListToStringArray());
 		swtToolList.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, TOOL_HELP));
@@ -203,7 +211,7 @@ public class ToolDialog extends TitleAreaDialog {
 	@Override
 	protected void okPressed() {
 		if (swtToolList.getSelectionCount() < 1) {
-			this.setMessage("Select at least one tool.");
+			this.setMessage(SELECT_AT_LEAST_ONE_TOOL_MESSAGE);
 		}
 		submissionInfo.setSelectedToolIDs(getSelectedIDs());
 		super.okPressed();
@@ -212,6 +220,7 @@ public class ToolDialog extends TitleAreaDialog {
 	/**
 	 * Helper method for converting the widget's selected elements to a list
 	 * of their UUIDs
+	 * @return list of UUIDs
 	 */
 	private List<String> getSelectedIDs() {
 		int[] selectedIndices = swtToolList.getSelectionIndices();

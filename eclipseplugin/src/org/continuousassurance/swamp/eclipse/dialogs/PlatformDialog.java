@@ -67,6 +67,10 @@ public class PlatformDialog extends TitleAreaDialog {
 	 * The help text for the List widget
 	 */
 	private static final String PLATFORM_HELP 	= "Select one or more platforms to run your assessment on.";
+	/**
+	 * Label for platforms
+	 */
+	private static final String PLATFORMS_LABEL = "Platforms: ";
 	
 	/**
 	 * Constructor for PlatformDialog
@@ -103,7 +107,7 @@ public class PlatformDialog extends TitleAreaDialog {
 		container.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
 		container.setLayout(new GridLayout(2, false));
 
-		DialogUtil.initializeLabelWidget("Platforms: ", SWT.NONE, container);
+		DialogUtil.initializeLabelWidget(PLATFORMS_LABEL, SWT.NONE, container);
 		platforms = getPlatforms(submissionInfo.getPackageType());
 		swtPlatformList = DialogUtil.initializeListWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), convertPlatformListToStringArray());
 		swtPlatformList.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PLATFORM_HELP));
@@ -252,6 +256,10 @@ private class ClearButtonSelectionListener implements SelectionListener {
 		}
 		
 		@Override
+		/**
+		 * When "Clear" button is selected, deselect all selected platforms
+		 * @param e click event
+		 */
 		public void widgetSelected(SelectionEvent e) {
 			swtPlatformList.deselectAll();
 		}

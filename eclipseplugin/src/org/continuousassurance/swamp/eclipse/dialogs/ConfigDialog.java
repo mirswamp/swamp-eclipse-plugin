@@ -65,54 +65,332 @@ import java.util.Set;
 public class ConfigDialog extends TitleAreaDialog {
 
 	/* Instance variables representing widgets */
+	/**
+	 * Text widget for build target (e.g. all)
+	 */
 	private Text buildTargetText;
+
+	/**
+	 * Text widget for project file path
+	 */
 	private Text prjFilePathText;
+	/**
+	 * Text widget for SWAMP package version
+	 */
 	private Text pkgVersionText;
+	/**
+	 * Text widget for SWAMP package name
+	 */
 	private Text pkgNameText;
+	/**
+	 * Combo widget for SWAMP project selection
+	 */
 	private Combo swampPrjCombo;
+	/**
+	 * Combo widget for Eclipse project selection
+	 */
 	private Combo eclipsePrjCombo;
+	/**
+	 * Combo widget for SWAMP package selection
+	 */
 	private Combo pkgCombo;
+	/**
+	 * Combo widget for SWAMP package type selection
+	 */
 	private Combo pkgTypeCombo;
+	/**
+	 * Combo widget for build system selection
+	 */
 	private Combo buildSysCombo;
+	/**
+	 * Checkbox button widget for whether system libraries should be packaged
+	 */
 	private Button packageRTButton;
+	/**
+	 * Button widget for selecting a file
+	 */
 	private Button selectFileButton;
+	/**
+	 * Text widget for build path
+	 */
 	private Text buildPathText;
-	
+	/**
+	 * Shell that this dialog will be on
+	 */
 	private Shell shell;
+	/**
+	 * Child AdvancedSettingsDialog
+	 */
 	private AdvancedSettingsDialog advancedSettingsDialog;
 	
 	/* Instance variables representing state */
+	/**
+	 * List of SWAMP projects available to this user
+	 */
 	private List<Project> swampProjects;
+	/**
+	 * List of Eclipse projects open in the workspace (matches what's showing
+	 * in project explorer)
+	 */
 	private IProject[] eclipseProjects;
-	private List<PackageThing> swampPackages;
-	private String buildOpts;
-	private String configOpts;
-	private String configScriptPath;
 
+	/**
+	 * List of SWAMP packages available to the user
+	 */
+	private List<PackageThing> swampPackages;
+	/**
+	 * Build options for the SWAMP package
+	 */
+	private String buildOpts;
+	/**
+	 * Config options for the SWAMP package
+	 */
+	private String configOpts;
+	/**
+	 * Relative path to the configuration script
+	 */
+	private String configScriptPath;
+	/**
+	 * UUID of the selected SWAMP project
+	 */
 	private String prjUUID;
-	
+	/**
+	 * SubmissionInfo object backing this dialog
+	 */
 	private SubmissionInfo submissionInfo;
+	/**
+	 * Reference to SwampApiWrapper object
+	 */
 	private SwampApiWrapper api;
 	
-	private static int CREATE_NEW_PACKAGE = 0;
+	/**
+	 * Index of create new package on SWAMP option
+	 */
+	private static final int CREATE_NEW_PACKAGE_IDX = 0;
+	
+	/**
+	 * Title of Config Dialog
+	 */
 	private static final String CONFIG_TITLE = "Build Configuration";
 	
+	/* Help messages */
+	/**
+	 * Help message for selecting SWAMP project
+	 */
 	private static final String SWAMP_PROJECT_HELP 				= "Select the SWAMP project that contains the package you want to assess. New projects can only be created using the SWAMP web interface.";
+	/**
+	 * Help message for selecting SWAMP package
+	 */
 	private static final String SWAMP_PACKAGE_HELP 				= "Select the SWAMP package you want to assess or select \"Create a new package\".";
+	/**
+	 * Help message for widget allowing user to specify name of new package
+	 */
 	private static final String NEW_PACKAGE_HELP 				= "Enter the name of your new package.";
+	/**
+	 * Help message for widget allowing user to specify package version
+	 */
 	private static final String PACKAGE_VERSION_HELP			= "Enter the version of your package that you are submitting now.";
+	/**
+	 * Help message for widget allowing user to specify Package Type
+	 */
 	private static final String PACKAGE_TYPE_HELP				= "Select the type of the package that you are uploading.";
+	/**
+	 * Help message for widget allowing user to specify Eclipse project
+	 */
 	private static final String ECLIPSE_PROJECT_HELP			= "Select the Eclipse project in your workspace to upload to the SWAMP.";
+	/**
+	 * Help message for widget allowing user to specify build system
+	 */
 	private static final String BUILD_SYSTEM_HELP				= "Select the build system of your project or select \"Auto-generate build file\".";
+	/**
+	 * Help message for widget allowing user build target
+	 */
 	private static final String BUILD_TARGET_HELP				= "Select the build target in the build file.";
+	/**
+	 * Help message for widget allowing user to select file
+	 */
 	private static final String SELECT_FILE_HELP				= "Select the build file for this project.";
+	/**
+	 * Help message for widget giving user option to package system libraries
+	 */
 	private static final String PACKAGE_SYSTEM_LIBRARIES_HELP 	= "Select this option to upload system libraries (e.g. JDK) to the SWAMP. By default, they will not be uploaded.";
+	/**
+	 * Help message for widget allowing user to specify advanced settings
+	 */
 	private static final String ADVANCED_SETTINGS				= "Advanced Settings...";
-	
+	/**
+	 * Text for new package option
+	 */
+	private static final String CREATE_NEW_PACKAGE				= "Create new package";
+
+	/* Dialog labels */
+	/**
+	 * Label for SWAMP Project
+	 */
+	private static final String SWAMP_PROJECT_LABEL = "SWAMP Project: ";
+	/**
+	 * Label for SWAMP Package
+	 */
+	private static final String SWAMP_PACKAGE_LABEL = "SWAMP Package: ";
+	/**
+	 * Label for New Package Name
+	 */
+	private static final String NEW_PACKAGE_NAME_LABEL = "New Package Name: ";
+	/**
+	 * Label for SWAMP Package Version
+	 */
+	private static final String SWAMP_PACKAGE_VERSION_LABEL = "Package Version: ";
+	/**
+	 * Label for Eclipse Project
+	 */
+	private static final String ECLIPSE_PROJECT_LABEL = "Eclipse Project: ";
+	/**
+	 * Label for Eclipse Project filepath
+	 */
+	private static final String FILEPATH_LABEL = "Filepath: ";
+	/**
+	 * Label for SWAMP Package Type
+	 */
+	private static final String PACKAGE_TYPE_LABEL = "Package Type: ";
+	/**
+	 * Label for build system
+	 */
+	private static final String BUILD_SYSTEM_LABEL = "Build System: ";
+	/**
+	 * Empty string label
+	 */
+	private static final String EMPTY_LABEL = "";
+	/**
+	 * Label for Packaging System Libraries 
+	 */
+	private static final String PACKAGE_SYSTEM_LIBRARIES_LABEL = "Package System Libraries?";
+	/**
+	 * Label for build file
+	 */
+	private static final String BUILD_FILE_LABEL = "Build File: ";
+	/**
+	 * Label for file selection
+	 */
+	private static final String MORE_OPTIONS_LABEL = "...";
+	/**
+	 * Label for build target
+	 */
+	private static final String BUILD_TARGET_LABEL = "Build Target: ";
+
+	/* Build system/package type constants */
+	/**
+	 * Ant build system
+	 */
+	private static final String BUILD_SYSTEM_ANT = "ant";
+	/**
+	 * Maven build system
+	 */
+	private static final String BUILD_SYSTEM_MAVEN = "Maven";
+	/**
+	 * Make build system
+	 */
+	private static final String BUILD_SYSTEM_MAKE = "make";
+	/**
+	 * Makefile
+	 */
+	private static final String MAKEFILE = "makefile";
+	/**
+	 * Java language
+	 */
+	private static final String JAVA_LANG = "Java";
+	/**
+	 * Java 7 Src Package Type
+	 */
+	private static final String JAVA_7_SRC_PKG_TYPE = "Java 7 Source Code";
+	/**
+	 * Java 8 Src Package Type
+	 */
+	private static final String JAVA_8_SRC_PKG_TYPE = "Java 8 Source Code";
+	/**
+	 * ALL option (i.e. Java and C/C++ options)
+	 */
+	private static final String ALL_OPTION = "All";
+	/**
+	 * C/C++ language
+	 */
+	private static final String CCPP_LANG = "C/C++";
+	/**
+	 * Java compliance version 1.7
+	 */
+	private static final String JAVA_COMPLIANCE_VERSION_17 = "1.7";
+	/**
+	 * Java compliance version 1.8
+	 */
+	private static final String JAVA_COMPLIANCE_VERSION_18 = "1.8";
+	/**
+	 * Eclipse option for getting Java compiler compliance option for the project
+	 */
+	private static final String ECLIPSE_JAVA_COMPLIANCE_OPTION = "org.eclipse.jdt.core.compiler.compliance";
+
+	/* Messages displayed to user if they try to advance without completing all necessary fields */
+	/**
+	 * Message for when user has not selected a SWAMP project
+	 */
+	private static final String SELECT_SWAMP_PROJECT = "Please select a SWAMP project.";
+	/**
+	 * Message for when user has not selected a SWAMP package
+	 */
+	private static final String SELECT_SWAMP_PACKAGE = "Please select a package.";
+	/**
+	 * Message for when user has chosen to make a new package but has not specified a name for that package
+	 */
+	private static final String ADD_PACKAGE_NAME = "Please add a name for your new package.";
+	/**
+	 * Message for when user has not specified package version
+	 */
+	private static final String ADD_PACKAGE_VERSION = "Please add a descriptor for your package version.";
+	/**
+	 * Message for when user has not selected a package type
+	 */
+	private static final String SELECT_PACKAGE_TYPE = "Please select a package type.";
+	/**
+	 * Message for when user has not selected an Eclipse project
+	 */
+	private static final String SELECT_ECLIPSE_PROJECT = "Please select an Eclipse project.";
+	/**
+	 * Message for when user has not selected a build system
+	 */
+	private static final String SELECT_BUILD_SYSTEM = "Please select a build system.";
+	/**
+	 * Message for when user has not specified a valid build file
+	 */
+	private static final String SELECT_BUILD_FILE = "Please select a valid build file.";
+	/**
+	 * Message for when user has not specified a build target
+	 */
+	private static final String SELECT_BUILD_TARGET = "Please enter a valid build target.";
+	/**
+	 * Message for when user has specified configuration options but no configuration script
+	 */
+	private static final String CONFIG_OPTS_WO_CONFIG_SCRIPT = "Config options set but no configuration script specified.";
+
+	/* Error messages */
+	/**
+	 * Error message for issue getting build information
+	 */
+	private static final String PROBLEM_GETTING_BUILD_INFO = "Error: Problem getting build information";
+	/**
+	 * Error message for makefile not found
+	 */
+	private static final String UNABLE_TO_FIND_MAKEFILE = "Error: Unable to find makefile for project";
+
+	/**
+	 * Enum for type of combo (to enable different behaviors for the different combos)
+	 */
 	private enum Type {
 		PACKAGE_TYPE, ECLIPSE_PROJECT, BUILD, PACKAGE, SWAMP_PROJECT
 	}
 	
+	/**
+	 * Constructor for ConfigDialog
+	 * @param parentShell
+	 * @param si
+	 */
 	public ConfigDialog(Shell parentShell, SubmissionInfo si) {
 		super(parentShell);
 		submissionInfo = si;
@@ -124,7 +402,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	/**
-	 * Resets widgets
+	 * Resets widgets in ConfigDialog
 	 */
 	private void resetWidgets() {
 		buildPathText.setText("");
@@ -275,14 +553,21 @@ public class ConfigDialog extends TitleAreaDialog {
 		swampPackages = api.getPackagesList(prjUUID);
 		int numPackages = swampPackages.size() + 1;
 		String[] pkgNames = new String[numPackages];
-		pkgNames[0] = "Create new package";
+		pkgNames[0] = CREATE_NEW_PACKAGE;
 		for (int i = 1; i < numPackages; i++) {
 			pkgNames[i] = swampPackages.get(i-1).getName();
 		}
 		return pkgNames; 
 	}
 	
+
+	
 	@Override
+	/**
+	 * Creates UI for ConfigDialog
+	 * @param parent the Composite on which the ConfigDialog UI will be placed on
+	 * @return composite with the ConfigDialog on it
+	 */
 	protected Control createDialogArea(Composite parent) {
 		System.out.println("Redrawing Config Dialog");
 		Composite area = (Composite) super.createDialogArea(parent);
@@ -295,65 +580,65 @@ public class ConfigDialog extends TitleAreaDialog {
 		GridLayout layout = new GridLayout(4, false);
 		container.setLayout(layout);
 		
-		DialogUtil.initializeLabelWidget("SWAMP Project: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(SWAMP_PROJECT_LABEL, SWT.NONE, container, horizontalSpan);
 		String swampPrjOptions[] = getSelectionElements(Type.SWAMP_PROJECT);
 		swampPrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), swampPrjOptions, horizontalSpan);
 		swampPrjCombo.addSelectionListener(new ComboSelectionListener(swampPrjCombo, Type.SWAMP_PROJECT));
 		swampPrjCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, SWAMP_PROJECT_HELP));
 		
-		DialogUtil.initializeLabelWidget("SWAMP Package: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(SWAMP_PACKAGE_LABEL, SWT.NONE, container, horizontalSpan);
 		String pkgOptions[] = getSelectionElements(Type.PACKAGE);
 		pkgCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), pkgOptions, horizontalSpan);
 		pkgCombo.addSelectionListener(new ComboSelectionListener(pkgCombo, Type.PACKAGE));
 		pkgCombo.setEnabled(false);
 		pkgCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, SWAMP_PACKAGE_HELP));
 
-		DialogUtil.initializeLabelWidget("New Package Name: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(NEW_PACKAGE_NAME_LABEL, SWT.NONE, container, horizontalSpan);
 		pkgNameText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
 		pkgNameText.setEnabled(false);
 		pkgNameText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, NEW_PACKAGE_HELP));
 		
-		DialogUtil.initializeLabelWidget("Package Version: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(SWAMP_PACKAGE_VERSION_LABEL, SWT.NONE, container, horizontalSpan);
 		pkgVersionText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);	
 		pkgVersionText.setText(submissionInfo.getPackageVersion());
 		pkgVersionText.setEnabled(false);
 		pkgVersionText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_VERSION_HELP));
 		
-		DialogUtil.initializeLabelWidget("Eclipse Project: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(ECLIPSE_PROJECT_LABEL, SWT.NONE, container, horizontalSpan);
 		String eclipsePrjOptions[] = getSelectionElements(Type.ECLIPSE_PROJECT);
 		eclipsePrjCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), eclipsePrjOptions, horizontalSpan);
 		eclipsePrjCombo.addSelectionListener(new ComboSelectionListener(eclipsePrjCombo, Type.ECLIPSE_PROJECT));
 		eclipsePrjCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, ECLIPSE_PROJECT_HELP));
 
-		DialogUtil.initializeLabelWidget("Filepath: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(FILEPATH_LABEL, SWT.NONE, container, horizontalSpan);
 		prjFilePathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
 		prjFilePathText.setEditable(false);
-		DialogUtil.initializeLabelWidget("Package Type: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(PACKAGE_TYPE_LABEL, SWT.NONE, container, horizontalSpan);
 
 		//String pkgTypes[] = getSelectionElements(Type.PACKAGE_TYPE);
 		pkgTypeCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), new String[0], horizontalSpan);
 		pkgTypeCombo.setEnabled(false);
 		pkgTypeCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_TYPE_HELP));
-		DialogUtil.initializeLabelWidget("Build System: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(BUILD_SYSTEM_LABEL, SWT.NONE, container, horizontalSpan);
 		String[] buildSysOptions = getSelectionElements(Type.BUILD);
 		buildSysCombo = DialogUtil.initializeComboWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), buildSysOptions, horizontalSpan);		
 		buildSysCombo.addSelectionListener(new ComboSelectionListener(buildSysCombo, Type.BUILD));
 		buildSysCombo.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, BUILD_SYSTEM_HELP));
 		
-		DialogUtil.initializeLabelWidget("", SWT.NONE, container, horizontalSpan);
-		packageRTButton = DialogUtil.initializeButtonWidget(container, "Package System Libraries?", new GridData(SWT.FILL, SWT.NONE, true, false), SWT.CHECK, horizontalSpan);
+		DialogUtil.initializeLabelWidget(EMPTY_LABEL, SWT.NONE, container, horizontalSpan);
+		packageRTButton = DialogUtil.initializeButtonWidget(container, PACKAGE_SYSTEM_LIBRARIES_LABEL, new GridData(SWT.FILL, SWT.NONE, true, false), SWT.CHECK, horizontalSpan);
 		packageRTButton.setEnabled(false);
 		packageRTButton.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, PACKAGE_SYSTEM_LIBRARIES_HELP));
 		
-		DialogUtil.initializeLabelWidget("Build File: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(BUILD_FILE_LABEL, SWT.NONE, container, horizontalSpan);
 		buildPathText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), 1);
 		buildPathText.setEditable(false);
 
-		selectFileButton = DialogUtil.initializeButtonWidget(container, " ... ", new GridData(SWT.FILL, SWT.NONE, false, false), SWT.PUSH, 1);
+		selectFileButton = DialogUtil.initializeButtonWidget(container, MORE_OPTIONS_LABEL, new GridData(SWT.FILL, SWT.NONE, false, false), SWT.PUSH, 1);
 		selectFileButton.addSelectionListener(new FileSelectionListener());
 		selectFileButton.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, SELECT_FILE_HELP));
 
-		DialogUtil.initializeLabelWidget("Build Target: ", SWT.NONE, container, horizontalSpan);
+		DialogUtil.initializeLabelWidget(BUILD_TARGET_LABEL, SWT.NONE, container, horizontalSpan);
 		buildTargetText = DialogUtil.initializeTextWidget(SWT.SINGLE | SWT.BORDER, container, new GridData(SWT.FILL, SWT.NONE, true, false), horizontalSpan);
 		buildTargetText.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, BUILD_TARGET_HELP));
 		
@@ -388,6 +673,8 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 	}
 	
+
+	
 	/**
 	 * Method attempts to predict that Java build system based on project nature's and common build file names
 	 * @param project Eclipse Java project
@@ -413,12 +700,12 @@ public class ConfigDialog extends TitleAreaDialog {
 				String nature = natures[i];
 				System.out.println("Nature " + i + ": " + nature);
 				if (nature.equals(GRADLE_NATURE)) {
-					setBuildSystem("ant");
+					setBuildSystem(BUILD_SYSTEM_ANT);
 					setBuildPath(path, ANT_BUILD);
 					return;
 				}
 				if (nature.equals(MAVEN_NATURE)) {
-					setBuildSystem("Maven");
+					setBuildSystem(BUILD_SYSTEM_MAVEN);
 					setBuildPath(path, MAVEN_BUILD);
 					return;
 				}
@@ -438,17 +725,17 @@ public class ConfigDialog extends TitleAreaDialog {
 					continue;
 				}
 				if (filename.equals(ANT_BUILD)) {
-					setBuildSystem("ant");
+					setBuildSystem(BUILD_SYSTEM_ANT);
 					buildPathText.setText(filepath);
 					return;
 				}
 				if (filename.equals(MAVEN_BUILD)) {
-					setBuildSystem("Maven");
+					setBuildSystem(BUILD_SYSTEM_MAVEN);
 					buildPathText.setText(filepath);
 					return;
 				}
 				if ((filename.equals(MAKE_UPPERCASE)) || (filename.equals(MAKE_LOWERCASE))) {
-					setBuildSystem("make");
+					setBuildSystem(BUILD_SYSTEM_MAKE);
 					buildPathText.setText(filepath);
 					return;
 				}
@@ -526,39 +813,39 @@ public class ConfigDialog extends TitleAreaDialog {
 			if (lang.equals("Java")) {
 				IJavaProject jp = JavaCore.create(project);
 				// JavaCore.COMPILER_COMPLIANCE
-				String complianceVersion = jp.getOption("org.eclipse.jdt.core.compiler.compliance", true);
+				String complianceVersion = jp.getOption(ECLIPSE_JAVA_COMPLIANCE_OPTION, true);
 				if (complianceVersion != null) {
-					if (complianceVersion.equals("1.7")) {
+					if (complianceVersion.equals(JAVA_COMPLIANCE_VERSION_17)) {
 						System.out.println("Java 7 package");
 						// set package type to Java 7
 						// This API doesn't really make sense for our purposes
 						//setPackageType(api.getPkgTypeString("Java", "java-7", "", null));
-						setPkgTypeOptions("Java");
-						setPackageType("Java 7 Source Code");
-						setBuildSysOptions("Java");
+						setPkgTypeOptions(JAVA_LANG);
+						setPackageType(JAVA_7_SRC_PKG_TYPE);
+						setBuildSysOptions(JAVA_LANG);
 					}
-					else if (complianceVersion.equals("1.8")) {
+					else if (complianceVersion.equals(JAVA_COMPLIANCE_VERSION_18)) {
 						System.out.println("Java 8 package");
 						// set package type to Java 8
 						//setPackageType(api.getPkgTypeString("Java", "java-8", "", null));
-						setPkgTypeOptions("Java");
-						setPackageType("Java 8 Source Code");
-						setBuildSysOptions("Java");
+						setPkgTypeOptions(JAVA_LANG);
+						setPackageType(JAVA_8_SRC_PKG_TYPE);
+						setBuildSysOptions(JAVA_LANG);
 					}
 				}
 				setPredictedJavaBuildSys(project);
 			}
-			else if (lang.equals("C/C++")) {
+			else if (lang.equals(CCPP_LANG)) {
 				packageRTButton.setEnabled(false);
-				setPkgTypeOptions("C/C++");
-				setPackageType("C/C++");
-				setBuildSysOptions("C/C++");
+				setPkgTypeOptions(CCPP_LANG);
+				setPackageType(CCPP_LANG);
+				setBuildSysOptions(CCPP_LANG);
 				setBuildSystem(ECLIPSE_GENERATED_STRING);
 			}
 			else {
 				packageRTButton.setEnabled(true);
-				setPkgTypeOptions("All");
-				setBuildSysOptions("All");
+				setPkgTypeOptions(ALL_OPTION);
+				setBuildSysOptions(ALL_OPTION);
 			}
 			prjFilePathText.setText(project.getLocation().toOSString());
 		}
@@ -570,9 +857,9 @@ public class ConfigDialog extends TitleAreaDialog {
 	 */
 	private void setBuildSysOptions(String lang) {
 		String[] buildOptions;
-		if (lang.equals("All")) {
-			String[] javaBuildOptions = SubmissionInfo.getBuildSystemList("Java");
-			String[] cBuildOptions = SubmissionInfo.getBuildSystemList("C/C++");
+		if (lang.equals(ALL_OPTION)) {
+			String[] javaBuildOptions = SubmissionInfo.getBuildSystemList(JAVA_LANG);
+			String[] cBuildOptions = SubmissionInfo.getBuildSystemList(CCPP_LANG);
 			buildOptions = union(javaBuildOptions, cBuildOptions);
 			Arrays.sort(buildOptions);
 		}
@@ -588,9 +875,9 @@ public class ConfigDialog extends TitleAreaDialog {
 	 */
 	private void setPkgTypeOptions(String lang) {
 		String[] pkgTypes;
-		if (lang.equals("All")) {
-			String[] javaPkgTypes = SubmissionInfo.getPackageTypeList("Java");
-			String[] cPkgTypes = SubmissionInfo.getPackageTypeList("C/C++");
+		if (lang.equals(ALL_OPTION)) {
+			String[] javaPkgTypes = SubmissionInfo.getPackageTypeList(JAVA_LANG);
+			String[] cPkgTypes = SubmissionInfo.getPackageTypeList(CCPP_LANG);
 			pkgTypes = union(javaPkgTypes, cPkgTypes);
 			Arrays.sort(pkgTypes);
 		}
@@ -624,12 +911,12 @@ public class ConfigDialog extends TitleAreaDialog {
 	 */
 	private String getProjectLanguage(IProject project) {
 		if (CoreModel.hasCCNature(project) || CoreModel.hasCNature(project)) {
-			return "C/C++";
+			return CCPP_LANG;
 		}
 		else {
 			try {
 				if (project.hasNature(JavaCore.NATURE_ID)) {
-					return "Java";
+					return JAVA_LANG;
 				}
 			} catch (CoreException e) { }
 		}
@@ -696,8 +983,8 @@ public class ConfigDialog extends TitleAreaDialog {
 		// disable the text box
 		if (submissionInfo.isNewPackage()) {
 			// this only happens if we came back from a later dialog
-			pkgCombo.select(CREATE_NEW_PACKAGE);
-			handlePackageSelection(CREATE_NEW_PACKAGE);
+			pkgCombo.select(CREATE_NEW_PACKAGE_IDX);
+			handlePackageSelection(CREATE_NEW_PACKAGE_IDX);
 			pkgNameText.setText(submissionInfo.getPackageName());
 		}
 		else {
@@ -719,7 +1006,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	 */
 	private void handlePackageSelection(int index) {
 		pkgNameText.setText("");
-		if (index == CREATE_NEW_PACKAGE) {
+		if (index == CREATE_NEW_PACKAGE_IDX) {
 			pkgNameText.setEnabled(true);
 		}
 		else {
@@ -830,6 +1117,10 @@ public class ConfigDialog extends TitleAreaDialog {
 	}
 	
 	@Override
+	/**
+	 * Places buttons on ConfigDialog's button bar
+	 * @param parent Composite on which button bar will be placed
+	 */
 	protected void createButtonsForButtonBar(Composite parent) {
 		
 		parent.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
@@ -843,48 +1134,51 @@ public class ConfigDialog extends TitleAreaDialog {
 		createButton(parent, IDialogConstants.CANCEL_ID, DialogUtil.CANCEL_CAPTION, false);
 	}
 	
+
+	
 	/**
+	 * Checks if the specified configuration is valid
 	 * @return true if dialog has been filled in properly and adequately
 	 */
 	private boolean isValid() {
 		int swampPrjIndex = swampPrjCombo.getSelectionIndex();
 		if (swampPrjIndex < 0) {
-			this.setMessage("Please select a SWAMP project.");
+			this.setMessage(SELECT_SWAMP_PROJECT);
 		}
 		
 		int pkgIndex = pkgCombo.getSelectionIndex();
 		if (pkgIndex < 0) {
-			this.setMessage("Please select a package.");
+			this.setMessage(SELECT_SWAMP_PACKAGE);
 			return false;
 		}
 		
-		if (pkgIndex == CREATE_NEW_PACKAGE) {
+		if (pkgIndex == CREATE_NEW_PACKAGE_IDX) {
 			if (pkgNameText.getText().equals("")) {
-				this.setMessage("Please add a name for your new package.");
+				this.setMessage(ADD_PACKAGE_NAME);
 				return false;
 			}
 		}
 		
 		if (pkgVersionText.getText().equals("")) {
-			this.setMessage("Please add a descriptor for your package version.");
+			this.setMessage(ADD_PACKAGE_VERSION);
 			return false;
 		}
 		
 		int pkgTypeIndex = pkgTypeCombo.getSelectionIndex();
 		if (pkgTypeIndex < 0) {
-			this.setMessage("Please select a package type.");
+			this.setMessage(SELECT_PACKAGE_TYPE);
 			return false;
 		}
 		
 		int eclipsePrjIndex = eclipsePrjCombo.getSelectionIndex();
 		if (eclipsePrjIndex < 0) {
-			this.setMessage("Please select an Eclipse project.");
+			this.setMessage(SELECT_ECLIPSE_PROJECT);
 			return false;
 		}
 		
 		int buildIndex = buildSysCombo.getSelectionIndex();
 		if (buildIndex < 0) {
-			this.setMessage("Please select a build system.");
+			this.setMessage(SELECT_BUILD_SYSTEM);
 			return false;
 		}
 		String buildSysString = buildSysCombo.getItem(buildIndex);
@@ -892,14 +1186,14 @@ public class ConfigDialog extends TitleAreaDialog {
 			return true;
 		}
 		if (buildPathText.getText().equals("")) { // TODO Add check to make sure build file is within project directory
-			this.setMessage("Please select a valid build file.");
+			this.setMessage(SELECT_BUILD_FILE);
 		}
 		if (buildTargetText.getText().equals("")) {
-			this.setMessage("Please enter a valid build target.");
+			this.setMessage(SELECT_BUILD_TARGET);
 			return false;
 		}
 		if (!configOpts.equals("") && configScriptPath.equals("")) {
-			this.setMessage("Config options set but no configuration script specified.");
+			this.setMessage(CONFIG_OPTS_WO_CONFIG_SCRIPT);
 			return false;
 		}
 		return true;
@@ -907,6 +1201,10 @@ public class ConfigDialog extends TitleAreaDialog {
 	
 
 	@Override
+	/**
+	 * Handles OK button being pressed. Does validation checks and either
+	 * exits this dialog (if valid) or stays on this dialog
+	 */
 	protected void okPressed() {
 		if (isValid()) {
 			// do a lot of setting of submissionInfo
@@ -916,7 +1214,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			
 			// swamp package (UUID if available, otherwise name)
 			int index = pkgCombo.getSelectionIndex();
-			if (index == CREATE_NEW_PACKAGE) {
+			if (index == CREATE_NEW_PACKAGE_IDX) {
 				submissionInfo.setPackageName(pkgNameText.getText());
 				submissionInfo.setNewPackage(true);
 			}
@@ -953,14 +1251,13 @@ public class ConfigDialog extends TitleAreaDialog {
 				try {
 					makeBuildInfo = MakeCorePlugin.createBuildInfo(project, MakeBuilder.BUILDER_ID);
 				} catch (CoreException e) {
-					// TODO Auto-generated catch block
-					System.out.println(Utils.getBracketedTimestamp() + "Error: Problem getting build information");
+					System.out.println(Utils.getBracketedTimestamp() + PROBLEM_GETTING_BUILD_INFO);
 					e.printStackTrace();
 					return;
 				}
-				IFile file = project.getFile("makefile");
+				IFile file = project.getFile(MAKEFILE);
 				if (file == null) {
-					System.out.println(Utils.getBracketedTimestamp() + "Error: Unable to find makefile for project");
+					System.out.println(Utils.getBracketedTimestamp() + UNABLE_TO_FIND_MAKEFILE);
 					return;
 				}
 				String cleanTarget = makeBuildInfo.getCleanBuildTarget();
@@ -1020,7 +1317,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	 * @param projectDir project directory
 	 * @param path path
 	 * @param isFilePath true if path is for a file rather than a directory
-	 * @return
+	 * @return relative directory
 	 */
 	private String getRelDir(String projectDir, String path, boolean isFilePath) {
 		int prjIndex = projectDir.lastIndexOf(SEPARATOR);
@@ -1047,6 +1344,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		
 		@Override
+		/**
+		 * Handles selection in a combo widget
+		 * @param e combo element selected
+		 */
 		public void widgetSelected(SelectionEvent e) {
 			int selection = combo.getSelectionIndex();
 			System.out.println("Index " + selection + " selected");
@@ -1081,6 +1382,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		
 		@Override
+		/**
+		 * Launches AdvancedSettingsDialog
+		 * @param e button selection event
+		 */
 		public void widgetSelected(SelectionEvent e) {
 			advancedSettingsDialog = new AdvancedSettingsDialog(shell, cd);
 			advancedSettingsDialog.create();
@@ -1103,6 +1408,9 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		
 		@Override
+		/**
+		 * @param e "Clear" button selection event
+		 */
 		public void widgetSelected(SelectionEvent e) {
 			resetWidgets();
 		}
@@ -1122,6 +1430,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		
 		@Override
+		/**
+		 * @param e file selection event
+		 * Handles file selection in file selection dialog
+		 */
 		public void widgetSelected(SelectionEvent e) {
 			FileDialog dialog = new FileDialog(shell);
 			String path = prjFilePathText.getText();

@@ -33,21 +33,57 @@ import org.eclipse.ui.PlatformUI;
  */
 public class AboutSWAMPDialog extends TitleAreaDialog {
 	
+	/**
+	 * Title of the dialog
+	 */
 	private static final String ABOUT_SWAMP_TITLE = "About SWAMP";
+	/**
+	 * Name of the plug-in
+	 */
 	private static final String ABOUT_SWAMP_NAME = "SWAMP Eclipse Plugin\n";
-	//private static final String ABOUT_SWAMP_RELEASE_DATE = // Get release date
-	//private static final String ABOUT_SWAMP_RELEASE_VERSION = // Get release version
 	//private static final String ABOUT_SWAMP_LINK = "";
 	//private static final String ABOUT_ECLIPSE_PLUGIN_LINK = "";
 	//private static final String ABOUT_SWAMP_GITHUB_LINK = "";
+	/**
+	 * Text with description and link to information about SWAMP License
+	 */
 	private static final String ABOUT_SWAMP_LICENSE_LINK = "Please visit <a href=\"https://www.apache.org/licenses/LICENSE-2.0\">Apache License</a> for licensing information.";
+	/**
+	 * Text with description and link to information about SWAMP support
+	 */
 	private static final String ABOUT_SWAMP_SUPPORT_INFO = "Please visit <a href=\"https://continuousassurance.org/support/\"> Continuous Assurance Support</a> for technical support.\n";
+	/**
+	 * Plug-in release version number
+	 */
+	private static final String ABOUT_SWAMP_SEMANTIC_VERSION_NUMBER = "0.9.0";
+	/**
+	 * Plug-in release date
+	 */
+	private static final String ABOUT_SWAMP_RELEASE_DATE = "03/01/2017";
+	/**
+	 * Release date label
+	 */
+	private static final String RELEASE_DATE_LABEL = "Release Date: ";
+	/**
+	 * Release version label
+	 */
+	private static final String RELEASE_VERSION_LABEL = "Release Version: ";
 	
+	
+	/**
+	 * Constructor for AboutSWAMPDialog
+	 * @param parentShell shell
+	 */
 	public AboutSWAMPDialog(Shell parentShell) {
 		super(parentShell);
 	}
 	
 	@Override
+	/**
+	 * Creates the UI of the AboutSWAMPDialog
+	 * @param parent the composite on which this UI is placed
+	 * @return Control with AboutSWAMPDialog UI on it
+	 */
 	protected Control createDialogArea(Composite parent) {
 		Composite area = (Composite) super.createDialogArea(parent);	
 		Composite container = new Composite(area, SWT.NONE);
@@ -60,7 +96,7 @@ public class AboutSWAMPDialog extends TitleAreaDialog {
 		
 		String relDate = getFormattedReleaseDate();
 		String releaseVersion = getReleaseVersion();
-		DialogUtil.initializeLabelWidget(ABOUT_SWAMP_NAME + "\n" + "Release Date: " + relDate + "\n" + "Release version: " + releaseVersion, SWT.NONE, container);
+		DialogUtil.initializeLabelWidget(ABOUT_SWAMP_NAME + "\n" + RELEASE_DATE_LABEL + relDate + "\n" + RELEASE_VERSION_LABEL + releaseVersion, SWT.NONE, container);
 		
 		Link licenseLink = new Link(container, SWT.NONE);
 		licenseLink.setText(ABOUT_SWAMP_LICENSE_LINK);
@@ -74,22 +110,25 @@ public class AboutSWAMPDialog extends TitleAreaDialog {
 	}
 	
 	/**
+	 * Gets the release date for this version of the plug-in
 	 * @return release date
 	 */
 	private String getFormattedReleaseDate() {
-		return "12/04/2016";
+		return ABOUT_SWAMP_RELEASE_DATE; 
 	}
 	
 	/**
+	 * Gets the release version for the plug-in
 	 * @return release version
 	 */
 	private String getReleaseVersion() {
 		//return org.eclipse.core.runtime.Platform.getBundle("swamp_eclipse_plugin").getHeaders().get("Bundle-Version");
-		return "0.8.0";
+		return ABOUT_SWAMP_SEMANTIC_VERSION_NUMBER;
 	}
 	
 	/**
-	 * Listener for link in dialog
+	 * Listener for link being selected (e.g. clicked) in dialog. Launches an
+	 * external browser instance
 	 * @author reid-jr
 	 *
 	 */

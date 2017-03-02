@@ -58,7 +58,7 @@ public class DialogUtil {
 	 * @param style the style for the widget (see Eclipse SWT Text API for more
 	 * details)
 	 * @param container the Composite that the widget will be placed on
-	 * @param the GridData object that specifies the widget's layout
+	 * @param griddata the GridData object that specifies the widget's layout
 	 * (Note: There should be a unique GridData object for each widget)
 	 * @param span the span in columns of the widget
 	 * @return Text control
@@ -78,7 +78,7 @@ public class DialogUtil {
 	 * @param style the style for the widget (see Eclipse Text API for more
 	 * details)
 	 * @param container the Composite that the widget will be placed on
-	 * @param the GridData object that specifies the widget's layout
+	 * @param griddata the GridData object that specifies the widget's layout
 	 * (Note: There should be a unique GridData object for each widget)
 	 * @return Text control
 	 */

@@ -53,12 +53,10 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	 * Combo for selecting SWAMP host
 	 */
 	private Combo hostnameCombo;
-	
 	/**
 	 * Text widget for specifying a hostname other than those listed in the combo
 	 */
 	private Text otherHostnameText;
-	//private Text hostnameText;
 	/**
 	 * The Text widget for username
 	 */
@@ -79,9 +77,10 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	 * Message for invalid username or password
 	 */
 	private static final String INVALID_MESSAGE = "Invalid username or password.";
-	
+	/**
+	 * Help message for host selection
+	 */
 	private static final String HOST_COMBO_HELP = "Select the SWAMP host that you want to connect to.";
-		
 	/**
 	 * Help message for username Text
 	 */
@@ -94,24 +93,38 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	 * Caption for login button
 	 */
 	private static final String LOGIN_CAPTION = "Login";
-	
+	/**
+	 * Abbreviation for Morgridge Institute for Research SWAMP instance
+	 */
 	private static final String MIR_SWAMP_DESCRIPTION = "MIR";
-	
+	/**
+	 * Key for being able to specify other (unlisted) SWAMP hosts
+	 */
 	private static final String JSON_UNLISTED_HOSTS_KEY = "canSpecifyUnlistedHosts";
-	
+	/**
+	 * Key for list of available hosts
+	 */
 	private static final String JSON_HOSTS_LIST_KEY = "hosts";
-	
+	/**
+	 * Key for host name
+	 */
 	private static final String JSON_HOST_NAME_KEY = "name";
-	
+	/**
+	 * Key for host description
+	 */
 	private static final String JSON_HOST_DESCRIPTION_KEY = "description";
-	
+	/**
+	 * Label for "Other" option
+	 */
 	private static final String OTHER_OPTION = "Other";
-	
+	/**
+	 * Message for invalid host specified
+	 */
 	private static final String NO_HOST_SPECIFIED = "Invalid hostname specified.";
-	
+	/**
+	 * Name of JSON host configuration file
+	 */
 	private static final String JSON_CONFIG_FILENAME = "SWAMP_hosts.json";
-	
-	private JsonObject info;
 	
 	/**
 	 * Reference to SwampApiWrapper object. This facilitates interaction with
@@ -183,9 +196,11 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	}
 	
 	/**
+	 * Gets list of available hostings based on the install's host
+	 * configuration options. Fallbacks to default list if none are found.
 	 * @return available hostnames
 	 */
-	private String[] getAvailableHostnames() {
+	private static String[] getAvailableHostnames() {
 		Location configLoc = Platform.getInstallLocation();
 		
 		String filePath = configLoc.getURL().getPath() + JSON_CONFIG_FILENAME;
@@ -197,7 +212,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 			try {
 				is = new FileInputStream(f);
 				reader = Json.createReader(is);
-				info = reader.readObject();
+				JsonObject info = reader.readObject();
 				JsonArray hostArray = info.getJsonArray(JSON_HOSTS_LIST_KEY);
 				for (int i = 0; i < hostArray.size(); i++) {
 					JsonObject o = hostArray.getJsonObject(i);
@@ -219,7 +234,6 @@ public class AuthenticationDialog extends TitleAreaDialog {
 					try {
 						is.close();
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -235,9 +249,10 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	}
 	
 	/**
+	 * Gets default hostnames
 	 * @return default hostnames
 	 */
-	private String[] getDefaultHostnames() {
+	private static String[] getDefaultHostnames() {
 		String[] array = {SwampApiWrapper.SWAMP_HOST_NAMES_MAP.get(HostType.PRODUCTION) + " (" + MIR_SWAMP_DESCRIPTION + ")"};
 		return array;
 	}
@@ -266,6 +281,10 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		passwordText.setText("");
 	}
 	
+	/**
+	 * Getter for SwampApiWrapper object
+	 * @return SwampApiWrapper object
+	 */
 	public SwampApiWrapper getSwampApiWrapper() {
 		return api;
 	}
@@ -331,12 +350,24 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	 *
 	 */
 	private class HostComboSelectionListener implements SelectionListener {
-		Combo combo;
+		/**
+		 * Combo that this listener is listening for selection in
+		 */
+		private Combo combo;
+		/**
+		 * Constructor for HostComboSelectionListener
+		 * @param c Combo widget
+		 */
 		public HostComboSelectionListener(Combo c) {
 			combo = c;
 		}
 		
 		@Override
+		/**
+		 * Handles selection in the Combo widget by enabling/disabling
+		 * text widget for entering another host option
+		 * @param e click event
+		 */
 		public void widgetSelected(SelectionEvent e) {
 			int selection = combo.getSelectionIndex();
 			if (combo.getItem(selection).equals(OTHER_OPTION)) {
@@ -351,5 +382,4 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		public void widgetDefaultSelected(SelectionEvent e) {
 		}
 	}
-	
 }
