@@ -57,24 +57,75 @@ public class ImprovedClasspathHandler {
 	 * The name used for storing SWAMP dependencies
 	 */
 	public static final String SWAMPBIN_DIR = "swampbin";
+	/**
+	 * Dash char
+	 */
 	private static final char DASH = '-';
-
+	/**
+	 * Path to directory that holds all of the binaries that the project within
+	 * this ImprovedClasspathHandler object is dependent on
+	 */
 	private IPath SWAMPBIN_PATH = null;
 	
 	// TODO Consider making these sets of entries instead of Lists
+	/**
+	 * List of source code classpath entries
+	 */
 	private List<IClasspathEntry> sources = null;
+	/**
+	 * List of library classpath entries
+	 */
 	private List<IClasspathEntry> libs = null;
+	/**
+	 * List of system library classpath entries
+	 */
 	private List<IClasspathEntry> systemLibs = null;
+	/**
+	 * List of exported classpath entries
+	 */
 	private List<IClasspathEntry> exportedEntries = null; 
+	/**
+	 * List of ImprovedClasspathHandler objects for projects dependent upon
+	 * this one
+	 */
 	private List<ImprovedClasspathHandler> dependentProjects = null;
+	/**
+	 * Map of projects that we have already visited in our DFS of dependencies
+	 */
 	private Map<String, ImprovedClasspathHandler> visitedProjects = null;
+	/**
+	 * ImprovedClasspathHandler object for the Eclipse Java project that was
+	 * selected to be assessed (i.e. the project that all of the dependent
+	 * projects are dependent on)
+	 */
 	private ImprovedClasspathHandler root = null;
+	/**
+	 * List of file paths to zip when packaging
+	 */
 	private Set<String> filesToArchive = null;
+	/**
+	 * Whether system libraries should be excluded from packaging
+	 */
 	private boolean excludeSysLibs = false;
+	/**
+	 * Whether this project depends on binaries that are moved into Swampbin
+	 */
 	private boolean hasSwampbinDependencies = false;
+	/**
+	 * The Java project underneath this ImprovedClasspathHandler object
+	 */
 	private IJavaProject project;
+	/**
+	 * Source code version
+	 */
 	private String srcVersion;
+	/**
+	 * Compiler target version
+	 */
 	private String targetVersion;
+	/**
+	 * Submonitor reference
+	 */
 	private SubMonitor subMonitor;
 	
 	/**
@@ -518,13 +569,19 @@ public class ImprovedClasspathHandler {
 	}
 	
 	/**
-	 * Get project plugin location (this is a directory in which we can store project-specific files for this plug-in)
+	 * Get project plugin location for the root project
 	 * @return project plugin location
 	 */
 	public String getRootProjectPluginLocation() {
 		return root.project.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
 	}
 	
+	/**
+	 * Get project plugin location for the project in this 
+	 * ImprovedClasspathHandler (this is a directory in which we can store
+	 * project-specific files on behalf of this plug-in)
+	 * @return
+	 */
 	public String getProjectPluginLocation() {
 		return project.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
 	}

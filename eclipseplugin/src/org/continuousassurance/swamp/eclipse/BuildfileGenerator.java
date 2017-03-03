@@ -80,7 +80,7 @@ public class BuildfileGenerator {
 	 */
 	private static final int 	INDENT_SPACES 		= 4;
 	
-	/**
+	/*
 	 * Variables for ant attributes
 	 */
 	private static final String ANT_INDENT_NUMBER = "indent-number";

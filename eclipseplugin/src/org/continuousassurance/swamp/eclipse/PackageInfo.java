@@ -37,7 +37,19 @@ public class PackageInfo {
 	 * The name of the package.conf file
 	 */
 	public static final String PACKAGE_CONF_NAME = "package.conf";
-
+	
+	/**
+	 * MD5 hash algo name
+	 */
+	private static final String MD5_HASH = "MD5";
+	/**
+	 * SHA 512 hash algo name
+	 */
+	private static final String SHA512_HASH = "SHA-512";
+	/**
+	 * UTF-8 encoding name
+	 */
+	private static final String UTF_8_ENCODING = "UTF-8";
 	
 	/**
 	 * Utility method for getting the digest of a set of bytes
@@ -74,8 +86,8 @@ public class PackageInfo {
 		MessageDigest md5 = null;
 		MessageDigest sha512 = null;
 		try {
-			md5 = MessageDigest.getInstance("MD5");
-			sha512 = MessageDigest.getInstance("SHA-512");
+			md5 = MessageDigest.getInstance(MD5_HASH);
+			sha512 = MessageDigest.getInstance(SHA512_HASH);
 		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -101,7 +113,7 @@ public class PackageInfo {
 		File pkgConf = new File(outputDir + SEPARATOR + PACKAGE_CONF_NAME);
 		PrintWriter writer = null;
 		try {
-			writer = new PrintWriter(pkgConf.getAbsolutePath(), "UTF-8");
+			writer = new PrintWriter(pkgConf.getAbsolutePath(), UTF_8_ENCODING);
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			// TODO Throw a stronger error here

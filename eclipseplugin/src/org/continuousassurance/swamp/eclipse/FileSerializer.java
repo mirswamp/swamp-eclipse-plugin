@@ -193,7 +193,7 @@ public class FileSerializer {
 		}
 		if (!si.initializeProject(prjName, prjPath)) {
 			// TODO Throw an exception here for failing to find project
-			// This right here is a big problem!, particularly if we're running in background
+			// This right here is a big problem!, particularly if we're running in background!
 			// Need custom exception here
 			reader.close();
 			System.out.println("We were unable to find the last selected project");

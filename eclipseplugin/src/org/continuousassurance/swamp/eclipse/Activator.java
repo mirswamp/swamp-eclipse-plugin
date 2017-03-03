@@ -31,35 +31,66 @@ import edu.wisc.cs.swamp.SwampApiWrapper;
  */
 public class Activator extends AbstractUIPlugin {
 
-	// The plug-in ID
+	/**
+	 * The plug-in ID
+	 */
 	public static final String PLUGIN_ID = "org.continuousassurance.swamp.eclipse"; //$NON-NLS-1$
 	
-	// Hostname of SWAMP host
+	/**
+	 * Hostname of SWAMP host
+	 */
 	private static String hostname;
 	
-	// Logged into SWAMP
+	/**
+	 * True if user is currently logged into SWAMP
+	 */
 	private static boolean loggedIn;
 
-	// The shared instance
+	/**
+	 * The shared instance of the Activator
+	 */
 	private static Activator plugin;
 	
-	// Default host
+	/**
+	 * Default host (i.e. MIR SWAMP instance)
+	 */
 	private static final String DEFAULT_HOST = "https://www.mir-swamp.org";
 	
-	// Name of file that stores host
+	/**
+	 * Name of file that stores host configuration information
+	 */
 	private static final String HOST_FILENAME = ".host";
 	
-	// Name of file that stores list of unfinished assessments
+	/**
+	 * Name of file that stores list of unfinished assessments
+	 */
 	private static final String UNFINISHED_ASSESS_FILENAME = ".unfinished_assess";
 	
-	// Name of file that stores list of finished assessments
+	/**
+	 * Name of file that stores list of finished assessments
+	 */
 	private static final String FINISHED_ASSESS_FILENAME = ".finished_assess";
 	
+	/**
+	 * StatusChecker job
+	 */
 	private static StatusChecker sc;
 	
+	/**
+	 * Shared Controller instance
+	 */
 	public static Controller controller;
 	
+	/**
+	 * Name of console (i.e. this is what the Console instance is named when
+	 * this plug-in makes one)
+	 */
 	public static final String SWAMP_PLUGIN_CONSOLE_NAME = "SWAMP Plugin";
+	
+	/**
+	 * System-defined separator
+	 */
+	private static final String SEPARATOR = System.getProperty("file.separator");
 	
 	/**
 	 * The constructor
@@ -118,7 +149,6 @@ public class Activator extends AbstractUIPlugin {
 		try {
 			f.createNewFile();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -143,7 +173,7 @@ public class Activator extends AbstractUIPlugin {
 	 * @return path
 	 */
 	private static String getHostnamePath() {
-		return SwampApiWrapper.SWAMP_DIR_PATH + System.getProperty("file.separator") + HOST_FILENAME;
+		return SwampApiWrapper.SWAMP_DIR_PATH + SEPARATOR + HOST_FILENAME;
 	}
 	
 	/**
@@ -227,6 +257,11 @@ public class Activator extends AbstractUIPlugin {
 		return hostname;
 	}
 	
+	/**
+	 * Getter for StatusChecker job
+	 * @return StatusChecker, which is a background job that updates assessment
+	 * statuses
+	 */
 	public static StatusChecker getStatusChecker() {
 		return sc;
 	}

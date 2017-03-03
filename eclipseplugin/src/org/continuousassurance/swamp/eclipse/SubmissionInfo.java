@@ -28,61 +28,204 @@ import edu.uiuc.ncsa.swamp.api.PackageThing;
 import edu.wisc.cs.swamp.SwampApiWrapper;
 
 /**
- * This class serves as the backend for the Dialog classes.
+ * This class holds information about a set of submissions. It is the back-end
+ * data store for the Dialog Classes. When a one-click submission takes place,
+ * data from file populates a SubmissionInfo object. The SwampSubmitter uses
+ * this class to actually submit assessments.
  * @author reid-jr
  *
  */
 public class SubmissionInfo {
 
+	/**
+	 * Has the configuration information been successfully set
+	 */
 	private boolean configInitialized;
 	
+	/**
+	 * UUID of the SWAMP project to be submitted
+	 */
 	private String selectedProjectID;
+	/**
+	 * UUIDs of the SWAMP tools that the assessment will be run on
+	 */
 	private List<String> selectedToolIDs;
+	/**
+	 * UUIDs of the platforms that the assessment will be run on
+	 */
 	private List<String> selectedPlatformIDs;
-	
+	/**
+	 * Is this a new package (i.e. must be uploaded to SWAMP)
+	 */
 	private boolean newPackage;
+	/**
+	 * Does the plug-in need to generate the build file for this package?
+	 */
 	private boolean createBuildFile;
+	/**
+	 * If the plug-in is generating the build file and packaging dependencies,
+	 * should it also package system libraries (default: false)
+	 */
 	private boolean packageSystemLibs;
-
+	/**
+	 * PackageType String for the package
+	 */
 	private String packageType;
+	/**
+	 * Eclipse Projects open in the workspace
+	 */
 	private IProject[] eclipseProjects;
-	
+	/**
+	 * Name of the package to be uploaded
+	 */
 	private String packageName;
+	/**
+	 * PackageThing for the package
+	 */
 	private PackageThing packageThing;
+	/**
+	 * Version descriptor for the package
+	 */
 	private String packageVersion;
+	/**
+	 * Package build system
+	 */
 	private String buildSystem;
+	/**
+	 * Directory for package's build file
+	 */
 	private String buildDirectory;
+	/**
+	 * Name of package's build file
+	 */
 	private String buildFile;
+	/**
+	 * Target for build
+	 */
 	private String buildTarget;
+	/**
+	 * The Eclipse project to be uploaded
+	 */
 	private IProject project;
 	
+	/**
+	 * Options/flags for build
+	 */
 	private String buildOpts;
+	/**
+	 * Options/flags for configuration
+	 */
 	private String configOpts;
+	/**
+	 * Config command/script
+	 */
 	private String configCmd;
+	/**
+	 * Directory of configure script
+	 */
 	private String configDir;
-
+	/**
+	 * List of existing PackageThings that the user has access to
+	 */
 	private List<? extends PackageThing> packages;
+	/**
+	 * UUID of the selected PackageThing
+	 */
 	private String selectedPackageThingID;
-	
-	// Other
+	/**
+	 * Reference to SwampApiWrapper
+	 */
 	private SwampApiWrapper api;
-	
+	/**
+	 * Java 8 Source Code Package Type
+	 */
 	public static final String JAVA_8_SRC 	= "Java 8 Source Code";
+	/**
+	 * Java 7 Source Code Package Type
+	 */
 	public static final String JAVA_7_SRC 	= "Java 7 Source Code";
+	/**
+	 * Java 8 Byte Code Package Type
+	 */
 	public static final String JAVA_8_BYTE 	= "Java 8 Bytecode";
+	/**
+	 * Java 7 Byte Code Package Type
+	 */
 	public static final String JAVA_7_BYTE 	= "Java 7 Bytecode";
+	/**
+	 * C/C++ Package Type
+	 */
 	public static final String C_CPP		= "C/C++";
 	
-	public static String NO_BUILD_STRING = "no-build";
-	public static String AUTO_GENERATE_BUILD_STRING = "Auto-generate build file";
-	public static String ECLIPSE_GENERATED_STRING = "Eclipse-generated makefile";
-	private static String javaBuildOptions[] = { AUTO_GENERATE_BUILD_STRING, "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "maven", NO_BUILD_STRING, "other" };
-	private static String cppBuildOptions[] = { ECLIPSE_GENERATED_STRING, "cmake+make", "configure+make", "make", NO_BUILD_STRING, "other" };
-	private static String PROJECT_KEY = "PROJECT";
-	private static String DELIMITER = ",";
-	private static String javaPkgTypeOptions[] = { JAVA_8_SRC, JAVA_7_SRC, JAVA_8_BYTE, JAVA_7_BYTE };
-	private static String cppPkgTypeOptions[] = { C_CPP };
+	/**
+	 * SWAMP String for indicating no build necessary
+	 */
+	public static final String NO_BUILD_STRING = "no-build";
+	/**
+	 * Text for selection option to have plug-in generate build file
+	 */
+	public static final String AUTO_GENERATE_BUILD_STRING = "Auto-generate build file";
+	/**
+	 * Text for selection option to use Eclipse-generated makefile (this is for C/C++ projects)
+	 */
+	public static final String ECLIPSE_GENERATED_STRING = "Eclipse-generated makefile";
+	/**
+	 * Build system options for Java
+	 */
+	private static final String javaBuildOptions[] = { AUTO_GENERATE_BUILD_STRING, "android+ant", "android+ant+ivy", "android+gradle", "android+maven", "ant", "ant+ivy", "gradle", "java-bytecode", "make", "maven", NO_BUILD_STRING, "other" };
+	/**
+	 * Build system options for C/C++
+	 */
+	private static final String cppBuildOptions[] = { ECLIPSE_GENERATED_STRING, "cmake+make", "configure+make", "make", NO_BUILD_STRING, "other" };
+	/**
+	 * Key for saving preferences associated with Eclipse project
+	 */
+	private static final String PROJECT_KEY = "PROJECT";
+	/**
+	 * Delimiter for plug-in preferences
+	 */
+	private static final String DELIMITER = ",";
+	/**
+	 * Package type options for Java
+	 */
+	private static final String javaPkgTypeOptions[] = { JAVA_8_SRC, JAVA_7_SRC, JAVA_8_BYTE, JAVA_7_BYTE };
+	/**
+	 * Package type options for C/C++
+	 */
+	private static final String cppPkgTypeOptions[] = { C_CPP };
+	/**
+	 * Java 8 Package Conf Package Type
+	 */
+	private static final String PKG_CONF_JAVA8 = "java-8";
+	/**
+	 * Java 7 Package Conf Package Type
+	 */
+	private static final String PKG_CONF_JAVA7 = "java-7";
+	/**
+	 * C/C++ Package Conf Package Type
+	 */
+	private static final String PKG_CONF_CCPP = "C/C++";
+	/**
+	 * Suffix for adding onto package type to make preference key for tools
+	 */
+	private static final String TOOLS_PREFERENCE_SUFFIX = "-TOOLS";
+	/**
+	 * Suffix for adding onto package type to make preference key for platforms
+	 */
+	private static final String PLATFORMS_PREFERENCE_SUFFIX = "-PLATFORMS";
+	/**
+	 * Java language
+	 */
+	private static final String JAVA_LANG = "JAVA";
+	/**
+	 * C/C++ language
+	 */
+	private static final String CCPP_LANG = "C/C++";
 	
+	/**
+	 * Constructor for SubmissionInfo
+	 * @param api reference to SwampApiWrapper
+	 */
 	public SubmissionInfo(SwampApiWrapper api) {
 		this.api = api;
 		packageVersion = Utils.getCurrentTimestamp();
@@ -97,6 +240,7 @@ public class SubmissionInfo {
 	}
 	
 	/**
+     * Method returns whether configuration information has been set
 	 * @return true if config information has been initialized
 	 */
 	public boolean isConfigInitialized() {
@@ -112,24 +256,26 @@ public class SubmissionInfo {
 	}
 	
 	/**
-	 * @return package type of Eclipse package
+	 * Getter for SWAMP package type
+	 * @return package type of SWAMP package
 	 */
 	public String getPackageType() {
 		return packageType;
 	}
 	
 	/**
-	 * Gets the package type
+	 * Gets the package type as formatted for Package Conf file that gets
+	 * uploaded to the SWAMP
 	 * @return package type (i.e. "java-8", "java-7", "C/C++")
 	 */
 	public String getPkgConfPackageType() {
 		if (packageType.equals(JAVA_8_SRC) || packageType.equals(JAVA_8_BYTE)) {
-			return "java-8";
+			return PKG_CONF_JAVA8;
 		}
 		if (packageType.equals(JAVA_7_SRC) || packageType.equals(JAVA_7_BYTE)) {
-			return "java-7";
+			return PKG_CONF_JAVA7;
 		}
-		return "C/C++";
+		return PKG_CONF_CCPP;
 	}
 	
 	/**
@@ -137,13 +283,16 @@ public class SubmissionInfo {
 	 * @return "C", "C++", or "Java"
 	 */
 	public String getPackageLanguage() {
+		String CPP_LANG = "C++";
+		String C_LANG = "C";
+		String JAVA = "Java";
 		if (CoreModel.hasCCNature(project)) {
-			return "C++";
+			return CPP_LANG;
 		}
 		if (CoreModel.hasCNature(project)) {
-			return "C";
+			return C_LANG;
 		}
-		return "Java";
+		return JAVA;
 	}
 	
 	/**
@@ -203,9 +352,9 @@ public class SubmissionInfo {
 	 */
 	public static String[] getBuildSystemList(String lang) {
 		switch(lang.toUpperCase()) {
-			case "JAVA":
+			case JAVA_LANG:
 				return javaBuildOptions;
-			case "C/C++":
+			case CCPP_LANG: 
 				return cppBuildOptions;
 		}
 		return new String[0];
@@ -218,9 +367,9 @@ public class SubmissionInfo {
 	 */
 	public static String[] getPackageTypeList(String lang) {
 		switch(lang.toUpperCase()) {
-			case "JAVA":
+			case JAVA_LANG:
 				return javaPkgTypeOptions;
-			case "C/C++":
+			case CCPP_LANG:
 				return cppPkgTypeOptions;
 		}
 		return new String[0];
@@ -289,7 +438,7 @@ public class SubmissionInfo {
 	}
 	
 	/**
-	 * @return true if Eclipse project is C or C++ project
+	 * @return true if Eclipse project to be assessed is C or C++ project
 	 */
 	public boolean isCProject() {
 		return (CoreModel.hasCCNature(project) || CoreModel.hasCNature(project));
@@ -304,6 +453,7 @@ public class SubmissionInfo {
 	}
 	
 	/**
+	 * Getter for PackageThing UUID
 	 * @return selected SWAMP package UUID
 	 */
 	public String getSelectedPackageID() {
@@ -378,6 +528,7 @@ public class SubmissionInfo {
 	}
 	
 	/**
+	 * Getter for whether Eclipse project has been set
 	 * @return true if Eclipse project has been set
 	 */
 	public boolean isProjectInitialized() {
@@ -393,6 +544,8 @@ public class SubmissionInfo {
 	}
 	
 	/**
+	 * Getter for whether system libraries should be packaged as part of the
+	 * package uploaded
 	 * @return true if system libraries should be packaged
 	 */
 	public boolean packageSystemLibraries() {
@@ -453,7 +606,6 @@ public class SubmissionInfo {
 	public String getProjectName() {
 		return project.getName();
 	}
-	
 	
 	/**
 	 * Returns the location of the Eclipse project on the file system
@@ -553,18 +705,6 @@ public class SubmissionInfo {
 	}
 
 	/**
-	 * Prints list of package types
-	 */
-	public void printPackageTypes() {
-		List<String> packageTypes = api.getPackageTypesList();
-		System.out.println("\n\n\nPackageTypes\n=================================================");
-		for (String s : packageTypes) {
-			System.out.println(s);
-		}
-		
-	}
-	
-	/**
 	 * Saves plugin preferences
 	 */
 	public void savePluginSettings() {
@@ -590,21 +730,23 @@ public class SubmissionInfo {
 	}
 	
 	/**
+	 * Getter for key for tools preferences
 	 * @return key for tools preferences
 	 */
 	private String getToolKey() {
-		return packageType + "-TOOLS"; 
+		return packageType + TOOLS_PREFERENCE_SUFFIX;
 	}
 	
 	/**
+	 * Getter for key for platform preferences
 	 * @return key for platform preferences
 	 */
 	private String getPlatformKey() {
-		return packageType + "-PLATFORMS";
+		return packageType + PLATFORMS_PREFERENCE_SUFFIX;
 	}
 	
 	/**
-	 * Sets build options
+	 * Setter for build options
 	 * @param opts options
 	 */
 	public void setBuildOpts(String opts) {
@@ -612,7 +754,7 @@ public class SubmissionInfo {
 	}
 	
 	/**
-	 * Sets config options
+	 * Setter for config options
 	 * @param opts options
 	 */
 	public void setConfigOpts(String opts) {
@@ -620,7 +762,7 @@ public class SubmissionInfo {
 	}
 	
 	/**
-	 * Sets config command
+	 * Setter for config command
 	 * @param cmd
 	 */
 	public void setConfigCmd(String cmd) {
@@ -628,7 +770,7 @@ public class SubmissionInfo {
 	}
 	
 	/**
-	 * Sets config directory
+	 * Setter for config directory
 	 * @param dir directory path
 	 */
 	public void setConfigDir(String dir) {
@@ -636,6 +778,7 @@ public class SubmissionInfo {
 	}
 	
 	/**
+	 * Getter for build options
 	 * @return build options
 	 */
 	public String getBuildOpts() {
@@ -643,6 +786,7 @@ public class SubmissionInfo {
 	}
 	
 	/**
+	 * Getter for config options
 	 * @return config options
 	 */
 	public String getConfigOpts() {
@@ -650,6 +794,7 @@ public class SubmissionInfo {
 	}
 
 	/**
+	 * Getter for config command/script
 	 * @return config command
 	 */
 	public String getConfigCmd() {
@@ -657,12 +802,17 @@ public class SubmissionInfo {
 	}
 	
 	/**
+	 * Getter for config directory
 	 * @return config directory path
 	 */
 	public String getConfigDir() {
 		return configDir;
 	}
 	
+	/**
+	 * Getter for Package Thing UUID
+	 * @return UUID for the Package Thing to be assessed
+	 */
 	public String getPackageThingUUID() {
 		if (packageThing == null) {
 			return "";
@@ -670,6 +820,10 @@ public class SubmissionInfo {
 		return packageThing.getUUIDString();
 	}
 	
+	/**
+	 * Setter for PackageThing to be submitted
+	 * @param p PackageThing
+	 */
 	public void setPackageThing(PackageThing p) {
 		packageThing = p;
 	}

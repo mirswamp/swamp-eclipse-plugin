@@ -46,6 +46,12 @@ import org.eclipse.ui.ide.IDE;
 import dataStructures.BugInstance;
 import dataStructures.Location;
 
+/**
+ * This class provides the back-end communication for the views and editors
+ * in the SWAMP perspective
+ * @author reid-jr
+ *
+ */
 public class Controller {
 	
 	/**
@@ -57,19 +63,35 @@ public class Controller {
 	 * Key for storing BugDetail object with row (TableItem)
 	 */
 	public static final String BUG_DETAIL_OBJ = "bugdetail";
+	/**
+	 * High severity marker type
+	 */
+	private static final String HIGH_SEVERITY_MARKER = "eclipseplugin.highseverity";
+	/**
+	 * Medium severity marker type
+	 */
+	private static final String MED_SEVERITY_MARKER = "eclipseplugin.medseverity";
+	/**
+	 * Low severity marker type
+	 */
+	private static final String LOW_SEVERITY_MARKER = "eclipseplugin.lowseverity";
+	/**
+	 * Unknown severity marker type
+	 */
+	private static final String UNKNOWN_SEVERITY_MARKER = "eclipseplugin.unknownseverity";
 	
-	private static final String HIGH_SEVERITY = "eclipseplugin.highseverity";
+	/**
+	 * Types of plug-in markers
+	 */
+	private static final String[] MARKER_TYPES = {HIGH_SEVERITY_MARKER, 
+			MED_SEVERITY_MARKER, LOW_SEVERITY_MARKER, UNKNOWN_SEVERITY_MARKER}; 
 	
-	private static final String MED_SEVERITY = "eclipseplugin.medseverity";
-	
-	private static final String LOW_SEVERITY = "eclipseplugin.lowseverity";
-	
-	private static final String UNKNOWN_SEVERITY = "eclipseplugin.unknownseverity";
-	
-	private static final String[] MARKER_TYPES = {HIGH_SEVERITY, MED_SEVERITY, LOW_SEVERITY, UNKNOWN_SEVERITY}; 
-	
-	//private IProject currentProject; // TODO Project caching
-
+	/**
+	 * Utility method for getting a view in the window given its ID
+	 * @param window currently opened window
+	 * @param viewID ID of the view
+	 * @return view as IViewPart
+	 */
 	public static IViewPart getView(IWorkbenchWindow window, String viewID) {
 		IWorkbenchPage page = window.getActivePage();
 		if (page == null) {
@@ -78,6 +100,12 @@ public class Controller {
 		return getView(page, viewID);
 	}
 	
+	/**
+	 * Utility method for getting a view in the page given its ID
+	 * @param page the currently active page
+	 * @param viewID ID of the view
+	 * @return view as IViewPart
+	 */
 	public static IViewPart getView(IWorkbenchPage page, String viewID) {
 		IViewReference[] refs = page.getViewReferences();
 		for (IViewReference ref : refs) {
@@ -89,6 +117,11 @@ public class Controller {
 		return null;
 	}
 	
+	/**
+	 * Utility method for getting editor from window
+	 * @param window currently opened window
+	 * @return editor as IEditorPart
+	 */
 	public static IEditorPart getEditor(IWorkbenchWindow window) {
 		IWorkbenchPage page = window.getActivePage();
 		if (page == null) {
@@ -97,10 +130,20 @@ public class Controller {
 		return getEditor(page);
 	}
 	
+	/**
+	 * Utility method for getting editor from page
+	 * @param page currently active page
+	 * @return editor as IEditorPart
+	 */
 	public static IEditorPart getEditor(IWorkbenchPage page) {
 		return page.getActiveEditor();
 	}
 	
+	/**
+	 * Checks whether the SWAMP perspective is open
+	 * @param page currently active page
+	 * @return true if SWAMP perspective is open
+	 */
 	public static boolean swampPerspectiveOpen(IWorkbenchPage page) {
 		IPerspectiveDescriptor pd = page.getPerspective();
 		if (pd == null) {
@@ -109,7 +152,11 @@ public class Controller {
 		return pd.getId().equals(SwampPerspective.ID);
 	}
 	
-	// TODO: New SCARF file downloaded
+	/**
+	 * This method refreshes the workspace. This is called after all sorts of
+	 * important events that might affect the views and editors and the SWAMP
+	 * perspective occur
+	 */
 	public void refreshWorkspace() {
 		IWorkbench wb = PlatformUI.getWorkbench();
 		if (wb == null) {
@@ -165,6 +212,15 @@ public class Controller {
 		}
 	}
 	
+	/**
+	 * This method updates the editor and views in the SWAMP perspective
+	 * @param file currently active file
+	 * @param page currently active page
+	 * @param bugs BugInstances for the currently opened project
+	 * @param toolName name of the tool that found these bugs
+	 * @param platformName name of the platform on which the assessment that
+	 * found these bugs was run
+	 */
 	private void updateEditorAndViews(IFile file, IWorkbenchPage page, List<BugInstance> bugs, String toolName, String platformName) {
 		TableView view = (TableView) getView(page, TableView.ID);
 		Table table = null;
@@ -200,7 +256,13 @@ public class Controller {
 		resetDetailView(page);
 	}
 	
-	
+	/**
+	 * Creates an editor marker for a single bug/weakness
+	 * @param resource file to create markers for
+	 * @param bug weakness to create a marker for
+	 * @param toolName tool that found this weakness
+	 * @return editor marker
+	 */
 	private IMarker createMarkerForResource(IFile resource, BugInstance bug, String toolName) {
 		for (Location l : bug.getLocations()) {
 			if (l.isPrimary()) {
@@ -213,16 +275,16 @@ public class Controller {
 					String severity = bug.getBugSeverity();
 					severity = severity == null ? "" : severity.toUpperCase();
 					if (severity.equals("HIGH")) {
-						marker = resource.createMarker(HIGH_SEVERITY);
+						marker = resource.createMarker(HIGH_SEVERITY_MARKER);
 					}
 					else if (severity.equals("MED")) {
-						marker = resource.createMarker(MED_SEVERITY);
+						marker = resource.createMarker(MED_SEVERITY_MARKER);
 					}
 					else if (severity.equals("LOW")) {
-						marker = resource.createMarker(LOW_SEVERITY);
+						marker = resource.createMarker(LOW_SEVERITY_MARKER);
 					}
 					else {
-						marker = resource.createMarker(UNKNOWN_SEVERITY);
+						marker = resource.createMarker(UNKNOWN_SEVERITY_MARKER);
 					}
 					marker.setAttribute(IMarker.MESSAGE, toolName + ": " + bug.getBugMessage());
 					marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING); // TODO Get priority right here
@@ -242,12 +304,21 @@ public class Controller {
 		return null;
 	}
 	
+	/**
+	 * Resets the ViewParts and editor of the SWAMP perspective
+	 * @param window currently opened window
+	 * @param page currently active page
+	 */
 	private void resetPerspectiveParts(IWorkbenchWindow window, IWorkbenchPage page) {
 		resetFileMarkers(window);
 		resetTableView(page);
 		resetDetailView(page);
 	}
 	
+	/**
+	 * Resets the TableView
+	 * @param page currently active page
+	 */
 	private void resetTableView(IWorkbenchPage page) {
 		TableView view = (TableView) getView(page, TableView.ID);
 		if (view != null) {
@@ -255,6 +326,10 @@ public class Controller {
 		}
 	}
 	
+	/**
+	 * Resets the DetailView
+	 * @param page currently active page
+	 */
 	private void resetDetailView(IWorkbenchPage page) {
 		DetailView view = (DetailView) getView(page, DetailView.ID);
 		if (view != null) {
@@ -262,10 +337,18 @@ public class Controller {
 		}
 	}
 	
+	/**
+	 * Gets plug-in's marker types
+	 * @return array of marker types
+	 */
 	public static String[] getMarkerTypes() {
 		return MARKER_TYPES;
 	}
 	
+	/**
+	 * Removes all plug-in file markers from the file in the window
+	 * @param window currently opened window
+	 */
 	private void resetFileMarkers(IWorkbenchWindow window) {
 		System.out.println("Attempting to reset file markers");
 		IFile file = HandlerUtilityMethods.getActiveFile(window);
@@ -283,7 +366,10 @@ public class Controller {
 		}
 	}
 	
-	// Row selected in TableView
+	/**
+	 * Updates the detail view with a specific bug
+	 * @param bug Bug to be displayed in the DetailView
+	 */
 	public void updateDetailView(BugDetail bug) {
 		IWorkbench wb = PlatformUI.getWorkbench();
 		if (wb != null) {
@@ -297,7 +383,11 @@ public class Controller {
 		}
 	}
 	
-	private IWorkbenchWindow getActiveWorkbenchWindow() {
+	/**
+	 * Utility method for getting active workbench window
+	 * @return reference to the active workbench window
+	 */
+	private static IWorkbenchWindow getActiveWorkbenchWindow() {
 		IWorkbench wb = PlatformUI.getWorkbench();
 		if (wb == null) {
 			return null;
@@ -305,6 +395,10 @@ public class Controller {
 		return wb.getActiveWorkbenchWindow();
 	}
 	
+	/**
+	 * Jumps editor to marker location
+	 * @param marker the marker whose location to jump to
+	 */
 	public void jumpToLocation(IMarker marker) {
 		if (marker == null || (marker.getAttribute(IMarker.LINE_NUMBER, 0) == 0)) {
 			return;
@@ -318,7 +412,10 @@ public class Controller {
 		}
 	}
 	
-	// TODO: update status dashboard
+	/**
+	 * Updates status view (i.e. table of assessment statuses)
+	 * @param statuses list of assessment statuses
+	 */
 	public void updateStatusView(List<String> statuses) {
 		IWorkbenchWindow window = getActiveWorkbenchWindow();
 		if (window != null) {

@@ -23,6 +23,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import dataStructures.*;
 
+/**
+ * This class collects the information that the plug-in needs from 
+ * ScarfXmlReader
+ * @author reid-jr
+ *
+ */
 public class ResultsParser implements ScarfInterface {
 	
 	/**
@@ -125,6 +131,10 @@ public class ResultsParser implements ScarfInterface {
 	}
 	
 	@Override
+	/**
+	 * Callback for bug summaries in SCARF
+	 * @param summary BugSummary that was just parsed from the SCARF file
+	 */
 	public void bugSummaryCallback(BugSummary summary) {
 		bugSummaries.add(summary);
 	}
@@ -135,7 +145,6 @@ public class ResultsParser implements ScarfInterface {
 	 * @return list of bugs found in that file
 	 */
 	public List<BugInstance> getFileBugs(String filename) {
-		//System.out.println("Filename queried: " + filename);
 		if (fileBugs.containsKey(filename)) {
 			return fileBugs.get(filename);
 		}

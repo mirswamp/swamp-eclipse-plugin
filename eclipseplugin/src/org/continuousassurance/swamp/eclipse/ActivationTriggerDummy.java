@@ -15,7 +15,7 @@ package org.continuousassurance.swamp.eclipse;
 
 import org.eclipse.ui.IStartup;
 
-/* This class simply starts up the plug-in when Eclipse is started */
+/** This class simply starts up the plug-in when Eclipse is started */
 public class ActivationTriggerDummy implements IStartup {
 	@Override
 	public void earlyStartup() { }

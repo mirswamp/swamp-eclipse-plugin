@@ -72,35 +72,104 @@ import java.io.FileWriter;
 
 public class SwampSubmitter {
 
+	/**
+	 * Reference to console output stream
+	 */
 	private MessageConsoleStream out;
+	/**
+	 * Reference to SwampApiWrapper, which is the interface by which we
+	 * communicate with the SWAMP
+	 */
 	private SwampApiWrapper api;
+	/**
+	 * Currently opened window
+	 */
 	private IWorkbenchWindow window;
+	/**
+	 * Path to information the plug-in keeps about the submission
+	 */
 	private String configFilepath;
 
-	private static String SWAMP_FAMILY 		 = "SWAMP_FAMILY";
-	public static String SWAMP_RESULTS_DIRNAME = ".SWAMP_RESULTS";
-	private static String CONFIG_FILENAME 	 = "swampconfig.txt";
-	private static String PLUGIN_EXIT_MANUAL = "Status: Plugin exited manually.";
-	private static String SWAMP_JOB_TITLE    = "SWAMP Assessment Submission";
-	private static int UNABLE_TO_DESERIALIZE = 0;
-	private static int UNABLE_TO_GENERATE_BUILD = 1;
-	private static int CYCLICAL_DEPENDENCIES = 2;
-	private static String[] FILE_PATTERNS = { ".*\\" + BuildfileGenerator.BUILDFILE_EXT, ImprovedClasspathHandler.SWAMPBIN_DIR, PackageInfo.PACKAGE_CONF_NAME, ".*\\.zip" };
-
+	/**
+	 * Eclipse Job family for the SWAMP jobs
+	 */
+	private static final String SWAMP_FAMILY 		 = "SWAMP_FAMILY";
+	/**
+	 * Directory name of directory that stores SWAMP results
+	 */
+	public static final String SWAMP_RESULTS_DIRNAME = ".SWAMP_RESULTS";
+	/**
+	 * File name of file with information about the submission
+	 */
+	private static  final String CONFIG_FILENAME 	 = "swampconfig.txt";
+	/**
+	 * Message to print to console if plug-in is manually exited
+	 */
+	private static final String PLUGIN_EXIT_MANUAL = "Status: Plugin exited manually.";
+	/**
+	 * Name of SWAMP assessment submission job
+	 */
+	private static final String SWAMP_JOB_TITLE    = "SWAMP Assessment Submission";
+	/**
+	 * Unable to deserialize previous submission error code
+	 */
+	private static final int UNABLE_TO_DESERIALIZE = 0;
+	/**
+	 * Unable to generate build error code
+	 */
+	private static final int UNABLE_TO_GENERATE_BUILD = 1;
+	/**
+	 * Cyclical dependencies error code
+	 */
+	private static final int CYCLICAL_DEPENDENCIES = 2;
+	/**
+	 * File patterns to delete if job is cancelled
+	 */
+	private static final String[] FILE_PATTERNS = { ".*\\" + BuildfileGenerator.BUILDFILE_EXT, ImprovedClasspathHandler.SWAMPBIN_DIR, PackageInfo.PACKAGE_CONF_NAME, ".*\\.zip" };
+	/**
+	 * Number of ticks for uploading package
+	 */
+	private static final int UPLOAD_TICKS = 80;
+	/**
+	 * Number of ticks for submitting an individual assessment to the SWAMP
+	 */
+	private static final int SUBMISSION_TICKS = 10;
+	/**
+	 * Number of ticks to write package conf
+	 */
+	private static final int PKG_CONF_TICKS = 10;
+	/**
+	 * Number of ticks to create archive with all the necessary files
+	 */
+	private static final int ZIP_TICKS = 40;
+	/**
+	 * Number of ticks to clean project
+	 */
+	private static final int CLEAN_PROJECTS_TICKS = 10;
+	/**
+	 * Number of ticks to handle a single classpath entry
+	 */
+	public static final int CLASSPATH_ENTRY_TICKS = 5;
+	/**
+	 * Default console name for plug-in
+	 */
+	private static final String CONSOLE_NAME = "SWAMP Plugin";
 	
-	private static int UPLOAD_TICKS = 80;
-	private static int SUBMISSION_TICKS = 10;
-	private static int PKG_CONF_TICKS = 10;
-	private static int ZIP_TICKS = 40;
-	private static int CLEAN_PROJECTS_TICKS = 10;
-	public static int CLASSPATH_ENTRY_TICKS = 5;
-	
+	/**
+	 * Constructor for SwampSubmitter
+	 * @param window currently opened window
+	 */
 	public SwampSubmitter(IWorkbenchWindow window) {
 		this.window = window;
 		this.out = initializeConsole(Activator.SWAMP_PLUGIN_CONSOLE_NAME);
 		//configFilepath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + CONFIG_FILENAME;
 	}
 	
+	/**
+	 * Initializes Console view (note: Console != System.out)
+	 * @param consoleName name of the Console
+	 * @return reference to stream that writes to Console
+	 */
 	private MessageConsoleStream initializeConsole(String consoleName) {
 		/* View http://wiki.eclipse.org/FAQ_How_do_I_write_to_the_console_from_a_plug-in%3F for more details */
 		/* Adapted from the above link */
@@ -113,7 +182,6 @@ public class SwampSubmitter {
 			IConsoleView view = (IConsoleView) page.showView(IConsoleConstants.ID_CONSOLE_VIEW);
 			view.display(console);
 		} catch (PartInitException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		MessageConsoleStream stream = console.newMessageStream();
@@ -121,15 +189,24 @@ public class SwampSubmitter {
 		return stream;
 	}
 	
+	/**
+	 * Prints message to Console view
+	 * @param msg message to print
+	 */
 	private void printToConsole(String msg) {
 		if (out == null) {
-			out = initializeConsole("SWAMP Plugin");
+			out = initializeConsole(CONSOLE_NAME);
 		}
 		if (out != null) {
 			out.println(msg);
 		}
 	}
 
+	/**
+	 * Submits an Eclipse project to the SWAMP. Project is assumed to already
+	 * have a build file
+	 * @param si Submission object with info about the submission
+	 */
 	private void submitPreConfiguredJob(SubmissionInfo si) {
 		Job job = new Job(SWAMP_JOB_TITLE) {
 			
@@ -234,6 +311,11 @@ public class SwampSubmitter {
 		job.schedule();
 	}
 	
+	/**
+	 * Generates build file for an Eclipse project and submits it to the SWAMP.
+	 * This can all happen in the background
+	 * @param si SubmissionInfo object with information about the submission
+	 */
 	private void submitAutoGenJob(SubmissionInfo si) {
 		Job job = new Job(SWAMP_JOB_TITLE) {
 			
@@ -386,6 +468,11 @@ public class SwampSubmitter {
 		
 	}
 	
+	/**
+	 * Writes mapping from Eclipse project to SWAMP package thing to file
+	 * @param pkgThingUUID SWAMP PackageThing UUID
+	 * @param projectPluginLoc file path of project's plug-in directory
+	 */
 	private void setEclipseProjectToPackageThingMapping(String pkgThingUUID, String projectPluginLoc) {
 		String path = projectPluginLoc + org.eclipse.core.runtime.Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
 		File f = new File(path);
@@ -395,7 +482,6 @@ public class SwampSubmitter {
 		try {
 			f.createNewFile();
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		// TODO Somehow get the PackageThing UUID
@@ -404,11 +490,15 @@ public class SwampSubmitter {
 			pw.write(pkgThingUUID);
 			pw.close();
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
 
+	/**
+	 * Sets up results directory for results to be downloaded for this
+	 * package
+	 * @param pkgThingUUID package thing UUID
+	 */
 	private void doNewPackageResultsSetup(String pkgThingUUID) {
 		String dirPath = ResultsUtils.constructFilepath(pkgThingUUID);
 		File dir = new File(dirPath);
@@ -417,6 +507,14 @@ public class SwampSubmitter {
 		}
 	}
 	
+	/**
+	 * Estimates total "ticks" for submitting the assessments
+	 * @param autoGen is the plug-in generating the build or is the build
+	 * already configured
+	 * @param numClasspathEntries number of classpath entries in the project
+	 * @param numSubmissions number of assessments to be submitted
+	 * @return
+	 */
 	private int calculateTotalTicks(boolean autoGen, int numClasspathEntries, int numSubmissions) {
 		int total = 0;
 		
@@ -439,6 +537,12 @@ public class SwampSubmitter {
 		return total;
 	}
 	
+	/**
+	 * Removes binaries and other artifacts from project and the projects it
+	 * depends on
+	 * @param project project to clean
+	 * @throws CoreException
+	 */
 	private void cleanProjects(IProject project) throws CoreException {
 		project.build(IncrementalProjectBuilder.CLEAN_BUILD, null);
 		for (IProject p : project.getReferencedProjects()) {
@@ -446,6 +550,14 @@ public class SwampSubmitter {
 		}
 	}
 	
+	/**
+	 * Uploads package to the SWAMP
+	 * @param pkgConfPath file path to the package.conf file
+	 * @param archivePath file path to the package archive
+	 * @param prjUUID UUID of the SWAMP project that this package is part of
+	 * @param newPackage true if package is new package
+	 * @return
+	 */
 	private String uploadPackage(String pkgConfPath, String archivePath, String prjUUID, boolean newPackage) {
 		// Upload package
 		System.out.println("Uploading package");
@@ -467,6 +579,10 @@ public class SwampSubmitter {
 	}
 	
 	// TODO Throw an exception if we can't get here
+	/**
+	 * Initializes SwampApiWrapper
+	 * @return true if api is initialized, false otherwise
+	 */
 	private boolean initializeSwampApi() {
 		if (api != null) {
 			return true;
@@ -482,6 +598,10 @@ public class SwampSubmitter {
 		return true;
 	}
 	
+	/**
+	 * Prints initial information  about the SWAMP plug-in to Console view
+	 * @param out stream to write to console
+	 */
 	private static void printInitialInfo(MessageConsoleStream out) {
 		Version version = org.eclipse.core.runtime.Platform.getBundle("org.eclipse.platform").getVersion();
 		String versionStr = "Eclipse";
@@ -494,6 +614,10 @@ public class SwampSubmitter {
 		out.println(Utils.getBracketedTimestamp() + "Status: Launched SWAMP plugin - running on " + versionStr + ".");
 	}
 	
+	/**
+	 * Launches assessment submission in background
+	 * @param project Eclipse project to be submitted
+	 */
 	public void launchBackgroundAssessment(IProject project) {
 		if (!initializeSwampApi()) {
 			return;
@@ -542,13 +666,22 @@ public class SwampSubmitter {
 		}
 	}
 	
-	public void logIntoSwamp() {
+	/**
+	 * Logs into the SWAMP
+	 * @return true if user is now logged in
+	 */
+	public boolean logIntoSwamp() {
 		if (!initializeSwampApi()) {
-			return;
+			return false;
 		}
-		authenticateUser();
+		return authenticateUser();
 	}
 	
+	/**
+	 * Authenticates the user. Requires user to enter username and password
+	 * and checks credentials with the SWAMP
+	 * @return true if user is logged in
+	 */
 	public boolean authenticateUser() {
 		AuthenticationDialog ad = new AuthenticationDialog(window.getShell(), this.out);
 		ad.create();
@@ -561,6 +694,11 @@ public class SwampSubmitter {
 		return true;
 	}
 	
+	/**
+	 * Launches the dialogs (ConfigDialog --> ToolDialog --> PlatformDialog)
+	 * @param si SubmissionInfo object storing information about 
+	 * this submission
+	 */
 	private void launchConfiguration(SubmissionInfo si) {
 		ConfigDialog cd;
 		ToolDialog td;
@@ -621,12 +759,11 @@ public class SwampSubmitter {
 		
 	}
 	
-	public void fetchResults() {
-		if (!initializeSwampApi()) {
-			return;
-		}
-	}
-	
+	/**
+	 * Launch process for submitting a set of assessments to the SWAMP. This
+	 * will launch the sequence of dialogs 
+	 * @param project project selected
+	 */
 	public void launch(IProject project) {
 		if (!initializeSwampApi()) {
 			return;
@@ -659,6 +796,10 @@ public class SwampSubmitter {
 		launchConfiguration(si);
 	}
 	
+	/**
+	 * Checks whether a user is logged into the SWAMP
+	 * @return true if user is logged in
+	 */
 	public boolean loggedIntoSwamp() {
 		if (!initializeSwampApi()) {
 			return false;
@@ -676,6 +817,9 @@ public class SwampSubmitter {
 		return true;
 	}
 	
+	/**
+	 * Logs a user out of the SWAMP
+	 */
 	public void logOutOfSwamp() {
 		Activator.setLoggedIn(false);
 		if (!initializeSwampApi()) {
@@ -684,6 +828,14 @@ public class SwampSubmitter {
 		api.logout();
 	}
 	
+	/**
+	 * Submits a single assessment to the SWAMP
+	 * @param pkgUUID UUID for the package version being assessed
+	 * @param toolUUID UUID for the tool that the assessment will run on
+	 * @param prjUUID UUID for the project that this package is part of
+	 * @param pltUUID UUID for the platform that this assessment will run on
+	 * @param details info about this assessment
+	 */
 	private void submitAssessment(String pkgUUID, String toolUUID, String prjUUID, String pltUUID, AssessmentDetails details) {
 		// Submit assessment
 		System.out.println("Package UUID: " + pkgUUID);
@@ -735,6 +887,11 @@ public class SwampSubmitter {
 		}
 	}
 	
+	/**
+	 * Appends a new serialized AssessmentDetails object to the unfinished assessments file
+	 * @param info serialized AssessmentDetails object
+	 * @throws IOException
+	 */
 	private static void appendToUnfinishedFile(String info) throws IOException {
 		System.out.println("Unfinished assessments located at: " + Activator.getUnfinishedAssessmentsPath());
 		File file = new File(Activator.getUnfinishedAssessmentsPath());
@@ -747,12 +904,33 @@ public class SwampSubmitter {
 		fw.close();
 	}
 	
+	/**
+	 * This class allows cancellation of jobs and does clean-up after the
+	 * the job is cancelled
+	 * @author reid-jr
+	 *
+	 */
 	private class JobCancellationListener implements IJobChangeListener {
 
+		/**
+		 * File patterns that files we want to delete will match
+		 */
 		private String[] filePatterns;
+		/**
+		 * Directory that we will delete files
+		 */
 		private String pluginLocation;
+		/**
+		 * Reference to the console
+		 */
 		private MessageConsoleStream out;
 
+		/**
+		 * Constructor for JobCancellationListener
+		 * @param location file path of directory to delete files in
+		 * @param patterns file patterns to be deleted
+		 * @param stream allows us to write to console
+		 */
 		public JobCancellationListener(String location, String[] patterns, MessageConsoleStream stream) {
 			filePatterns = patterns;
 			pluginLocation = location;
@@ -761,16 +939,16 @@ public class SwampSubmitter {
 
 		@Override
 		public void aboutToRun(IJobChangeEvent arg0) {
-			// TODO Auto-generated method stub
-			
 		}
 
 		@Override
 		public void awake(IJobChangeEvent arg0) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
+		/**
+		 * Runs when job is cancelled or finished
+		 */
 		public void done(IJobChangeEvent event) {
 			System.out.println("Done!!");
 			System.out.println("Event results: " + event.getResult());
@@ -805,17 +983,14 @@ public class SwampSubmitter {
 
 		@Override
 		public void running(IJobChangeEvent arg0) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void scheduled(IJobChangeEvent arg0) {
-			// TODO Auto-generated method stub
 		}
 
 		@Override
 		public void sleeping(IJobChangeEvent arg0) {
-			// TODO Auto-generated method stub	
 		}
 	}
 	

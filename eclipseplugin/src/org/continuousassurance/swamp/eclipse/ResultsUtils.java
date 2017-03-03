@@ -13,29 +13,65 @@
 
 package org.continuousassurance.swamp.eclipse;
 
+/**
+ * Utility functions for results handling and retrieval
+ * @author reid-jr
+ *
+ */
 public class ResultsUtils {
 
-	public static String FILE_SUFFIX = "results.xml";
+	/**
+	 * End of SCARF file results name
+	 */
+	public static final String FILE_SUFFIX = "results.xml";
 	
-	public static String ECLIPSE_TO_SWAMP_FILENAME = "eclipse-swamp.txt";
+	/**
+	 * Name of file storing the mapping from Eclipse project to SWAMP package
+	 */
+	public static final String ECLIPSE_TO_SWAMP_FILENAME = "eclipse-swamp.txt";
 	
-	private static String SEPARATOR = System.getProperty("file.separator");
+	/**
+	 * System-defined directory separator (e.g. "/" in Unix, Linux)
+	 */
+	private static final String SEPARATOR = System.getProperty("file.separator");
 	
+	/**
+	 * Eclipse property name for user's home directory
+	 */
+	private static final String USER_HOME_PROPERTY = "user.home";
+	
+	/**
+	 * Construct file path for SCARF results for a given assessment
+	 * @param projectUUID project UUID for the SWAMP project that the 
+	 * assessment submitted
+	 * @param pkgUUID packageThing UUID for the SWAMP package that the 
+	 * assessment submitted
+	 * @param toolUUID tool UUID for the tool that ran the assessment
+	 * @param platformUUID platform UUID for the platform that the assessment 
+	 * was run on
+	 * @return file path that the SCARF results should be downloaded to
+	 */
 	public static String constructFilepath(String projectUUID, String pkgUUID, String toolUUID, String platformUUID) {
-		// TODO: get plugin location + SEPARATOR + projectID + "-" + assessID + ".results";
-		System.out.println("Project UUID: " + projectUUID);
-		System.out.println("Package UUID: " + pkgUUID);
-		System.out.println("Tool UUID: " + toolUUID);
-		System.out.println("Platform UUID: " + platformUUID);
-		// return System.getProperty("user.home") + SEPARATOR + SwampSubmitter.SWAMP_RESULTS_DIRNAME + SEPARATOR + projectUUID + SEPARATOR + pkgUUID + SEPARATOR + toolUUID + "-" + platformUUID + "-" + "results.xml";
 		return constructFilepath(pkgUUID) + SEPARATOR + toolUUID + "-" + platformUUID + "-" + FILE_SUFFIX;
 	}
 	
+	/**
+	 * Constructs file path for the directory for SCARF results for assessments
+	 * submitted of a given Package Thing
+	 * @param pkgThingUUID 
+	 * @return file path of the directory in which results for assessments on
+	 * the specified Package Thing should be downloaded
+	 */
 	public static String constructFilepath(String pkgThingUUID) {
 		return getTopLevelResultsDirectory() + SEPARATOR + pkgThingUUID;
 	}
 	
+	/**
+	 * Constructs file path for the directory for SCARF results for assessments
+	 * @return file path of the directory in which SCARF results should be
+	 * downloaded
+	 */
 	public static String getTopLevelResultsDirectory() {
-		return System.getProperty("user.home") + SEPARATOR + SwampSubmitter.SWAMP_RESULTS_DIRNAME;
+		return System.getProperty(USER_HOME_PROPERTY) + SEPARATOR + SwampSubmitter.SWAMP_RESULTS_DIRNAME;
 	}
 }

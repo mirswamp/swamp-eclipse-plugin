@@ -42,8 +42,8 @@ import org.eclipse.swt.widgets.TableItem;
 import static org.eclipse.core.runtime.IPath.SEPARATOR;
 
 /**
- * This class provides utility methods that provide basic
- * functionality.
+ * This class provides static utility methods that provide basic functionality 
+ * for the SWAMP plug-in.
  * @author Malcolm Reid Jr. (reid-jr@cs.wisc.edu)
  * @since 07/2016 
  */
@@ -282,6 +282,12 @@ public class Utils {
 		return cmp;
 	}
 	
+	/**
+	 * Utility method for getting the int value of a string that may or may not
+	 * be numeric
+	 * @param str string to be converted
+	 * @return int value of the string, -1 if non-numeric
+	 */
 	private static int getIntValue(String str) {
 		int val = -1;
 		try {
@@ -345,5 +351,5 @@ public class Utils {
 		return col;
 		
 	}
-	
+
 }

@@ -19,14 +19,34 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
+/**
+ * This class is a job that checks SWAMP assessment statuses
+ * @author reid-jr
+ *
+ */
 public class StatusChecker extends Job {
+	/**
+	 * Is the job running? (i.e. scheduled, not to be confused with currently
+	 * executing)
+	 */
 	private boolean running = true;
+	/**
+	 * Name of StatusChecker job (the user sees this name)
+	 */
+	private static final String JOB_NAME = "Status Checker";
 	
+	/**
+	 * Constructor for StatusChecker job
+	 */
 	public StatusChecker() {
-		super("Status Checker");
+		super(JOB_NAME);
 	}
 	
 	@Override
+	/**
+	 * Job checks SWAMP assessment statuses
+	 * @param monitor progress monitor
+	 */
 	protected IStatus run(IProgressMonitor monitor) {
 		System.out.println("\n\nRunning status checker background job\n\n");
 		schedule(30000); // runs once every 30s
@@ -43,16 +63,25 @@ public class StatusChecker extends Job {
 	}
 	
 	@Override
+	/**
+	 * If the job is "running", we should schedule it
+	 */
 	public boolean shouldSchedule() {
 		return running;
 	}
 	
+	/**
+	 * Stops the job
+	 */
 	public void stop() {
 		running = false;
 	}
 	
+	/**
+	 * Getter for whether job is currently being executed
+	 * @return true if job is currently being executed
+	 */
 	public boolean isRunning() {
 		return this.getState() == Job.RUNNING;
 	}
-
 }

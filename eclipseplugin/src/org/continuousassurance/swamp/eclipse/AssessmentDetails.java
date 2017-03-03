@@ -5,14 +5,12 @@ package org.continuousassurance.swamp.eclipse;
  * @author reid-jr
  *
  */
-
 public class AssessmentDetails {
 	
 	/**
 	 * String file path where the results should be stored
 	 */
 	private String resultsFilepath;
-	
 	/**
 	 * UUID of SWAMP project that assessment is for
 	 */
@@ -41,7 +39,6 @@ public class AssessmentDetails {
 	 * Most recent status
 	 */
 	private String status;
-	
 	/**
 	 * Tool assessment was run on
 	 */
@@ -51,24 +48,25 @@ public class AssessmentDetails {
 	 * Platform assessment was submitted on
 	 */
 	private String platform;
-	
 	/**
 	 * Number of bugs found by assessment
 	 */
 	private String bugCount;
-	
 	/**
 	 * DELIMITER for csv
 	 */
 	public static final String DELIMITER = ",";
-	
 	/**
 	 * Number of hidden fields in serialized assessment details
 	 */
 	public static final int NUM_HIDDEN_FIELDS = 3;
-	
+	/**
+	 * Index of ASSESS_UUID
+	 */
 	public static final int ASSESS_UUID_PART = 2;
-	
+	/**
+	 * Index of Results filepath
+	 */
 	public static final int RESULTS_FILEPATH_PART = 0;
 	
 	/**
@@ -93,6 +91,10 @@ public class AssessmentDetails {
 		this.bugCount = "";
 	}
 	
+	/**
+	 * Constructor for AssessmentDetails object from serialized string
+	 * @param serializedDetails serialized AssessmentDetails object
+	 */
 	public AssessmentDetails(String serializedDetails) {
 		String[] parts = serializedDetails.split(DELIMITER);
 		this.resultsFilepath = parts[0];
@@ -117,7 +119,7 @@ public class AssessmentDetails {
 	}
 	
 	/**
-	 * Setter for submission time
+	 * Setter for submission time to formatted current time string
 	 */
 	public void setSubmissionTime() {
 		submissionTime = Utils.getCurrentTimestamp();
@@ -131,6 +133,11 @@ public class AssessmentDetails {
 		this.status = status;
 	}
 	
+	/**
+	 * Setter for results filepath
+	 * @param filepath the filepath that the SCARF results should be downloaded 
+	 * to
+	 */
 	public void setResultsFilepath(String filepath) {
 		this.resultsFilepath = filepath;
 	}
@@ -149,24 +156,42 @@ public class AssessmentDetails {
 	
 	/**
 	 * Overriden toString()
+	 * @return serialized AssessmentDetails object
 	 */
 	@Override
 	public String toString() {
 		return serialize();
 	}
 	
+	/**
+	 * Setter for tool name
+	 * @param toolName name of the tool that is running the assessment
+	 */
 	public void setToolName(String toolName) {
 		tool = toolName;
 	}
 	
+	/**
+	 * Setter for platform name
+	 * @param platformName name of the platform that the assessment is being
+	 * run on
+	 */
 	public void setPlatformName(String platformName) {
 		platform = platformName;
 	}
 	
+	/**
+	 * Getter for UUID of the project that this assessment was submitted on
+	 * @return project UUID
+	 */
 	public String getProjectUUID() {
 		return prjUUID;
 	}
 	
+	/**
+	 * Getter for UUID of this assessment
+	 * @return assessment UUID
+	 */
 	public String getAssessUUID() {
 		return assessUUID;
 	}
@@ -181,10 +206,18 @@ public class AssessmentDetails {
 		this.status = status;
 	}
 	
+	/**
+	 * Setter for number of weaknesses
+	 * @param bugCount number of weaknesses from the assessment
+	 */
 	public void setBugCount(int bugCount) {
 		this.bugCount = Integer.toString(bugCount);
 	}
 	
+	/**
+	 * Getter for filepath where results should be downloaded
+	 * @return results filepath
+	 */
 	public String getFilepath() {
 		return this.resultsFilepath;
 	}

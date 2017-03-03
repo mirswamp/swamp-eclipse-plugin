@@ -19,7 +19,7 @@ import java.util.List;
 import dataStructures.BugInstance;
 import dataStructures.Location;
 
-/* This is an object to store detailed information about a bug and its source
+/** This is an object to store detailed information about a bug and its source
  * for display in the BugDetail view
  */
 public class BugDetail {
@@ -30,11 +30,11 @@ public class BugDetail {
 	/**
 	 * Name of the platform on which the assessment that found this bug was run
 	 */
-	private String platform;
+	private final String platform;
 	/**
 	 * Name of the tool that ran the assessment that found this bug
 	 */
-	private String tool;
+	private final String tool;
 	/**
 	 * Name of the file in which the primary location of the bug takes place
 	 */
@@ -86,6 +86,11 @@ public class BugDetail {
 		return Integer.toString(start) + "-" + Integer.toString(end);
 	}
 	
+	/**
+	 * Formats single line number
+	 * @param ln line number of bug instance
+	 * @return formatted line number string
+	 */
 	public static String formatSingleLineNumber(int ln) {
 		if (ln == 0) {
 			return "";
