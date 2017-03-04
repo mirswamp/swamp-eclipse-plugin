@@ -263,7 +263,9 @@ public class SwampSubmitter {
 				if (si.isNewPackage()) { // All packages will need to be made new for this to be configured properly
 					doNewPackageResultsSetup(si.getPackageThingUUID());
 				}
-				
+			
+				String pkgThingUUID = si.getPackageThingUUID();
+				setEclipseProjectToPackageThingMapping(pkgThingUUID, si.getProject().getWorkingLocation(PLUGIN_ID).toOSString());
 				// TODO: Add results for dependent projects
 				
 				
@@ -288,7 +290,6 @@ public class SwampSubmitter {
 				
 				printToConsole(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
 				AssessmentDetails details = new AssessmentDetails(prjUUID, si.getPackageName(), si.getPackageVersion(), si.getProjectName());
-				String pkgThingUUID = si.getPackageThingUUID();
 				for (String toolUUID : si.getSelectedToolIDs()) {
 					for (String platformUUID : si.getSelectedPlatformIDs()) {
 						subMonitor.split(SUBMISSION_TICKS);
