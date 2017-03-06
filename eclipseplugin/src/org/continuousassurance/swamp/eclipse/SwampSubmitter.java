@@ -374,7 +374,7 @@ public class SwampSubmitter {
 					return status;
 				}
 				
-				org.continuousassurance.swamp.eclipse.BuildfileGenerator.generateBuildFile(ich, files);
+				BuildfileGenerator.generateBuildFile(ich, files);
 				
 				try {
 					cleanProjects(si.getProject());
