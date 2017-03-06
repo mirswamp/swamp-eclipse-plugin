@@ -132,7 +132,7 @@ public class AboutSWAMPDialog extends TitleAreaDialog {
 	 * @author reid-jr
 	 *
 	 */
-	public class LinkSelectionAdapter extends SelectionAdapter {
+	public static class LinkSelectionAdapter extends SelectionAdapter {
 		@Override
 		public void widgetSelected(SelectionEvent e) {
 			try {

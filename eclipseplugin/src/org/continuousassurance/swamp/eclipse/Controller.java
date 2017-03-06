@@ -16,7 +16,8 @@ import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -183,10 +184,13 @@ public class Controller {
 		File f = new File(path); 
 		if (f.exists()) {
 			String pkgThingUUID = "";
+			InputStreamReader filereader = null;
+			BufferedReader reader = null;
 			try {
-				FileReader filereader = new FileReader(f);
-				BufferedReader reader = new BufferedReader(filereader);
+				filereader = new InputStreamReader(new FileInputStream(f), Activator.ENCODING);
+				reader = new BufferedReader(filereader);
 				pkgThingUUID = reader.readLine();
+				reader.close();
 			}
 			catch (Exception e) {
 				System.err.println("Exception occured");

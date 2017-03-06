@@ -16,9 +16,12 @@ package org.continuousassurance.swamp.eclipse;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
@@ -93,6 +96,11 @@ public class Activator extends AbstractUIPlugin {
 	private static final String SEPARATOR = System.getProperty("file.separator");
 	
 	/**
+	 * Default encoding for writing/reading to/from file
+	 */
+	public static final String ENCODING = "UTF-8";
+	
+	/**
 	 * The constructor
 	 */
 	public Activator() {
@@ -103,6 +111,7 @@ public class Activator extends AbstractUIPlugin {
 	 * (non-Javadoc)
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#start(org.osgi.framework.BundleContext)
 	 */
+	@Override
 	public void start(BundleContext context) throws Exception {
 		super.start(context);
 		plugin = this;
@@ -114,11 +123,11 @@ public class Activator extends AbstractUIPlugin {
 		hostname = DEFAULT_HOST;
 
 		if (file.exists()) {
-			FileReader filereader = null;
+			InputStreamReader filereader = null;
 			BufferedReader reader = null;
 		
 			try {
-				filereader = new FileReader(file);
+				filereader = new InputStreamReader(new FileInputStream(file), Activator.ENCODING);
 				reader = new BufferedReader(filereader);
 				String host = reader.readLine();
 				reader.close();
@@ -153,11 +162,11 @@ public class Activator extends AbstractUIPlugin {
 		}
 		
 		// Write it to file here
-		FileWriter filewriter = null;
+		OutputStreamWriter filewriter = null;
 		BufferedWriter writer = null;
 		
 		try {
-			filewriter = new FileWriter(f);
+			filewriter = new OutputStreamWriter(new FileOutputStream(f), Activator.ENCODING);
 			writer = new BufferedWriter(filewriter);
 			writer.write(name);
 			writer.close();
@@ -196,6 +205,7 @@ public class Activator extends AbstractUIPlugin {
 	 * (non-Javadoc)
 	 * @see org.eclipse.ui.plugin.AbstractUIPlugin#stop(org.osgi.framework.BundleContext)
 	 */
+	@Override
 	public void stop(BundleContext context) throws Exception {
 		if (sc != null) {
 			sc.cancel();

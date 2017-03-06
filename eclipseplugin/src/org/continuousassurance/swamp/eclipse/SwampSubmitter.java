@@ -14,9 +14,9 @@
 package org.continuousassurance.swamp.eclipse;
 
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Date;
@@ -68,7 +68,6 @@ import edu.wisc.cs.swamp.exceptions.SessionRestoreException;
 
 import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
 import static org.eclipse.core.runtime.Path.SEPARATOR;
-import java.io.FileWriter;
 
 public class SwampSubmitter {
 
@@ -485,12 +484,11 @@ public class SwampSubmitter {
 		} catch (IOException e1) {
 			e1.printStackTrace();
 		}
-		// TODO Somehow get the PackageThing UUID
 		try {
-			PrintWriter pw = new PrintWriter(f);
-			pw.write(pkgThingUUID);
-			pw.close();
-		} catch (FileNotFoundException e) {
+			OutputStreamWriter filewriter = new OutputStreamWriter(new FileOutputStream(f), Activator.ENCODING);
+			filewriter.write(pkgThingUUID);
+			filewriter.close();
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -899,10 +897,9 @@ public class SwampSubmitter {
 		if (!file.exists()) {
 			file.createNewFile();
 		}
-		FileWriter fw;
-		fw = new FileWriter(file, true);
-		fw.write(info);
-		fw.close();
+		OutputStreamWriter filewriter = new OutputStreamWriter(new FileOutputStream(file, true), Activator.ENCODING);
+		filewriter.write(info);
+		filewriter.close();
 	}
 	
 	/**
@@ -911,7 +908,7 @@ public class SwampSubmitter {
 	 * @author reid-jr
 	 *
 	 */
-	private class JobCancellationListener implements IJobChangeListener {
+	private static class JobCancellationListener implements IJobChangeListener {
 
 		/**
 		 * File patterns that files we want to delete will match

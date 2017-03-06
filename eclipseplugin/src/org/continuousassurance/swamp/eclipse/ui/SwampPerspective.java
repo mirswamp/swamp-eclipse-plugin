@@ -98,7 +98,7 @@ public class SwampPerspective implements IPerspectiveFactory {
 	 * @author reid-jr
 	 *
 	 */
-	public class FileChangeListener implements IPartListener2 {
+	public static class FileChangeListener implements IPartListener2 {
 
 		/* We need to set the rows in the TableView from here. We need to store
 		 * markers and BugDetail objects with rows in order to have the desired

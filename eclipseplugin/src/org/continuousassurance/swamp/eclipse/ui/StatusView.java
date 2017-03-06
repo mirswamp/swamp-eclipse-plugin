@@ -147,6 +147,7 @@ public class StatusView extends ViewPart {
 	 */
 	private void createActions() {
 		refreshItemAction = new Action(REFRESH_ACTION_LABEL) {
+			@Override
 			public void run() {
 				StatusChecker sc = Activator.getStatusChecker();
 				if (sc != null && sc.isRunning()) {

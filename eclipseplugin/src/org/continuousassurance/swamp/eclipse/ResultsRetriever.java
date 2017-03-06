@@ -14,8 +14,9 @@ package org.continuousassurance.swamp.eclipse;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -131,7 +132,7 @@ public class ResultsRetriever {
 		}
 		Scanner sc = null;
 		try {
-			sc = new Scanner(oldFile);
+			sc = new Scanner(oldFile, Activator.ENCODING);
 		} catch (FileNotFoundException e) {
 			return false;
 		}
@@ -140,9 +141,9 @@ public class ResultsRetriever {
 		if (tmp.exists()) {
 			tmp.delete();
 		}
-		FileWriter writer = null;
+		OutputStreamWriter writer = null;
 		try {
-			writer = new FileWriter(tmp, true);
+			writer = new OutputStreamWriter(new FileOutputStream(tmp, true), Activator.ENCODING);
 		} catch (IOException e) {
 			e.printStackTrace();
 			sc.close();
@@ -202,9 +203,9 @@ public class ResultsRetriever {
 			tmp.delete();
 		}
 		
-		FileWriter writer = null;
+		OutputStreamWriter writer = null;
 		try {
-			writer = new FileWriter(tmp, true);
+			writer = new OutputStreamWriter(new FileOutputStream(tmp, true), Activator.ENCODING);
 		} catch (IOException e) {
 			e.printStackTrace();
 			sc.close();
@@ -278,20 +279,20 @@ public class ResultsRetriever {
 		if (!f.exists()) {
 			f.createNewFile();
 		}
-		FileWriter finishedWriter = new FileWriter(f, true);
+		OutputStreamWriter finishedWriter = new OutputStreamWriter(new FileOutputStream(f, true), Activator.ENCODING);
 		finishedWriter.write(newDetailInfo);
 		finishedWriter.close();
 	}
 
 	/**
 	 * This method updates the status of a single unfinished assessment
-	 * @param unfinishedWriter FileWriter that appends to end of unfinished assessments file
+	 * @param writer OutputStreamWriter that appends to end of unfinished assessments file
 	 * @param api SwampApiWrapper reference
 	 * @param serializedAssessmentDetails information about this assessment
 	 * @return new serialized AssessmentDetails object with updated status (if
 	 * unfinished). null if finished
 	 */
-	private static String updateStatus(FileWriter unfinishedWriter, SwampApiWrapper api, String serializedAssessmentDetails) {
+	private static String updateStatus(OutputStreamWriter writer, SwampApiWrapper api, String serializedAssessmentDetails) {
 		AssessmentDetails ad = new AssessmentDetails(serializedAssessmentDetails);
 		if (api == null) {
 			ad.updateStatus(USER_NOT_LOGGED_IN_STATUS);
@@ -329,7 +330,7 @@ public class ResultsRetriever {
 					writeToFinishedFile(newDetailInfo);
 					return null;
 				} // TODO: Catch file not found exception
-				unfinishedWriter.write(newDetailInfo);
+				writer.write(newDetailInfo);
 			}
 			else if (FINISHED_WITH_ERRORS.equals(status)) { // Note: This will break if the labels are changed, so MIR shouldn't do that
 				System.out.println("Finished with errors!");
@@ -339,7 +340,7 @@ public class ResultsRetriever {
 			}
 			else {
 				newDetailInfo = ad.serialize();
-				unfinishedWriter.write(newDetailInfo);
+				writer.write(newDetailInfo);
 			}
 		}
 		catch (IOException e) {

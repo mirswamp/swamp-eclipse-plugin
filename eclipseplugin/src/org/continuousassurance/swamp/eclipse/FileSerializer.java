@@ -16,9 +16,11 @@ package org.continuousassurance.swamp.eclipse;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.List;
 
 /**
@@ -63,11 +65,11 @@ public class FileSerializer {
 			return false;
 		}
 		
-		FileReader filereader = null;
+		InputStreamReader filereader = null;
 		BufferedReader reader = null;
 		
 		try {
-			filereader = new FileReader(file);
+			filereader = new InputStreamReader(new FileInputStream(file), Activator.ENCODING);
 			reader = new BufferedReader(filereader);
 
 			if (!deserializeConfigInfo(reader, si)) {
@@ -100,11 +102,11 @@ public class FileSerializer {
 			deleteFile(filepath);
 		}
 		
-		FileWriter filewriter = null;
+		OutputStreamWriter filewriter = null;
 		BufferedWriter writer = null;
 		
 		try {
-			filewriter = new FileWriter(file);
+			filewriter = new OutputStreamWriter(new FileOutputStream(file), Activator.ENCODING);
 			writer = new BufferedWriter(filewriter);
 			
 			serializeConfigInfo(writer, si);

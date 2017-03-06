@@ -128,7 +128,7 @@ public class TableView extends ViewPart {
 	 * Listener for TableItem (i.e. row) selection in a table
 	 * @author reid-jr
 	 */
-	private class RowSelectionListener implements SelectionListener {
+	private static class RowSelectionListener implements SelectionListener {
 		/**
 		 * Reference to the table in which the rows (i.e. TableItem objects)
 		 * are in
