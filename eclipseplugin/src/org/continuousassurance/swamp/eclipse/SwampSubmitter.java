@@ -374,6 +374,7 @@ public class SwampSubmitter {
 					return status;
 				}
 				
+				System.out.println("Java Classpath: " + System.getProperty("java.classpath"));
 				BuildfileGenerator.generateBuildFile(ich, files);
 				
 				try {

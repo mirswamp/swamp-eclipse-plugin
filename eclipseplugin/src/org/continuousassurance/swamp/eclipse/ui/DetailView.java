@@ -41,10 +41,16 @@ public class DetailView extends ViewPart {
 	 * Label for source file name
 	 */
 	private static final String FILENAME_LABEL = "File name: ";
+	
+	/**
+	 * Label for weakness group
+	 */
+	private static final String GROUP_LABEL = "Weakness group: ";
+	
 	/**
 	 * Label for bug type
 	 */
-	private static final String TYPE_LABEL = "Type: ";
+	private static final String CODE_LABEL = "Weakness code: ";
 	/**
 	 * Label for tool name
 	 */
@@ -154,7 +160,8 @@ public class DetailView extends ViewPart {
 		sb.append(constructParagraph(fmtBold(MESSAGE_LABEL), bug.getBugMessage()));
 		sb.append(constructParagraph(fmtBold(LINE_NUMBER_LABEL), bugInfo.getPrimaryLineNumber()));
 		sb.append(constructParagraph(fmtBold(FILENAME_LABEL), bugInfo.getPrimaryFilename()));
-		sb.append(constructParagraph(fmtBold(TYPE_LABEL), bug.getBugGroup()));
+		sb.append(constructParagraph(fmtBold(GROUP_LABEL), bug.getBugGroup()));
+		sb.append(constructParagraph(fmtBold(CODE_LABEL), bug.getBugCode()));
 		sb.append(constructParagraph(fmtBold(TOOL_LABEL), bugInfo.getTool()));
 		sb.append(constructParagraph(fmtBold(PLATFORM_LABEL), bugInfo.getPlatform()));
 		sb.append(constructFlowParagraphs(fmtBold(FLOW_LABEL), bugInfo.getFlow()));

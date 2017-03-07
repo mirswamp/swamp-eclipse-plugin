@@ -246,7 +246,7 @@ public class Controller {
 						item.setText(0, filename);
 						item.setText(1, Integer.toString(loc.getStartLine()));
 						item.setText(2, Integer.toString(loc.getEndLine()));
-						item.setText(3, bug.getBugCode());
+						item.setText(3, bug.getBugGroup());
 						item.setText(4, toolName);
 						item.setText(5, platformName);
 					}

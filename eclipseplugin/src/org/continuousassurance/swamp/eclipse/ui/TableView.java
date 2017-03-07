@@ -41,7 +41,7 @@ public class TableView extends ViewPart {
 	 * Names of the columns of the table
 	 */
 	public static final String[] COLUMN_NAMES = {"File", "Start Line", 
-			"End Line", "Type", "Tool", "Platform"};
+			"End Line", "Group", "Tool", "Platform"};
 	/**
 	 * Widths of the columns of the table
 	 */
