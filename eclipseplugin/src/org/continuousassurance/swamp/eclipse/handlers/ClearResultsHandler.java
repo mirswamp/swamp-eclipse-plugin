@@ -14,16 +14,13 @@ package org.continuousassurance.swamp.eclipse.handlers;
 
 import java.io.File;
 
-import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.Controller;
 import org.continuousassurance.swamp.eclipse.ResultsUtils;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.PlatformUI;
 
 /**
  * This is a handler for deleting all existing results
@@ -40,15 +37,9 @@ public class ClearResultsHandler extends AbstractHandler {
 	 */
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		// (1) Clear all markers
-		IWorkspaceRoot wsRoot = ResourcesPlugin.getWorkspace().getRoot();
-		if (wsRoot != null) {
-			try {
-				for (String markerType : Controller.getMarkerTypes()) {
-				wsRoot.deleteMarkers(markerType, true, IResource.DEPTH_INFINITE);
-				}
-			} catch (CoreException e) {
-				e.printStackTrace();
-			}
+		IWorkbench wb = PlatformUI.getWorkbench();
+		if (wb != null) {
+			Controller.resetFileMarkers(wb.getActiveWorkbenchWindow());
 		}
 		
 		// (2) Clear all results
@@ -56,7 +47,7 @@ public class ClearResultsHandler extends AbstractHandler {
 		if (f.exists()) {
 			f.delete();
 		}
-		Activator.controller.refreshWorkspace();
+		Controller.refreshWorkspace();
 		return null;
 	}
 }

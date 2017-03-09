@@ -12,8 +12,8 @@
  */
 package org.continuousassurance.swamp.eclipse.ui;
 
-import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.BugDetail;
+import org.continuousassurance.swamp.eclipse.Controller;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.swt.SWT;
@@ -100,11 +100,11 @@ public class TableView extends ViewPart {
 				if (items.length > 0) {
 					TableItem item = items[0];
 					IMarker marker = (IMarker)item.getData(SwampPerspective.MARKER_OBJ);
-					Activator.controller.jumpToLocation(marker);
+					Controller.jumpToLocation(marker);
 				}
 			}
 		});
-		Activator.controller.refreshWorkspace();
+		Controller.refreshWorkspace();
 	}
 	
 	/**
@@ -153,7 +153,7 @@ public class TableView extends ViewPart {
 			if (items.length > 0) {
 				TableItem selectedRow = items[0];
 				BugDetail details = (BugDetail)selectedRow.getData(SwampPerspective.BUG_DETAIL_OBJ);
-				Activator.controller.updateDetailView(details);
+				Controller.updateDetailView(details);
 			}
 		}
 

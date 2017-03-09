@@ -13,7 +13,7 @@
 
 package org.continuousassurance.swamp.eclipse.ui;
 
-import org.continuousassurance.swamp.eclipse.Activator;
+import org.continuousassurance.swamp.eclipse.Controller;
 import org.continuousassurance.swamp.eclipse.handlers.HandlerUtilityMethods;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -66,7 +66,7 @@ public class SwampPerspective implements IPerspectiveFactory {
 	 */
 	public void createInitialLayout(IPageLayout layout) {
 		defineLayout(layout);
-		Activator.controller.refreshWorkspace();
+		Controller.refreshWorkspace();
 	}
 	
 	/**
@@ -128,7 +128,7 @@ public class SwampPerspective implements IPerspectiveFactory {
 					if ((project != null) && (file != null) && 
 							(!file.equals(currentlyOpenedFile))) {
 						currentlyOpenedFile = file;
-						Activator.controller.refreshWorkspace();
+						Controller.refreshWorkspace();
 					}
 				}
 			}

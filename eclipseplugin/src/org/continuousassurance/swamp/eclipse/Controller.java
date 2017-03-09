@@ -64,28 +64,6 @@ public class Controller {
 	 * Key for storing BugDetail object with row (TableItem)
 	 */
 	public static final String BUG_DETAIL_OBJ = "bugdetail";
-	/**
-	 * High severity marker type
-	 */
-	private static final String HIGH_SEVERITY_MARKER = "eclipseplugin.highseverity";
-	/**
-	 * Medium severity marker type
-	 */
-	private static final String MED_SEVERITY_MARKER = "eclipseplugin.medseverity";
-	/**
-	 * Low severity marker type
-	 */
-	private static final String LOW_SEVERITY_MARKER = "eclipseplugin.lowseverity";
-	/**
-	 * Unknown severity marker type
-	 */
-	private static final String UNKNOWN_SEVERITY_MARKER = "eclipseplugin.unknownseverity";
-	
-	/**
-	 * Types of plug-in markers
-	 */
-	private static final String[] MARKER_TYPES = {HIGH_SEVERITY_MARKER, 
-			MED_SEVERITY_MARKER, LOW_SEVERITY_MARKER, UNKNOWN_SEVERITY_MARKER}; 
 	
 	/**
 	 * Utility method for getting a view in the window given its ID
@@ -158,7 +136,7 @@ public class Controller {
 	 * important events that might affect the views and editors and the SWAMP
 	 * perspective occur
 	 */
-	public void refreshWorkspace() {
+	public static void refreshWorkspace() {
 		IWorkbench wb = PlatformUI.getWorkbench();
 		if (wb == null) {
 			return;
@@ -225,7 +203,7 @@ public class Controller {
 	 * @param platformName name of the platform on which the assessment that
 	 * found these bugs was run
 	 */
-	private void updateEditorAndViews(IFile file, IWorkbenchPage page, List<BugInstance> bugs, String toolName, String platformName) {
+	private static void updateEditorAndViews(IFile file, IWorkbenchPage page, List<BugInstance> bugs, String toolName, String platformName) {
 		TableView view = (TableView) getView(page, TableView.ID);
 		Table table = null;
 		if (view != null) {
@@ -267,29 +245,13 @@ public class Controller {
 	 * @param toolName tool that found this weakness
 	 * @return editor marker
 	 */
-	private IMarker createMarkerForResource(IFile resource, BugInstance bug, String toolName) {
+	private static IMarker createMarkerForResource(IFile resource, BugInstance bug, String toolName) {
 		for (Location l : bug.getLocations()) {
 			if (l.isPrimary()) {
-				System.out.println("Primary bug!");
-				System.out.println(bug);
 				try {
-					//IMarker marker = resource.createMarker(IMarker.PROBLEM);
-					//IMarker marker = resource.createMarker("highseverity");
-					IMarker marker;
-					String severity = bug.getBugSeverity();
-					severity = severity == null ? "" : severity.toUpperCase();
-					if (severity.equals("HIGH")) {
-						marker = resource.createMarker(HIGH_SEVERITY_MARKER);
-					}
-					else if (severity.equals("MED")) {
-						marker = resource.createMarker(MED_SEVERITY_MARKER);
-					}
-					else if (severity.equals("LOW")) {
-						marker = resource.createMarker(LOW_SEVERITY_MARKER);
-					}
-					else {
-						marker = resource.createMarker(UNKNOWN_SEVERITY_MARKER);
-					}
+					String markerType = Activator.getMarkerType(toolName, bug.getBugGroup(), bug.getBugSeverity());
+					System.out.println("MARKER TYPE: " + markerType);
+					IMarker marker = resource.createMarker(markerType);
 					marker.setAttribute(IMarker.MESSAGE, toolName + ": " + bug.getBugMessage());
 					marker.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING); // TODO Get priority right here
 					marker.setAttribute(IMarker.LINE_NUMBER, l.getStartLine()); // TODO End line also / lines between also?
@@ -299,9 +261,6 @@ public class Controller {
 					System.err.println("Core exception when creating marker");
 					e.printStackTrace();
 				}
-			}
-			else {
-				System.out.println("Non-primary bug!");
 			}
 			// TODO Maybe add some marker for non-primary bugs? This would probably get too noisy
 		}
@@ -313,7 +272,7 @@ public class Controller {
 	 * @param window currently opened window
 	 * @param page currently active page
 	 */
-	private void resetPerspectiveParts(IWorkbenchWindow window, IWorkbenchPage page) {
+	private static void resetPerspectiveParts(IWorkbenchWindow window, IWorkbenchPage page) {
 		resetFileMarkers(window);
 		resetTableView(page);
 		resetDetailView(page);
@@ -323,7 +282,7 @@ public class Controller {
 	 * Resets the TableView
 	 * @param page currently active page
 	 */
-	private void resetTableView(IWorkbenchPage page) {
+	private static void resetTableView(IWorkbenchPage page) {
 		TableView view = (TableView) getView(page, TableView.ID);
 		if (view != null) {
 			view.resetTable();
@@ -334,7 +293,7 @@ public class Controller {
 	 * Resets the DetailView
 	 * @param page currently active page
 	 */
-	private void resetDetailView(IWorkbenchPage page) {
+	private static void resetDetailView(IWorkbenchPage page) {
 		DetailView view = (DetailView) getView(page, DetailView.ID);
 		if (view != null) {
 			view.reset();
@@ -342,25 +301,19 @@ public class Controller {
 	}
 	
 	/**
-	 * Gets plug-in's marker types
-	 * @return array of marker types
-	 */
-	public static String[] getMarkerTypes() {
-		return MARKER_TYPES;
-	}
-	
-	/**
 	 * Removes all plug-in file markers from the file in the window
 	 * @param window currently opened window
 	 */
-	private void resetFileMarkers(IWorkbenchWindow window) {
+	public static void resetFileMarkers(IWorkbenchWindow window) {
 		System.out.println("Attempting to reset file markers");
 		IFile file = HandlerUtilityMethods.getActiveFile(window);
 		if (file != null) {
 			System.out.println("Removing file markers for file " + file.getName());
 			try {
-				for (String markerType : getMarkerTypes())
-				file.deleteMarkers(markerType, true, 1);
+				for (String color : Activator.getValidColors()) {
+					String markerType = color + Activator.MARKER_SUFFIX;
+					file.deleteMarkers(markerType, true, 1);
+				}
 			} catch (CoreException e) {
 				e.printStackTrace();
 			}
@@ -374,7 +327,7 @@ public class Controller {
 	 * Updates the detail view with a specific bug
 	 * @param bug Bug to be displayed in the DetailView
 	 */
-	public void updateDetailView(BugDetail bug) {
+	public static void updateDetailView(BugDetail bug) {
 		IWorkbench wb = PlatformUI.getWorkbench();
 		if (wb != null) {
 			IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
@@ -403,7 +356,7 @@ public class Controller {
 	 * Jumps editor to marker location
 	 * @param marker the marker whose location to jump to
 	 */
-	public void jumpToLocation(IMarker marker) {
+	public static void jumpToLocation(IMarker marker) {
 		if (marker == null || (marker.getAttribute(IMarker.LINE_NUMBER, 0) == 0)) {
 			return;
 		}
@@ -420,7 +373,7 @@ public class Controller {
 	 * Updates status view (i.e. table of assessment statuses)
 	 * @param statuses list of assessment statuses
 	 */
-	public void updateStatusView(List<String> statuses) {
+	public static void updateStatusView(List<String> statuses) {
 		IWorkbenchWindow window = getActiveWorkbenchWindow();
 		if (window != null) {
 			StatusView view = (StatusView) getView(window, StatusView.ID);

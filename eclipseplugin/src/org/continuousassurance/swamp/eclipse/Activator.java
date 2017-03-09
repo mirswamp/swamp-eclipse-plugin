@@ -21,6 +21,12 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -64,6 +70,8 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	private static final String HOST_FILENAME = ".host";
 	
+	private static final String MARKER_PREFS_FILENAME = ".marker_preferences";
+	
 	/**
 	 * Name of file that stores list of unfinished assessments
 	 */
@@ -82,7 +90,7 @@ public class Activator extends AbstractUIPlugin {
 	/**
 	 * Shared Controller instance
 	 */
-	public static Controller controller;
+	//public static Controller controller;
 	
 	/**
 	 * Name of console (i.e. this is what the Console instance is named when
@@ -91,20 +99,26 @@ public class Activator extends AbstractUIPlugin {
 	public static final String SWAMP_PLUGIN_CONSOLE_NAME = "SWAMP Plugin";
 	
 	/**
-	 * System-defined separator
-	 */
-	private static final String SEPARATOR = System.getProperty("file.separator");
-	
-	/**
 	 * Default encoding for writing/reading to/from file
 	 */
 	public static final String ENCODING = "UTF-8";
+	
+	private static List<Pattern> patterns;
+	
+	private static List<String> colors;
+	
+	private static final String[] COLORS = {"red", "yellow", "green", "black", "blue", "orange",
+			"purple", "gray", "white"};
+
+	public static final String MARKER_SUFFIX = "-marker";
+	
+	public static final String MARKER_PREFIX = "eclipseplugin.";
 	
 	/**
 	 * The constructor
 	 */
 	public Activator() {
-		controller = new Controller();
+		//controller = new Controller();
 	}
 
 	/*
@@ -142,6 +156,71 @@ public class Activator extends AbstractUIPlugin {
 			}
 		}
 		
+		getMarkerPreferences();
+		
+	}
+	
+	private void getMarkerPreferences() {
+		String DEFAULT_REGEX = ".*:.*:.*";
+		Pattern DEFAULT_PATTERN = Pattern.compile(DEFAULT_REGEX);
+		String DEFAULT_COLOR = "black";
+		String COMMENT_CHAR = "#";
+		String SPACE_SEPARATOR = "  ";
+		Set<String> VALID_COLORS = new HashSet<>();
+		for (String color : COLORS) {
+			VALID_COLORS.add(color);
+		}
+		
+		patterns = new ArrayList<>();
+		colors = new ArrayList<>();
+		String markerPrefPath = getMarkerPrefsPath();
+		File file = new File(markerPrefPath);
+		if (file.exists()) {
+			InputStreamReader filereader = null;
+			BufferedReader reader = null;
+			try {
+				filereader = new InputStreamReader(new FileInputStream(file), Activator.ENCODING);
+				reader = new BufferedReader(filereader);
+				String ln = reader.readLine();
+				while (ln != null) {
+					if (!ln.contains(COMMENT_CHAR)) {
+						String[] parts = ln.split(SPACE_SEPARATOR);
+						if (parts.length >= 2) {
+							String regex = parts[0];
+							String color = parts[1];
+							if (isValidColor(color, VALID_COLORS)) {
+								try {
+									Pattern pattern = Pattern.compile(regex);
+									patterns.add(pattern);
+									colors.add(color.toLowerCase());
+								}
+								catch (PatternSyntaxException e) {
+								}
+							}
+						}
+					}
+					ln = reader.readLine();
+				}
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+			try {
+				reader.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			
+		}
+		patterns.add(DEFAULT_PATTERN);
+		colors.add(DEFAULT_COLOR);
+	}
+	
+	private static boolean isValidColor(String color, Set<String> validColors) {
+		if (color == null) {
+			return false;
+		}
+		return validColors.contains(color.toLowerCase());
 	}
 	
 	/**
@@ -182,7 +261,11 @@ public class Activator extends AbstractUIPlugin {
 	 * @return path
 	 */
 	private static String getHostnamePath() {
-		return SwampApiWrapper.SWAMP_DIR_PATH + SEPARATOR + HOST_FILENAME;
+		return SwampApiWrapper.SWAMP_DIR_PATH +  HOST_FILENAME;
+	}
+	
+	private static String getMarkerPrefsPath() {
+		return SwampApiWrapper.SWAMP_DIR_PATH +  MARKER_PREFS_FILENAME;
 	}
 	
 	/**
@@ -274,6 +357,31 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public static StatusChecker getStatusChecker() {
 		return sc;
+	}
+	
+	/**
+	 * Gets installation's preferred marker type for this tool name, bug group,
+	 * and severity
+	 * @param toolName name of the tool the marker is for
+	 * @param bugGroup group of bug marker is for
+	 * @param bugSeverity severity of bug marker is for
+	 * @return
+	 */
+	public static String getMarkerType(String toolName, String bugGroup, String bugSeverity) {
+		String DELIMITER = ":";
+		String input = toolName + DELIMITER + bugGroup + DELIMITER + bugSeverity;
+		System.out.println("Input: " + input);
+		for (int i = 0; i < patterns.size(); i++) {
+			if (patterns.get(i).matcher(input).matches()) {
+				return MARKER_PREFIX + colors.get(i) + MARKER_SUFFIX;
+			}
+		}
+		System.out.println("Pattern didn't match anything. wtf?");
+		return MARKER_PREFIX + colors.get(colors.size()-1) + MARKER_SUFFIX;
+	}
+	
+	public static String[] getValidColors() {
+		return COLORS;
 	}
 	
 }

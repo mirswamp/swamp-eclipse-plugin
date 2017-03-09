@@ -250,7 +250,7 @@ public class ResultsRetriever {
 				@Override
 				public void run() {
 					System.out.println("Actually attempting to update status view");
-					Activator.controller.updateStatusView(statuses);
+					Controller.updateStatusView(statuses);
 				}
 			});
 	}
@@ -263,7 +263,7 @@ public class ResultsRetriever {
 			@Override
 			public void run() {
 				System.out.println("Actually attempting to refresh workspace");
-				Activator.controller.refreshWorkspace();
+				Controller.refreshWorkspace();
 			}
 		});
 	}
