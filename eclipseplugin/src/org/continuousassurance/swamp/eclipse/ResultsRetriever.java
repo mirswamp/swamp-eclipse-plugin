@@ -17,6 +17,9 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -172,9 +175,18 @@ public class ResultsRetriever {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		oldFile.delete();
+		//oldFile.delete();
 		
-		tmp.renameTo(oldFile);
+		//tmp.renameTo(oldFile);
+		Path dst = oldFile.toPath();
+		Path src = tmp.toPath();
+		try {
+			Files.move(src, dst, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+		} catch (IOException e) {
+			// TODO: See if we can implement some kind of rollback here
+			e.printStackTrace();
+		}
+
 		return refreshNeeded;
 	}
 	
@@ -236,8 +248,17 @@ public class ResultsRetriever {
 			writer.close();
 		} catch (IOException e) {
 		}
-		f.delete();
-		tmp.renameTo(f);
+		//f.delete();
+		//tmp.renameTo(f);
+		Path dst = f.toPath();
+		Path src = tmp.toPath();
+		try {
+			Files.move(src, dst, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+		} catch (IOException e) {
+			// TODO: See if we can implement some kind of rollback here
+			e.printStackTrace();
+		}
+		
 		return refreshNeeded;
 	}
 	
