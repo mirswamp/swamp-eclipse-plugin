@@ -1,0 +1,32 @@
+# This file allows a user to configure the color and shape of the marker that
+# appears for a bug based on the bug's tool, group, and severity. Lines that
+# begin with "#" will be ignored. This file lists mappings from a
+# colon-delimited regular expression in the format "tool:bug_group:bug_severity"
+# to color-shape pairs (e.g. "red-circle"). There must be two spaces between
+# the regular expression and its corresponding color. If a bug does not match 
+# any of the regular expressions in this file, it will have a black circle 
+# marker. This file should be saved in $HOME/.SWAMP_SETTINGS/.marker_preferences
+#
+# The available colors are red, yellow, green, black, blue, orange, purple,
+# gray, and white.
+# The only available shape at this time is circle.
+
+# Java tools
+
+findbugs.*:.*:.*  red-circle
+
+pmd.*:.*:.*  orange-circle
+
+checkstyle.*:.*:.*  green-circle
+
+error-prone.*:.*:.*  blue-circle
+
+OWASP Dependency Check.*:.*:.*  yellow-circle
+
+# C/C++ tools
+
+cppcheck.*:.*:.*  red-circle
+
+gcc.*:.*:.*  green-circle
+
+Clang Static Analyzer.*:.*:.*  orange-circle
