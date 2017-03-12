@@ -33,47 +33,47 @@
 		id="org.continuousassurance.swamp.eclipse.ui.views.statusview" /> <!-- Add icon -->
 </extension>
 
-<extension point="org.eclipse.core.resources.markers" id="red-marker">
+<extension point="org.eclipse.core.resources.markers" id="red-circle-marker">
 	<super type="org.eclipse.core.resources.textmarker"/>
 	<persistent value="true"/>
 </extension>
 
-<extension point="org.eclipse.core.resources.markers" id="yellow-marker">
+<extension point="org.eclipse.core.resources.markers" id="yellow-circle-marker">
 	<super type="org.eclipse.core.resources.textmarker"/>
 	<persistent value="true"/>
 </extension>
 
-<extension point="org.eclipse.core.resources.markers" id="green-marker">
+<extension point="org.eclipse.core.resources.markers" id="green-circle-marker">
 	<super type="org.eclipse.core.resources.textmarker"/>
 	<persistent value="true"/>
 </extension>
 
-<extension point="org.eclipse.core.resources.markers" id="black-marker">
+<extension point="org.eclipse.core.resources.markers" id="black-circle-marker">
 	<super type="org.eclipse.core.resources.textmarker"/>
 	<persistent value="true"/>
 </extension>
 
-<extension point="org.eclipse.core.resources.markers" id="blue-marker">
+<extension point="org.eclipse.core.resources.markers" id="blue-circle-marker">
 	<super type="org.eclipse.core.resources.textmarker"/>
 	<persistent value="true"/>
 </extension>
 
-<extension point="org.eclipse.core.resources.markers" id="orange-marker">
+<extension point="org.eclipse.core.resources.markers" id="orange-circle-marker">
 	<super type="org.eclipse.core.resources.textmarker"/>
 	<persistent value="true"/>
 </extension>
 
-<extension point="org.eclipse.core.resources.markers" id="purple-marker">
+<extension point="org.eclipse.core.resources.markers" id="purple-circle-marker">
 	<super type="org.eclipse.core.resources.textmarker"/>
 	<persistent value="true"/>
 </extension>
 
-<extension point="org.eclipse.core.resources.markers" id="gray-marker">
+<extension point="org.eclipse.core.resources.markers" id="gray-circle-marker">
 	<super type="org.eclipse.core.resources.textmarker"/>
 	<persistent value="true"/>
 </extension>
 
-<extension point="org.eclipse.core.resources.markers" id="white-marker">
+<extension point="org.eclipse.core.resources.markers" id="white-circle-marker">
 	<super type="org.eclipse.core.resources.textmarker"/>
 	<persistent value="true"/>
 </extension>
@@ -81,56 +81,56 @@
 <extension point="org.eclipse.ui.editors.annotationTypes">
 	<type
 		super="org.eclipse.ui.workbench.texteditor.warning"
-		markerType="eclipseplugin.red-marker"
-		name="org.continuousassurance.swamp.eclipse.annotations.red-marker"
+		markerType="eclipseplugin.red-circle-marker"
+		name="org.continuousassurance.swamp.eclipse.annotations.red-circle-marker"
 		markerSeverity="1" /> <!--SWAMP markers should all be treated as warnings regardless of severity?-->
 		
 	<type
 		super="org.eclipse.ui.workbench.texteditor.warning"
-		markerType="eclipseplugin.yellow-marker"
-		name="org.continuousassurance.swamp.eclipse.annotations.yellow-marker"
+		markerType="eclipseplugin.yellow-circle-marker"
+		name="org.continuousassurance.swamp.eclipse.annotations.yellow-circle-marker"
 		markerSeverity="1" />
 		
 	<type
 		super="org.eclipse.ui.workbench.texteditor.warning"
-		markerType="eclipseplugin.green-marker"
-		name="org.continuousassurance.swamp.eclipse.annotations.green-marker"
+		markerType="eclipseplugin.green-circle-marker"
+		name="org.continuousassurance.swamp.eclipse.annotations.green-circle-marker"
 		markerSeverity="1" />
 
 	<type
 		super="org.eclipse.ui.workbench.texteditor.warning"
-		markerType="eclipseplugin.black-marker"
-		name="org.continuousassurance.swamp.eclipse.annotations.black-marker"
+		markerType="eclipseplugin.black-circle-marker"
+		name="org.continuousassurance.swamp.eclipse.annotations.black-circle-marker"
 		markerSeverity="1" />
 		
 	<type
 		super="org.eclipse.ui.workbench.texteditor.warning"
-		markerType="eclipseplugin.blue-marker"
-		name="org.continuousassurance.swamp.eclipse.annotations.blue-marker"
+		markerType="eclipseplugin.blue-circle-marker"
+		name="org.continuousassurance.swamp.eclipse.annotations.blue-circle-marker"
 		markerSeverity="1" />
 		
 	<type
 		super="org.eclipse.ui.workbench.texteditor.warning"
-		markerType="eclipseplugin.orange-marker"
-		name="org.continuousassurance.swamp.eclipse.annotations.orange-marker"
+		markerType="eclipseplugin.orange-circle-marker"
+		name="org.continuousassurance.swamp.eclipse.annotations.orange-circle-marker"
 		markerSeverity="1" />
 		
 	<type
 		super="org.eclipse.ui.workbench.texteditor.warning"
-		markerType="eclipseplugin.purple-marker"
-		name="org.continuousassurance.swamp.eclipse.annotations.purple-marker"
+		markerType="eclipseplugin.purple-circle-marker"
+		name="org.continuousassurance.swamp.eclipse.annotations.purple-circle-marker"
 		markerSeverity="1" />
 		
 	<type
 		super="org.eclipse.ui.workbench.texteditor.warning"
-		markerType="eclipseplugin.gray-marker"
-		name="org.continuousassurance.swamp.eclipse.annotations.gray-marker"
+		markerType="eclipseplugin.gray-circle-marker"
+		name="org.continuousassurance.swamp.eclipse.annotations.gray-circle-marker"
 		markerSeverity="1" />			
 
 	<type
 		super="org.eclipse.ui.workbench.texteditor.warning"
-		markerType="eclipseplugin.white-marker"
-		name="org.continuousassurance.swamp.eclipse.annotations.white-marker"
+		markerType="eclipseplugin.white-circle-marker"
+		name="org.continuousassurance.swamp.eclipse.annotations.white-circle-marker"
 		markerSeverity="1" />	
 
 </extension>		
@@ -139,56 +139,56 @@
 <!-- Setting custom images for the markers based on color -->
 <extension point="org.eclipse.ui.editors.markerAnnotationSpecification">
 	<specification
-		annotationType="org.continuousassurance.swamp.eclipse.annotations.red-marker"
-		icon="icons/red-marker.png"
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.red-circle-marker"
+		icon="icons/red-circle-marker.png"
 		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
 	verticalRulerPreferenceValue="true"/>
 
 	<specification
-		annotationType="org.continuousassurance.swamp.eclipse.annotations.yellow-marker"
-		icon="icons/yellow-marker.png"
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.yellow-circle-marker"
+		icon="icons/yellow-circle-marker.png"
 		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
 	verticalRulerPreferenceValue="true"/>
 	
 	<specification
-		annotationType="org.continuousassurance.swamp.eclipse.annotations.green-marker"
-		icon="icons/green-marker.png"
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.green-circle-marker"
+		icon="icons/green-circle-marker.png"
 		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
 	verticalRulerPreferenceValue="true"/>
 	
 	<specification
-		annotationType="org.continuousassurance.swamp.eclipse.annotations.black-marker"
-		icon="icons/black-marker.png"
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.black-circle-marker"
+		icon="icons/black-circle-marker.png"
 		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
 	verticalRulerPreferenceValue="true"/>
 	
 	<specification
-		annotationType="org.continuousassurance.swamp.eclipse.annotations.blue-marker"
-		icon="icons/blue-marker.png"
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.blue-circle-marker"
+		icon="icons/blue-circle-marker.png"
 		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
 	verticalRulerPreferenceValue="true"/>
 	
 	<specification
-		annotationType="org.continuousassurance.swamp.eclipse.annotations.orange-marker"
-		icon="icons/orange-marker.png"
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.orange-circle-marker"
+		icon="icons/orange-circle-marker.png"
 		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
 	verticalRulerPreferenceValue="true"/>
 	
 	<specification
-		annotationType="org.continuousassurance.swamp.eclipse.annotations.purple-marker"
-		icon="icons/purple-marker.png"
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.purple-circle-marker"
+		icon="icons/purple-circle-marker.png"
 		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
 	verticalRulerPreferenceValue="true"/>
 	
 	<specification
-		annotationType="org.continuousassurance.swamp.eclipse.annotations.gray-marker"
-		icon="icons/gray-marker.png"
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.gray-circle-marker"
+		icon="icons/gray-circle-marker.png"
 		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
 	verticalRulerPreferenceValue="true"/>
 	
 	<specification
-		annotationType="org.continuousassurance.swamp.eclipse.annotations.white-marker"
-		icon="icons/white-marker.png"
+		annotationType="org.continuousassurance.swamp.eclipse.annotations.white-circle-marker"
+		icon="icons/white-circle-marker.png"
 		verticalRulerPreferenceKey="myMarkerIndicationInVerticalRuler"
 	verticalRulerPreferenceValue="true"/>
 	

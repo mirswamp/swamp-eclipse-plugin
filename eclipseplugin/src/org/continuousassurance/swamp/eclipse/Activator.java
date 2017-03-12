@@ -105,15 +105,22 @@ public class Activator extends AbstractUIPlugin {
 	
 	private static List<Pattern> patterns;
 	
-	private static List<String> colors;
+	private static List<String> icons;
 	
 	private static final String[] COLORS = {"red", "yellow", "green", "black", "blue", "orange",
 			"purple", "gray", "white"};
+	
+	private static final String[] SHAPES = { "circle" };
 
 	public static final String MARKER_SUFFIX = "-marker";
 	
 	public static final String MARKER_PREFIX = "eclipseplugin.";
 	
+	private static final String SEPARATOR = System.getProperty("file.separator");
+	
+	private static final String SWAMP_SETTINGS_DIR_NAME = ".SWAMP_SETTINGS";
+	
+	private static final String SWAMP_SETTINGS_PATH = System.getProperty("user.home") + SEPARATOR + SWAMP_SETTINGS_DIR_NAME; 
 	/**
 	 * The constructor
 	 */
@@ -164,6 +171,8 @@ public class Activator extends AbstractUIPlugin {
 		String DEFAULT_REGEX = ".*:.*:.*";
 		Pattern DEFAULT_PATTERN = Pattern.compile(DEFAULT_REGEX);
 		String DEFAULT_COLOR = "black";
+		String DEFAULT_SHAPE = "circle";
+		String DASH = "-";
 		String COMMENT_CHAR = "#";
 		String SPACE_SEPARATOR = "  ";
 		Set<String> VALID_COLORS = new HashSet<>();
@@ -172,7 +181,7 @@ public class Activator extends AbstractUIPlugin {
 		}
 		
 		patterns = new ArrayList<>();
-		colors = new ArrayList<>();
+		icons = new ArrayList<>();
 		String markerPrefPath = getMarkerPrefsPath();
 		File file = new File(markerPrefPath);
 		if (file.exists()) {
@@ -187,14 +196,19 @@ public class Activator extends AbstractUIPlugin {
 						String[] parts = ln.split(SPACE_SEPARATOR);
 						if (parts.length >= 2) {
 							String regex = parts[0];
-							String color = parts[1];
-							if (isValidColor(color, VALID_COLORS)) {
-								try {
-									Pattern pattern = Pattern.compile(regex);
-									patterns.add(pattern);
-									colors.add(color.toLowerCase());
-								}
-								catch (PatternSyntaxException e) {
+							String figure = parts[1];
+							String[] attr = figure.split(DASH);
+							if (attr.length >= 2) {
+								String color = attr[0];
+								String shape = attr[1];
+								if (isValidColor(color, VALID_COLORS) && isValidShape(shape)) {
+									try {
+										Pattern pattern = Pattern.compile(regex);
+										patterns.add(pattern);
+										icons.add(color.toLowerCase() + DASH + shape.toLowerCase());
+									}
+									catch (PatternSyntaxException e) {
+									}
 								}
 							}
 						}
@@ -213,7 +227,16 @@ public class Activator extends AbstractUIPlugin {
 			
 		}
 		patterns.add(DEFAULT_PATTERN);
-		colors.add(DEFAULT_COLOR);
+		icons.add(DEFAULT_COLOR + DASH + DEFAULT_SHAPE);
+	}
+	
+	private static boolean isValidShape(String shape) {
+		for (String s : SHAPES) {
+			if (s.equals(shape)) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	private static boolean isValidColor(String color, Set<String> validColors) {
@@ -265,7 +288,7 @@ public class Activator extends AbstractUIPlugin {
 	}
 	
 	private static String getMarkerPrefsPath() {
-		return SwampApiWrapper.SWAMP_DIR_PATH +  MARKER_PREFS_FILENAME;
+		return SWAMP_SETTINGS_PATH + SEPARATOR + MARKER_PREFS_FILENAME;
 	}
 	
 	/**
@@ -373,11 +396,11 @@ public class Activator extends AbstractUIPlugin {
 		System.out.println("Input: " + input);
 		for (int i = 0; i < patterns.size(); i++) {
 			if (patterns.get(i).matcher(input).matches()) {
-				return MARKER_PREFIX + colors.get(i) + MARKER_SUFFIX;
+				return MARKER_PREFIX + icons.get(i) + MARKER_SUFFIX;
 			}
 		}
-		System.out.println("Pattern didn't match anything. wtf?");
-		return MARKER_PREFIX + colors.get(colors.size()-1) + MARKER_SUFFIX;
+		System.out.println("Pattern didn't match anything. Should never happen");
+		return MARKER_PREFIX + icons.get(icons.size()-1) + MARKER_SUFFIX;
 	}
 	
 	public static String[] getValidColors() {
