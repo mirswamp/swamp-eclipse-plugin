@@ -74,21 +74,18 @@ public class ResultsRetriever {
 	 * @throws UserNotLoggedInException thrown if user is not logged in
 	 * @throws ResultsRetrievalException thrown if there is some error in retrieving results
 	 */
-	public static synchronized void retrieveResults() throws UserNotLoggedInException, ResultsRetrievalException {
-		// (1) If user's not logged in, quit out immediately
-		if (!Activator.getLoggedIn()) {
-			throw new UserNotLoggedInException();
-		}
-	
+	public static synchronized void retrieveResults() throws ResultsRetrievalException {
+		// (1) If user's not logged in, set SwampApiWrapper to be null
 		SwampApiWrapper api = null;
-		try {
-			api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, Activator.getLastHostname());
-			if (!api.restoreSession()) {
-				throw new UserNotLoggedInException();
+		if (Activator.getLoggedIn()) {
+			try {
+				api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, Activator.getLastHostname());
+				if (!api.restoreSession()) {
+					api = null;
+				}
+			} catch (Exception e) {
+				api = null;
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new UserNotLoggedInException();
 		}
 
 		List<String> statuses = new ArrayList<>();
@@ -123,7 +120,7 @@ public class ResultsRetriever {
 	 * Checks and updates status of unfinished assessments
 	 * @param statuses list of unfinished file statuses (new statuses are added
 	 * to this)
-	 * @param api SwampApiWrapper reference
+	 * @param api SwampApiWrapper reference. Null if user is not logged in
 	 * @return true if the workspace needs to be refreshed
 	 * @throws ResultsRetrievalException thrown if there is an error in
 	 * retrieving results
@@ -175,16 +172,17 @@ public class ResultsRetriever {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//oldFile.delete();
-		
-		//tmp.renameTo(oldFile);
-		Path dst = oldFile.toPath();
-		Path src = tmp.toPath();
-		try {
-			Files.move(src, dst, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-		} catch (IOException e) {
-			// TODO: See if we can implement some kind of rollback here
-			e.printStackTrace();
+		if (api != null) {
+			//oldFile.delete();
+			//tmp.renameTo(oldFile);
+			Path dst = oldFile.toPath();
+			Path src = tmp.toPath();
+			try {
+				Files.move(src, dst, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+			} catch (IOException e) {
+				// TODO: See if we can implement some kind of rollback here
+				e.printStackTrace();
+			}
 		}
 
 		return refreshNeeded;
@@ -315,10 +313,8 @@ public class ResultsRetriever {
 	 */
 	private static String updateStatus(OutputStreamWriter writer, SwampApiWrapper api, String serializedAssessmentDetails) {
 		AssessmentDetails ad = new AssessmentDetails(serializedAssessmentDetails);
-		if (api == null) {
-			ad.updateStatus(USER_NOT_LOGGED_IN_STATUS);
-			return ad.serialize();
-		}
+		// TODO: Move this below assessmentsToDelete stuff
+		
 		String prjUUID = ad.getProjectUUID();
 		String assessUUID = ad.getAssessUUID();
 		lock.lock();
@@ -328,6 +324,10 @@ public class ResultsRetriever {
 			return null;
 		}
 		lock.unlock();
+		if (api == null) {
+			ad.updateStatus(USER_NOT_LOGGED_IN_STATUS);
+			return ad.serialize();
+		}
 		
 		AssessmentRecord rec = api.getAssessmentRecord(prjUUID, assessUUID);
 		String status = rec.getStatus();

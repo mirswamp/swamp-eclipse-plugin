@@ -17,7 +17,6 @@ import org.continuousassurance.swamp.eclipse.ResultsRetriever;
 import org.continuousassurance.swamp.eclipse.StatusChecker;
 import org.continuousassurance.swamp.eclipse.SwampSubmitter;
 import org.continuousassurance.swamp.eclipse.exceptions.ResultsRetrievalException;
-import org.continuousassurance.swamp.eclipse.exceptions.UserNotLoggedInException;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -43,25 +42,21 @@ public class CheckResultsHandler extends AbstractHandler {
 		if (sc != null && sc.isRunning()) {
 			return null;
 		}
-		try {
-			ResultsRetriever.retrieveResults();
-		} catch (UserNotLoggedInException e) {
+		if (!Activator.getLoggedIn()) {
 			IWorkbench wb = PlatformUI.getWorkbench();
 			if (wb != null) {
 				IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
 				if (window != null) {
-					SwampSubmitter ss = new SwampSubmitter(window);
+					SwampSubmitter ss = new SwampSubmitter(PlatformUI.getWorkbench().getActiveWorkbenchWindow());
 					if (ss.authenticateUser()) {
 						try {
 							ResultsRetriever.retrieveResults();
-						} catch (UserNotLoggedInException e1) {
-						} catch (ResultsRetrievalException e1) {
+						} catch (ResultsRetrievalException e) {
+							e.printStackTrace();
 						}
 					}
 				}
 			}
-		} catch (ResultsRetrievalException e) {
-			e.printStackTrace();
 		}
 		return null;
 	}

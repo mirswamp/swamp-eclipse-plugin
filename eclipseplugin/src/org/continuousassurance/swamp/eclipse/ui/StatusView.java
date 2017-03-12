@@ -33,6 +33,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
@@ -154,21 +156,21 @@ public class StatusView extends ViewPart {
 					System.out.println("Status checker already running");
 					return;
 				}
-				try {
-					ResultsRetriever.retrieveResults();
-				} catch (UserNotLoggedInException e) {
-					SwampSubmitter ss = new SwampSubmitter(PlatformUI.getWorkbench().getActiveWorkbenchWindow());
-					if (ss.authenticateUser()) {
-						try {
-							ResultsRetriever.retrieveResults();
-						} catch (UserNotLoggedInException e1) {
-							e1.printStackTrace();
-						} catch (ResultsRetrievalException e1) {
-							e1.printStackTrace();
+				if (!Activator.getLoggedIn()) {
+					IWorkbench wb = PlatformUI.getWorkbench();
+					if (wb != null) {
+						IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
+						if (window != null) {
+							SwampSubmitter ss = new SwampSubmitter(PlatformUI.getWorkbench().getActiveWorkbenchWindow());
+							if (ss.authenticateUser()) {
+								try {
+									ResultsRetriever.retrieveResults();
+								} catch (ResultsRetrievalException e) {
+									e.printStackTrace();
+								}
+							}
 						}
 					}
-				} catch (ResultsRetrievalException e) {
-					e.printStackTrace();
 				}
 			}
 		};

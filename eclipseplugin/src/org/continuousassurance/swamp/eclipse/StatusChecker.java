@@ -53,9 +53,6 @@ public class StatusChecker extends Job {
 		try {
 			ResultsRetriever.retrieveResults();
 		}
-		catch (UserNotLoggedInException e) {
-			System.err.println("User not logged into SWAMP");
-		}
 		catch (ResultsRetrievalException e) {
 			System.err.println("Error in results retrieval");
 		}
