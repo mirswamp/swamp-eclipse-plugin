@@ -296,7 +296,7 @@ public class Activator extends AbstractUIPlugin {
 	 * @return path
 	 */
 	public static String getUnfinishedAssessmentsPath() {
-		return SwampApiWrapper.SWAMP_DIR_PATH + UNFINISHED_ASSESS_FILENAME;
+		return ResultsUtils.getTopLevelResultsDirectory() + SEPARATOR + UNFINISHED_ASSESS_FILENAME;
 	}
 	
 	/**
@@ -304,7 +304,7 @@ public class Activator extends AbstractUIPlugin {
 	 * @return path
 	 */
 	public static String getFinishedAssessmentsPath() {
-		return SwampApiWrapper.SWAMP_DIR_PATH +  FINISHED_ASSESS_FILENAME;
+		return ResultsUtils.getTopLevelResultsDirectory() +  FINISHED_ASSESS_FILENAME;
 	}
 
 	/*
