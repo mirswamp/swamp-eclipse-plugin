@@ -13,7 +13,11 @@
 
 package org.continuousassurance.swamp.eclipse.ui;
 
+import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.Controller;
+import org.continuousassurance.swamp.eclipse.ResultsRetriever;
+import org.continuousassurance.swamp.eclipse.StatusChecker;
+import org.continuousassurance.swamp.eclipse.exceptions.ResultsRetrievalException;
 import org.continuousassurance.swamp.eclipse.handlers.HandlerUtilityMethods;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -115,6 +119,8 @@ public class SwampPerspective implements IPerspectiveFactory {
 		 */
 		private IFile currentlyOpenedFile = null;
 		
+		private boolean statusViewInitialized = false;
+		
 		/**
 		 * Method for refreshing the workspace if the file has changed
 		 */
@@ -140,7 +146,21 @@ public class SwampPerspective implements IPerspectiveFactory {
 		 * @param part reference to the workbench part
 		 */
 		public void partActivated(IWorkbenchPartReference part) {
-			refreshWS();
+			System.out.println("WorkbenchPartRef: " + part.getId());
+			if (!statusViewInitialized && part.getId().equals(StatusView.ID)) {
+				statusViewInitialized = true;
+				StatusChecker sc = Activator.getStatusChecker();
+				if (sc == null || !sc.isRunning()) {
+					try {
+						ResultsRetriever.retrieveResults();
+					} catch (ResultsRetrievalException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			else {
+				refreshWS();
+			}
 		}
 		
 		@Override
