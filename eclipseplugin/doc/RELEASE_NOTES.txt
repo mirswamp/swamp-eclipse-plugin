@@ -1,3 +1,3 @@
--Available host types is now configurable
--Plug-in now allows user to specify build options
--Plug-in now allows user to specify configuration script and configuration options
+-SWAMP perspective added
+-Status dashboarded added
+-Results are retrieved and shown on top of source code
