@@ -586,6 +586,15 @@ public class ImprovedClasspathHandler {
 		return project.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
 	}
 	
+	public String getEncoding() {
+		String encoding = "";
+		try {
+			encoding = project.getProject().getDefaultCharset(true);
+		} catch (CoreException e) {
+		}
+		return encoding;
+	}
+	
 	/**
 	 * Accessor for dependent projects
 	 * @return list of ImprovedClasspathHandlers for dependent projects

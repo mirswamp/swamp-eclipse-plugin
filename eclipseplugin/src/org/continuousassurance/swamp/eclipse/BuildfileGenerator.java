@@ -29,6 +29,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.OutputKeys;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IClasspathAttribute;
 import org.eclipse.jdt.core.IClasspathEntry;
@@ -149,7 +150,7 @@ public class BuildfileGenerator {
 			// init target (as of now just creating output directory)
 			String prjName = project.getProjectName();
 			// build target
-			setBuildTarget(doc, root, project.getDefaultOutputLocation().toOSString(), project.getDependentProjects(), project.getSourceClasspath(), prjName, filePaths);	
+			setBuildTarget(doc, root, project.getDefaultOutputLocation().toOSString(), project.getDependentProjects(), project.getSourceClasspath(), prjName, filePaths, project.getEncoding());	
 			
 			TransformerFactory transformerFactory = TransformerFactory.newInstance();
 			transformerFactory.setAttribute(ANT_INDENT_NUMBER, INDENT_SPACES);
@@ -397,7 +398,7 @@ public class BuildfileGenerator {
 	 * @param isRoot is this project the root  
 	 * @return the image descriptor
 	 */
-	private static void setBuildTarget(Document doc, Element root, String outputDirectory, List<ImprovedClasspathHandler> dependentProjects, List<IClasspathEntry> srcEntries, String projectName, Set<String> filePaths) {
+	private static void setBuildTarget(Document doc, Element root, String outputDirectory, List<ImprovedClasspathHandler> dependentProjects, List<IClasspathEntry> srcEntries, String projectName, Set<String> filePaths, String prjEncoding) {
 		
 		String prjOutputDirectory = outputDirectory.substring(1); // unroot it
 		System.out.println("Relative output directory: " + prjOutputDirectory);
@@ -433,9 +434,13 @@ public class BuildfileGenerator {
 			else {
 				javac.setAttribute(ANT_SOURCEPATH, getModifiedSourcePath(entry, srcEntries));
 			}
-			String encoding = getEncodingAttribute(entry);
-			if (!("".equals(encoding))) {
-				javac.setAttribute(ANT_ENCODING, encoding);
+			String srcEncoding = getEncodingAttribute(entry);
+			if (!("").equals(srcEncoding)) {
+				javac.setAttribute(ANT_ENCODING, srcEncoding);
+			}
+			else if (!("".equals(prjEncoding)) && prjEncoding != null) {
+				System.out.println("Project encoding: " + prjEncoding);
+				javac.setAttribute(ANT_ENCODING, prjEncoding);
 			}
 			// Source entries may have a specific output location associated with them, otherwise, we use the project's default location
 			IPath destPath = entry.getOutputLocation();
@@ -510,7 +515,8 @@ public class BuildfileGenerator {
 	}
 	
 	/**
-	 * Gets the encoding of a classpath entry
+	 * Gets the encoding of a classpath entry. Falls back to project encoding
+	 * if none found
 	 * @param entry the entry
 	 * @return the encoding or empty string if unspecified
 	 */
