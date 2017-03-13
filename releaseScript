@@ -25,7 +25,8 @@
 # (5) run /p/swamp/bin/asciidoctor -pdf README.adoc
 # (6) move README.pdf to new directory
 # (7) copy SWAMP_hosts.json to new directory
-# (8) add to RELEASE_NOTES.txt
+# (8) copy .marker_preferences to new directory
+# (9) add to RELEASE_NOTES.txt
 
 # Out of band: export feature to desktop dir, zip the dir
 
@@ -66,6 +67,10 @@ echo "Moved README.pdf to "$dir_name
 cp SWAMP_hosts.json $dir_name
 
 echo "Moved SWAMP_hosts.json to "$dir_name
+
+cp .marker_preferences $dir_name
+
+echo "Moved .marker_preferences to "$dir_name
 
 echo "RELEASE_NOTES.txt" > tmpfile
 echo $SEPARATOR_LINE >> tmpfile
