@@ -33,6 +33,7 @@ import org.continuousassurance.swamp.eclipse.exceptions.UserNotLoggedInException
 import org.eclipse.swt.widgets.Display;
 import edu.uiuc.ncsa.swamp.api.AssessmentRecord;
 import edu.wisc.cs.swamp.SwampApiWrapper;
+import edu.wisc.cs.swamp.exceptions.InvalidIdentifierException;
 
 /**
  * This class retrieves assessment statuses from the SWAMP, downloads results
@@ -328,8 +329,17 @@ public class ResultsRetriever {
 			ad.updateStatus(USER_NOT_LOGGED_IN_STATUS);
 			return ad.serialize();
 		}
-		
-		AssessmentRecord rec = api.getAssessmentRecord(prjUUID, assessUUID);
+	
+		AssessmentRecord rec = null;
+		try {
+			rec = api.getAssessmentRecord(prjUUID, assessUUID);
+		} catch (InvalidIdentifierException e) {
+			System.out.println("Assessment has been deleted on SWAMP");
+			return null;
+		}
+		if (rec == null) {
+			return null;
+		}
 		String status = rec.getStatus();
 		System.out.println("Status: " + status);
 		ad.updateStatus(status);
