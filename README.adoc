@@ -34,7 +34,7 @@ To import, follow these steps:
 === **Eclipse Marketplace**
 The Eclipse Marketplace hosts plug-ins and features. To access the Eclipse Marketplace, select "Eclipse Marketplace..." from the Help menu. Search for "SWAMP" and click the install button. When the installation is finished, you should see the SWAMP icon in the toolbar and the SWAMP menu in the menubar.
 
-image:images/menuAndToolbar.png[Menubar and Toolbar, 600, 600]
+image:eclipseplugin/doc/images/menuAndToolbar.png[Menubar and Toolbar, 600, 600]
 
 [[configuration-and-submission]]
 == **configuration and submission**
@@ -42,13 +42,13 @@ image:images/menuAndToolbar.png[Menubar and Toolbar, 600, 600]
 === **login**
 A user must be logged into his or her SWAMP account to use the plug-in. To log in, select "Log In" from the SWAMP dropdown menu. The hostname field specifies what SWAMP instance a user logs into. By default, the Morgridge Institute for Research's hostname is entered. The next two fields are username and password. If logging onto the default SWAMP instance, these are the same credentials used for www.mir-swamp.org. The plug-in stores cookies with the user's session information for 24 hours. To log out, select "Log Out" from the SWAMP dropdown menu.
 
-image:images/authenticationDialog.png[Authentication Dialog]
+image:eclipseplugin/doc/images/authenticationDialog.png[Authentication Dialog]
 
 === **assessment configuration**
 
 Any of the open Java projects in a user's Eclipse workspace may be submitted to the SWAMP. To configure a project, a user simply needs to have some file from the project (e.g. a source code file) active in his or her editor and to select "Configure Assessment Submission" from the SWAMP dropdown menu. If the user is not logged in, the authentication popup will come first allowing the user to authenticate. Once the user is logged in, a dialog with configuration information for the assessment pops up.
 
-image:images/BuildConfiguration.png[Configuration Dialog]
+image:eclipseplugin/doc/images/BuildConfiguration.png[Configuration Dialog]
 
 === **configuration options**
 	a. *SWAMP Project* - this is the SWAMP project to which the package belongs (or if it's a new package, the project to which the package will be added). A user can only select from projects he or she has access to
@@ -65,12 +65,12 @@ image:images/BuildConfiguration.png[Configuration Dialog]
 === **tool selection**
 Next, a user must select the tools he or she wishes to run the assessments on
 
-image:images/ToolDialog.png[Tool Dialog]
+image:eclipseplugin/doc/images/ToolDialog.png[Tool Dialog]
 
 === **platform selection**
 Finally, a user must select the platforms he or she wishes to run the assessments on. A platform is the operating system that runs on an assessment's virtual machine. For interpreted languages or languages that run on a VM there will only be one option.
 
-image:images/PlatformDialog.png[Platform Dialog]
+image:eclipseplugin/doc/images/PlatformDialog.png[Platform Dialog]
 
 === **submission**
 
@@ -81,7 +81,7 @@ The plug-in saves previous assessment information about each Eclipse project. In
 	2. Right-click on the project on Package Explorer and click "Assess Project on SWAMP"
 	3. Have a file from the project open and select "Resubmit Previous Assessment" from either the dropdown menu or the SWAMP menu in the main menubar
 
-image:images/RightClickMenu.png[Right Click Submission, 600, 600]
+image:eclipseplugin/doc/images/RightClickMenu.png[Right Click Submission, 600, 600]
 
 [[appendix-a]]
 == **Appendix A: SWAMP account setup**
