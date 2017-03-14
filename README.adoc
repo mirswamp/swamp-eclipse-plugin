@@ -1,6 +1,6 @@
 == `SWAMP Eclipse Plug-in User Guide`
 
-**September 15, 2016** +
+**March 12, 2017** +
 **Authors:** __Malcolm Reid Jr., James A. Kupsch__ +
 
 This document describes the SWAMP Eclipse plug-in, an extension to the Eclipse IDE that allows users with SWAMP accounts to submit Java code to the SWAMP. Working with the plug-in involves the following steps:
@@ -8,7 +8,9 @@ This document describes the SWAMP Eclipse plug-in, an extension to the Eclipse I
     . <<appendix-a, Get a SWAMP account (see Appendix A)>>
 	. <<appendix-b, Install Eclipse (see Appendix B)>>
 	. <<plug-in-installation, Install the plug-in>>
+    . <<plug-in-config, Set up plug-in preferences (optional)>>
 	. <<configuration-and-submission, Configure and submit package assessments>>
+    . <<view-results, View assessment results>>
 
 :numbered:
 
@@ -27,7 +29,7 @@ To import, follow these steps:
     . Open Eclipse Neon (or any version after it).
     . In the menu bar, select "Help > Install New Software".
     . In the "Install" dialog that comes up, click "Add...".
-    . In the "Add Repository" dialog that comes up select "Local..." and select the directory created from unzipping the archive.
+    . In the "Add Repository" dialog that comes up select "Local..." and select the "update-site" directory inside the directory created from unzipping the archive.
     . Back in the "Install" dialog, uncheck the "Group items by category" checkbox. The Eclipse plug-in should show up as an option now. Check that checkbox.
     . Click "Next" and finish the installation. Eclipse will restart and when it reopens, the plug-in should be installed
 
@@ -35,6 +37,14 @@ To import, follow these steps:
 The Eclipse Marketplace hosts plug-ins and features. To access the Eclipse Marketplace, select "Eclipse Marketplace..." from the Help menu. Search for "SWAMP" and click the install button. When the installation is finished, you should see the SWAMP icon in the toolbar and the SWAMP menu in the menubar.
 
 image:eclipseplugin/doc/images/menuAndToolbar.png[Menubar and Toolbar, 600, 600]
+
+[[plug-in-config]]
+== **set up plug-in preferences (optional)**
+=== **available SWAMP hosts**
+For shared Eclipse installations and individual installations, system administrators and users may control what SWAMP hosts are accessible by modifying SWAMP_hosts.json and adding it to the installation directory (see Eclipse's Platform.getInstallLocation() for more details). By default, the MIR host is available to all users.
+
+=== **editor markers**
+The SWAMP perspective adds colored markers to the left-hand ruler to annotate weaknesses found by the SWAMP. A user may set preferences for these markers by modifying .marker_preferences and moving it to a directory named .SWAMP_SETTINGS in the user's home directory.
 
 [[configuration-and-submission]]
 == **configuration and submission**
@@ -82,6 +92,21 @@ The plug-in saves previous assessment information about each Eclipse project. In
 	3. Have a file from the project open and select "Resubmit Previous Assessment" from either the dropdown menu or the SWAMP menu in the main menubar
 
 image:eclipseplugin/doc/images/RightClickMenu.png[Right Click Submission, 600, 600]
+
+[[view-results]]
+== **View assessment results**
+
+This plug-in comes with a new perspective named "SWAMP." When a user opens the SWAMP perspective, he or she will see an editor and four views: the package explorer, the weakness table view, the assessment status view, and the weakness detail view. 
+
+image:eclipseplugin/doc/images/SwampPerspective.png[SWAMP Perspective, 600, 600]
+
+=== **view assessment statuses**
+The assessment status view shows the status of submitted assessments. The statuses are periodically updated automatically, but the user may click the "Refresh" button any time to query the SWAMP for unfinished assessments' statuses. By right-clicking and selecting "Remove Assessment" on an unfinished assessment, the status of that assessment will no longer appear in the view. Selecting "Remove Assessment" on a finished assessment, will both remove that status row and stop the results from showing on top of the source code in the Eclipse editor.
+
+=== **view results**
+To view results for a finished assessment, the user must open the source code for the Eclipse project that was assessed. If any weaknesses were found on the currently opened source file, they will show up with annotated markers on the editor and listed in the weakness table view. Single-clicking any weakness in the table view will show more detailed information about the weakness in the weakness detail view. Double-clicking any weakness in the table view, will jump the user to that weakness'es location in the source file.
+
+image:eclipseplugin/doc/images/SwampResults.png[SWAMP Results, 600, 600]
 
 [[appendix-a]]
 == **Appendix A: SWAMP account setup**
