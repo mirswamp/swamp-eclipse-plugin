@@ -1,3 +1,9 @@
+2017-03-14
+-Fixed issue with results not being stored properly
+-Fixed issue in which pre-configured projects show wrong build file path by default
+-Fixed issue with repeatedly querying for SWAMP assessment that has been deleted on website
+
+2017-03-13
 -SWAMP perspective added
 -Status dashboarded added
 -Results are retrieved and shown on top of source code
