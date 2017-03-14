@@ -29,7 +29,7 @@ To import, follow these steps:
     . Open Eclipse Neon (or any version after it).
     . In the menu bar, select "Help > Install New Software".
     . In the "Install" dialog that comes up, click "Add...".
-    . In the "Add Repository" dialog that comes up select "Local..." and select the directory created from unzipping the archive.
+    . In the "Add Repository" dialog that comes up select "Local..." and select the "update-site" directory inside the directory created from unzipping the archive.
     . Back in the "Install" dialog, uncheck the "Group items by category" checkbox. The Eclipse plug-in should show up as an option now. Check that checkbox.
     . Click "Next" and finish the installation. Eclipse will restart and when it reopens, the plug-in should be installed
 
