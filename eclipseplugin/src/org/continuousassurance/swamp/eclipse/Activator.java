@@ -304,7 +304,7 @@ public class Activator extends AbstractUIPlugin {
 	 * @return path
 	 */
 	public static String getFinishedAssessmentsPath() {
-		return ResultsUtils.getTopLevelResultsDirectory() +  FINISHED_ASSESS_FILENAME;
+		return ResultsUtils.getTopLevelResultsDirectory() + SEPARATOR + FINISHED_ASSESS_FILENAME;
 	}
 
 	/*

@@ -259,9 +259,9 @@ public class SwampSubmitter {
 				subMonitor.split(UPLOAD_TICKS);
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
 				si.setPackageThing(api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing());
-				if (si.isNewPackage()) { // All packages will need to be made new for this to be configured properly
-					doNewPackageResultsSetup(si.getPackageThingUUID());
-				}
+				// Always do this in case there were problems setting up these directories before
+				doNewPackageResultsSetup(si.getPackageThingUUID());
+				
 			
 				String pkgThingUUID = si.getPackageThingUUID();
 				setEclipseProjectToPackageThingMapping(pkgThingUUID, si.getProject().getWorkingLocation(PLUGIN_ID).toOSString());
@@ -412,9 +412,8 @@ public class SwampSubmitter {
 				String pkgVersUUID = uploadPackage(pkgConf.getPath(), archivePath.toString(), prjUUID, si.isNewPackage());
 				String pkgThingUUID = api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing().getUUIDString();
 				si.setPackageThing(api.getPackageVersion(pkgVersUUID, prjUUID).getPackageThing());
-				if (si.isNewPackage()) { // All packages will need to be made new for this to be configured properly
-					doNewPackageResultsSetup(pkgThingUUID);
-				}
+				// Always do this in case there were problems setting up these directories before
+				doNewPackageResultsSetup(pkgThingUUID);
 				
 				setEclipseProjectToPackageThingMapping(pkgThingUUID, ich.getRootProjectPluginLocation());
 				for (ImprovedClasspathHandler i : ich.getDependentProjects()) {
@@ -503,7 +502,7 @@ public class SwampSubmitter {
 		String dirPath = ResultsUtils.constructFilepath(pkgThingUUID);
 		File dir = new File(dirPath);
 		if (!dir.exists()) {
-			dir.mkdir();
+			dir.mkdirs();
 		}
 	}
 	
@@ -894,6 +893,10 @@ public class SwampSubmitter {
 	 */
 	private static void appendToUnfinishedFile(String info) throws IOException {
 		System.out.println("Unfinished assessments located at: " + Activator.getUnfinishedAssessmentsPath());
+		File resultsDir = new File(ResultsUtils.getTopLevelResultsDirectory());
+		if (!resultsDir.exists()) {
+			resultsDir.mkdirs();
+		}
 		File file = new File(Activator.getUnfinishedAssessmentsPath());
 		if (!file.exists()) {
 			file.createNewFile();
