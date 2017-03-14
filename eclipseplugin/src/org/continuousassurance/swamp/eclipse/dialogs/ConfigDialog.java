@@ -757,7 +757,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		if (fileList != null && fileList.length > 0) {
 			for (String f : fileList) {
 				if (f.equals(filename)) {
-					buildPathText.setText(dirPath + SEPARATOR + file);
+					buildPathText.setText(dirPath + SEPARATOR + filename);
 					return;
 				}
 			}
