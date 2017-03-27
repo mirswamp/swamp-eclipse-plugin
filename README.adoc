@@ -25,7 +25,7 @@ To install the Eclipse plug-in, a user may either download the plug-in archive a
 === **import plug-in**
 To import, follow these steps:
 
-	. Download the archive from the SWAMP [releases](https://github.com/mirswamp/swamp-eclipse-plugin/releases) page and unzip it.
+	. Download the archive from the SWAMP https://github.com/mirswamp/swamp-eclipse-plugin/releases[releases] page and unzip it.
     . Open Eclipse Neon (or any version after it).
     . In the menu bar, select "Help > Install New Software".
     . In the "Install" dialog that comes up, click "Add...".
