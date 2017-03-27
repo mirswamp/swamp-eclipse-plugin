@@ -36,7 +36,7 @@ To import, follow these steps:
 === **Eclipse Marketplace**
 The Eclipse Marketplace hosts plug-ins and features. To access the Eclipse Marketplace, select "Eclipse Marketplace..." from the Help menu. Search for "SWAMP" and click the install button. When the installation is finished, you should see the SWAMP icon in the toolbar and the SWAMP menu in the menubar.
 
-image:eclipseplugin/doc/images/menuAndToolbar.png[Menubar and Toolbar, 600, 600]
+image:eclipseplugin/doc/images/menuAndToolbar.png[Menubar and Toolbar]
 
 [[plug-in-config]]
 == **set up plug-in preferences (optional)**
@@ -91,14 +91,14 @@ The plug-in saves previous assessment information about each Eclipse project. In
 	2. Right-click on the project on Package Explorer and click "Assess Project on SWAMP"
 	3. Have a file from the project open and select "Resubmit Previous Assessment" from either the dropdown menu or the SWAMP menu in the main menubar
 
-image:eclipseplugin/doc/images/RightClickMenu.png[Right Click Submission, 600, 600]
+image:eclipseplugin/doc/images/RightClickMenu.png[Right Click Submission]
 
 [[view-results]]
 == **View assessment results**
 
 This plug-in comes with a new perspective named "SWAMP." When a user opens the SWAMP perspective, he or she will see an editor and four views: the package explorer, the weakness table view, the assessment status view, and the weakness detail view. 
 
-image:eclipseplugin/doc/images/SwampPerspective.png[SWAMP Perspective, 600, 600]
+image:eclipseplugin/doc/images/SwampPerspective.png[SWAMP Perspective]
 
 === **view assessment statuses**
 The assessment status view shows the status of submitted assessments. The statuses are periodically updated automatically, but the user may click the "Refresh" button any time to query the SWAMP for unfinished assessments' statuses. By right-clicking and selecting "Remove Assessment" on an unfinished assessment, the status of that assessment will no longer appear in the view. Selecting "Remove Assessment" on a finished assessment, will both remove that status row and stop the results from showing on top of the source code in the Eclipse editor.
@@ -106,7 +106,7 @@ The assessment status view shows the status of submitted assessments. The status
 === **view results**
 To view results for a finished assessment, the user must open the source code for the Eclipse project that was assessed. If any weaknesses were found on the currently opened source file, they will show up with annotated markers on the editor and listed in the weakness table view. Single-clicking any weakness in the table view will show more detailed information about the weakness in the weakness detail view. Double-clicking any weakness in the table view, will jump the user to that weakness'es location in the source file.
 
-image:eclipseplugin/doc/images/SwampResults.png[SWAMP Results, 600, 600]
+image:eclipseplugin/doc/images/SwampResults.png[SWAMP Results]
 
 [[appendix-a]]
 == **Appendix A: SWAMP account setup**
