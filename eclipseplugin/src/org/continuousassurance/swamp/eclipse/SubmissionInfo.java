@@ -17,15 +17,14 @@ import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
 
 import java.util.List;
 
+import org.continuousassurance.swamp.api.PackageThing;
+import org.continuousassurance.swamp.cli.SwampApiWrapper;
 import org.eclipse.cdt.core.model.CoreModel;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
-
-import edu.uiuc.ncsa.swamp.api.PackageThing;
-import edu.wisc.cs.swamp.SwampApiWrapper;
 
 /**
  * This class holds information about a set of submissions. It is the back-end

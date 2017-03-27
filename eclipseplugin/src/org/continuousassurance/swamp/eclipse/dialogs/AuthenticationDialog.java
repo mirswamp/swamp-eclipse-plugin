@@ -24,6 +24,7 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
+import org.continuousassurance.swamp.cli.SwampApiWrapper;
 import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.eclipse.core.runtime.Platform;
@@ -38,9 +39,6 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
-
-import edu.wisc.cs.swamp.*;
-import edu.wisc.cs.swamp.SwampApiWrapper.HostType;
 
 /**
  * This class creates a dialog for SWAMP authentication
@@ -253,7 +251,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	 * @return default hostnames
 	 */
 	private static String[] getDefaultHostnames() {
-		String[] array = {SwampApiWrapper.SWAMP_HOST_NAMES_MAP.get(HostType.PRODUCTION) + " (" + MIR_SWAMP_DESCRIPTION + ")"};
+		String[] array = {SwampApiWrapper.SWAMP_HOST_NAME + " (" + MIR_SWAMP_DESCRIPTION + ")"};
 		return array;
 	}
 	
@@ -327,8 +325,8 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		}
 	
 		try {
-			api = new SwampApiWrapper(HostType.CUSTOM, hostname);
-			id = api.login(username, password, HostType.CUSTOM, hostname);
+			api = new SwampApiWrapper(hostname);
+			id = api.login(username, password, hostname);
 			api.saveSession();
 		}
 		catch (Exception h) {

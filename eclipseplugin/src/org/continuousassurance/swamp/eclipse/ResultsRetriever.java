@@ -28,12 +28,12 @@ import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.continuousassurance.swamp.api.AssessmentRecord;
+import org.continuousassurance.swamp.cli.SwampApiWrapper;
+import org.continuousassurance.swamp.cli.exceptions.InvalidIdentifierException;
 import org.continuousassurance.swamp.eclipse.exceptions.ResultsRetrievalException;
 import org.continuousassurance.swamp.eclipse.exceptions.UserNotLoggedInException;
 import org.eclipse.swt.widgets.Display;
-import edu.uiuc.ncsa.swamp.api.AssessmentRecord;
-import edu.wisc.cs.swamp.SwampApiWrapper;
-import edu.wisc.cs.swamp.exceptions.InvalidIdentifierException;
 
 /**
  * This class retrieves assessment statuses from the SWAMP, downloads results
@@ -80,7 +80,7 @@ public class ResultsRetriever {
 		SwampApiWrapper api = null;
 		if (Activator.getLoggedIn()) {
 			try {
-				api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, Activator.getLastHostname());
+				api = new SwampApiWrapper(Activator.getLastHostname());
 				if (!api.restoreSession()) {
 					api = null;
 				}
@@ -355,12 +355,17 @@ public class ResultsRetriever {
 					f.delete();
 				}
 				newDetailInfo = ad.serialize();
-				if (api.getAssessmentResults(prjUUID, rec.getAssessmentResultUUID(), filepath)) {
+				try {
+					api.getAssessmentResults(prjUUID, rec.getAssessmentResultUUID(), filepath);
 					System.out.println("Saved results to filepath: " + filepath);
 					System.out.println("Here's the details I just wrote out: " + newDetailInfo);
 					writeToFinishedFile(newDetailInfo);
 					return null;
-				} // TODO: Catch file not found exception
+				} 
+				catch (Exception e) {
+					// TODO: Handle this case better - this means file not found or IOException
+					System.err.println("Error in saving results for file");
+				}
 				writer.write(newDetailInfo);
 			}
 			else if (FINISHED_WITH_ERRORS.equals(status)) { // Note: This will break if the labels are changed, so MIR shouldn't do that
