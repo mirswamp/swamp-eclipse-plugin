@@ -17,15 +17,10 @@
 	<classpathentry exported="true" kind="lib" path="lib/javax.inject-1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/json-lib-2.4-jdk15.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/log4j-1.2.17.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/ncsa-swamp-1.0-SNAPSHOT.jar" sourcepath="/afs/cs.wisc.edu/p/swamp/home/reid-jr/swamp-java-api/src"/>
-	<classpathentry exported="true" kind="lib" path="lib/swamp-api-client-1.0-SNAPSHOT.jar" sourcepath="/afs/cs.wisc.edu/p/swamp/home/reid-jr/swamp-java-api-client/src"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-logging-1.1.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-io-2.5.jar"/>
 	<classpathentry kind="lib" path="lib/javax.json-1.0.4.jar"/>
-	<classpathentry kind="lib" path="lib/ncsa-security-core-3.4-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="lib/ncsa-security-servlet-3.4-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="lib/ncsa-security-storage-3.4-SNAPSHOT.jar"/>
-	<classpathentry kind="lib" path="lib/ncsa-security-util-3.4-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/javaSCARF.jar" sourcepath="/JavaSCARF/src"/>
+	<classpathentry exported="true" kind="lib" path="lib/java-cli-1.0-SNAPSHOT-jar-with-dependencies.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

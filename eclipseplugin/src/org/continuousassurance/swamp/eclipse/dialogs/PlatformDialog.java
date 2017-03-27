@@ -15,6 +15,9 @@ package org.continuousassurance.swamp.eclipse.dialogs;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.continuousassurance.swamp.api.Platform;
+import org.continuousassurance.swamp.cli.SwampApiWrapper;
 import org.continuousassurance.swamp.eclipse.SubmissionInfo;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -28,9 +31,6 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
-
-import edu.wisc.cs.swamp.SwampApiWrapper;
-import edu.uiuc.ncsa.swamp.api.Platform;
 
 /**
  * This class creates a dialog for SWAMP Platform selection
