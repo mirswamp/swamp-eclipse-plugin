@@ -28,11 +28,10 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
+import org.continuousassurance.swamp.cli.SwampApiWrapper;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
-
-import edu.wisc.cs.swamp.SwampApiWrapper;
 
 
 /**
@@ -153,7 +152,7 @@ public class Activator extends AbstractUIPlugin {
 				String host = reader.readLine();
 				reader.close();
 				if ((host != null) && (!host.equals(""))) {
-					api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, host);
+					api = new SwampApiWrapper(host);
 					if (api != null) {
 						hostname = host;
 						setLoggedIn(api.restoreSession());

@@ -13,6 +13,9 @@
 
 package org.continuousassurance.swamp.eclipse.dialogs;
 
+import org.continuousassurance.swamp.api.PackageThing;
+import org.continuousassurance.swamp.api.Project;
+import org.continuousassurance.swamp.cli.SwampApiWrapper;
 import org.continuousassurance.swamp.eclipse.SubmissionInfo;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.eclipse.cdt.core.model.CoreModel;
@@ -46,10 +49,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
-
-import edu.uiuc.ncsa.swamp.api.PackageThing;
-import edu.uiuc.ncsa.swamp.api.Project;
-import edu.wisc.cs.swamp.SwampApiWrapper;
 
 import static org.continuousassurance.swamp.eclipse.SubmissionInfo.AUTO_GENERATE_BUILD_STRING;
 import static org.continuousassurance.swamp.eclipse.SubmissionInfo.ECLIPSE_GENERATED_STRING;

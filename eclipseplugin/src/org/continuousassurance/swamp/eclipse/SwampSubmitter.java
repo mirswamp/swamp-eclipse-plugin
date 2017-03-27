@@ -25,6 +25,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
+import org.continuousassurance.swamp.api.PackageThing;
+import org.continuousassurance.swamp.api.PackageVersion;
+import org.continuousassurance.swamp.cli.SwampApiWrapper;
+import org.continuousassurance.swamp.cli.exceptions.IncompatibleAssessmentTupleException;
+import org.continuousassurance.swamp.cli.exceptions.InvalidIdentifierException;
+import org.continuousassurance.swamp.cli.exceptions.SessionExpiredException;
+import org.continuousassurance.swamp.cli.exceptions.SessionRestoreException;
 import org.continuousassurance.swamp.eclipse.dialogs.AuthenticationDialog;
 import org.continuousassurance.swamp.eclipse.dialogs.ConfigDialog;
 import org.continuousassurance.swamp.eclipse.dialogs.PlatformDialog;
@@ -58,14 +65,6 @@ import org.eclipse.ui.console.MessageConsole;
 import org.eclipse.ui.console.MessageConsoleStream;
 import org.osgi.framework.Version;
 
-import edu.uiuc.ncsa.swamp.api.PackageThing;
-import edu.uiuc.ncsa.swamp.api.PackageVersion;
-import edu.wisc.cs.swamp.SwampApiWrapper;
-import edu.wisc.cs.swamp.exceptions.IncompatibleAssessmentTupleException;
-import edu.wisc.cs.swamp.exceptions.InvalidIdentifierException;
-import edu.wisc.cs.swamp.exceptions.SessionExpiredException;
-import edu.wisc.cs.swamp.exceptions.SessionRestoreException;
-
 import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
 import static org.eclipse.core.runtime.Path.SEPARATOR;
 
@@ -79,7 +78,7 @@ public class SwampSubmitter {
 	 * Reference to SwampApiWrapper, which is the interface by which we
 	 * communicate with the SWAMP
 	 */
-	private SwampApiWrapper api;
+	private org.continuousassurance.swamp.cli.SwampApiWrapper api;
 	/**
 	 * Currently opened window
 	 */
@@ -588,7 +587,7 @@ public class SwampSubmitter {
 		}
 		try {
 			System.out.println("Initialized SWAMP API");
-			api = new SwampApiWrapper(SwampApiWrapper.HostType.CUSTOM, Activator.getLastHostname());
+			api = new SwampApiWrapper(Activator.getLastHostname());
 		} catch (Exception e) {
 			printToConsole(Utils.getBracketedTimestamp() + "Error: Unable to initialize SWAMP API.");
 			e.printStackTrace();
