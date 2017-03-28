@@ -23,6 +23,9 @@ error-prone.*:.*:.*  blue-circle
 
 OWASP Dependency Check.*:.*:.*  yellow-circle
 
+# Commercial Java tools
+ps-jtest.*:.*:.*  purple-circle
+
 # C/C++ tools
 
 cppcheck.*:.*:.*  red-circle
@@ -30,3 +33,8 @@ cppcheck.*:.*:.*  red-circle
 gcc.*:.*:.*  green-circle
 
 Clang Static Analyzer.*:.*:.*  orange-circle
+
+# Commercial C/C++ tools
+gt-csonar.*:.*:.*  blue-circle
+
+ps-ctest.*:.*:.*  yellow-circle
