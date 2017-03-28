@@ -1,3 +1,8 @@
+2017-03-28
+-Updated documentation
+-Changed default SWAMP host settings. Now there is a different default MIR URL, and users can specify unlisted hosts by default
+-Added commercial tools to marker configuration file
+
 2017-03-14
 -Fixed issue with results not being stored properly
 -Fixed issue in which pre-configured projects show wrong build file path by default
