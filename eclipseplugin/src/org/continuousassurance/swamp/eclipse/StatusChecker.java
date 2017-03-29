@@ -12,8 +12,9 @@
  */
 package org.continuousassurance.swamp.eclipse;
 
+import java.io.File;
+
 import org.continuousassurance.swamp.eclipse.exceptions.ResultsRetrievalException;
-import org.continuousassurance.swamp.eclipse.exceptions.UserNotLoggedInException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
@@ -50,18 +51,20 @@ public class StatusChecker extends Job {
 	protected IStatus run(IProgressMonitor monitor) {
 		System.out.println("\n\nRunning status checker background job\n\n");
 		schedule(30000); // runs once every 30s
-		try {
-			ResultsRetriever.retrieveResults();
-		}
-		catch (ResultsRetrievalException e) {
-			System.err.println("Error in results retrieval");
+		if (unfinishedAssessmentsExist()) {
+			try {
+				ResultsRetriever.retrieveResults();
+			}
+			catch (ResultsRetrievalException e) {
+				System.err.println("Error in results retrieval");
+			}
 		}
 		return Status.OK_STATUS;
 	}
 	
 	@Override
 	/**
-	 * If the job is "running", we should schedule it
+	 * If the job is "running" (i.e. it hasn't been stopped), we should schedule it
 	 */
 	public boolean shouldSchedule() {
 		return running;
@@ -80,5 +83,14 @@ public class StatusChecker extends Job {
 	 */
 	public boolean isRunning() {
 		return this.getState() == Job.RUNNING;
+	}
+	
+	/**
+	 * Checks whether there are unfinished assessments
+	 * @return true if there are unfinished assessments
+	 */
+	private static boolean unfinishedAssessmentsExist() {
+		File f = new File(Activator.getUnfinishedAssessmentsPath());
+		return f.length() > 0L;
 	}
 }
