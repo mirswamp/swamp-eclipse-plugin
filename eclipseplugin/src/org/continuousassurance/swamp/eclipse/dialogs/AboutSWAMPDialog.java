@@ -41,25 +41,27 @@ public class AboutSWAMPDialog extends TitleAreaDialog {
 	 * Name of the plug-in
 	 */
 	private static final String ABOUT_SWAMP_NAME = "SWAMP Eclipse Plugin\n";
-	//private static final String ABOUT_SWAMP_LINK = "";
-	//private static final String ABOUT_ECLIPSE_PLUGIN_LINK = "";
-	//private static final String ABOUT_SWAMP_GITHUB_LINK = "";
+
 	/**
 	 * Text with description and link to information about SWAMP License
 	 */
-	private static final String ABOUT_SWAMP_LICENSE_LINK = "Please visit <a href=\"https://www.apache.org/licenses/LICENSE-2.0\">Apache License</a> for licensing information.";
+	private static final String ABOUT_SWAMP_LICENSE_LINK = "Please visit <a href=\"https://www.apache.org/licenses/LICENSE-2.0\">Apache License</a> for licensing information.\n";
 	/**
 	 * Text with description and link to information about SWAMP support
 	 */
 	private static final String ABOUT_SWAMP_SUPPORT_INFO = "Please visit <a href=\"https://continuousassurance.org/support/\"> Continuous Assurance Support</a> for technical support.\n";
 	/**
+	 * Text with link to source code
+	 */
+	private static final String ABOUT_SWAMP_GITHUB_LINK = "Source code is available at the SWAMP Eclipse Plug-in <a href=\"https://github.com/mirswamp/swamp-eclipse-plugin\">GitHub</a> repository.\n"; 
+	/**
 	 * Plug-in release version number
 	 */
-	private static final String ABOUT_SWAMP_SEMANTIC_VERSION_NUMBER = "0.9.0";
+	private static final String ABOUT_SWAMP_SEMANTIC_VERSION_NUMBER = "0.9.5";
 	/**
 	 * Plug-in release date
 	 */
-	private static final String ABOUT_SWAMP_RELEASE_DATE = "03/01/2017";
+	private static final String ABOUT_SWAMP_RELEASE_DATE = "03/30/2017";
 	/**
 	 * Release date label
 	 */
@@ -96,17 +98,19 @@ public class AboutSWAMPDialog extends TitleAreaDialog {
 		
 		String relDate = getFormattedReleaseDate();
 		String releaseVersion = getReleaseVersion();
-		DialogUtil.initializeLabelWidget(ABOUT_SWAMP_NAME + "\n" + RELEASE_DATE_LABEL + relDate + "\n" + RELEASE_VERSION_LABEL + releaseVersion, SWT.NONE, container);
+		DialogUtil.initializeLabelWidget(ABOUT_SWAMP_NAME + "\n" + RELEASE_DATE_LABEL + relDate + "\n\n" + RELEASE_VERSION_LABEL + releaseVersion + "\n", SWT.NONE, container);
 		
-		Link licenseLink = new Link(container, SWT.NONE);
-		licenseLink.setText(ABOUT_SWAMP_LICENSE_LINK);
-		licenseLink.addSelectionListener(new LinkSelectionAdapter());
-		
-		Link supportLink = new Link(container, SWT.NONE);
-		supportLink.setText(ABOUT_SWAMP_SUPPORT_INFO);
-		supportLink.addSelectionListener(new LinkSelectionAdapter());
+		addLink(container, ABOUT_SWAMP_LICENSE_LINK);
+		addLink(container, ABOUT_SWAMP_SUPPORT_INFO);
+		addLink(container, ABOUT_SWAMP_GITHUB_LINK);
 		
 		return area;
+	}
+	
+	private static void addLink(Composite container, String text) {
+		Link link = new Link(container, SWT.NONE);
+		link.setText(text);
+		link.addSelectionListener(new LinkSelectionAdapter());
 	}
 	
 	/**
