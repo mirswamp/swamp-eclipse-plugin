@@ -222,8 +222,8 @@ public class Controller {
 						details.setPrimaryFilename(filename);
 						details.setPrimaryLineNumber(loc);
 						item.setText(0, filename);
-						item.setText(1, Integer.toString(loc.getStartLine()));
-						item.setText(2, Integer.toString(loc.getEndLine()));
+						item.setText(1, BugDetail.formatSingleLineNumber(loc.getStartLine()));
+						item.setText(2, BugDetail.formatSingleLineNumber(loc.getEndLine()));
 						item.setText(3, bug.getBugGroup());
 						item.setText(4, toolName);
 						item.setText(5, platformName);
