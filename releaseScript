@@ -2,7 +2,7 @@
 
 #  releaseScript
 #
-#  Copyright 2016 Malcolm Reid Jr.
+#  Copyright 2016-2017 Malcolm Reid Jr.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -19,16 +19,17 @@
 
 # This is a script to streamline making a release
 # (1) Make $HOME/Desktop directory with proper format (yyyy-mm-dd-swamp_eclipse_plugin)
-# (2) cd to doc directory
-# (3) run asciidoc README.adoc
+# (2) rm -f README.html
+# (3) run asciidoc README.adoc 
 # (4) move README.html to the new directory
 # (5) run /p/swamp/bin/asciidoctor -pdf README.adoc
 # (6) move README.pdf to new directory
-# (7) copy SWAMP_hosts.json to new directory
-# (8) copy .marker_preferences to new directory
-# (9) add to RELEASE_NOTES.txt
-
-# Out of band: export feature to desktop dir, zip the dir
+# (7) cd to eclipseplugin/doc
+# (8) copy SWAMP_hosts.json to new directory
+# (9) copy .marker_preferences to new directory
+# (10) add to RELEASE_NOTES.txt
+# (11) copy update-site into the Desktop dir
+# (12) zip it
 
 : ${1?"Usage: $0 versionNumber"}
 
@@ -42,17 +43,18 @@ dir_name=$HOME/Desktop/
 dir_name+=$TIMESTAMP
 dir_name+="-"$ARCHIVE_NAME
 
+rm -f $dir_name
 mkdir $dir_name
 
 echo "Created "$dir_name
 
-cd eclipseplugin/doc
+rm -f README.html
 asciidoc README.adoc
 
 echo "Generated README.html"
 
 mv README.html $dir_name
-cp -r images $dir_name
+cp -r eclipseplugin/doc/images $dir_name
 
 echo "Moved README.html to "$dir_name
 
@@ -64,6 +66,7 @@ mv README.pdf $dir_name
 
 echo "Moved README.pdf to "$dir_name
 
+cd eclipseplugin/doc
 cp SWAMP_hosts.json $dir_name
 
 echo "Moved SWAMP_hosts.json to "$dir_name
@@ -81,5 +84,9 @@ cat RELEASE_NOTES.txt >> tmpfile
 mv tmpfile $dir_name"/RELEASE_NOTES.txt"
 
 echo "Formatted release_notes and moved RELEASE_NOTES.txt to "$dir_name
+
+cp -r $HOME/public/html-s/swamp-eclipse $dir_name/update-site
+
+zip -r $dir_name{.zip,}
 
 cd $START_DIR
