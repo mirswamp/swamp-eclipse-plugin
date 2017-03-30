@@ -77,7 +77,7 @@ public class BugDetail {
 	private static String formatLineNumber(Location l) {
 		int start = l.getStartLine();
 		int end = l.getEndLine();
-		if (start == 0) {
+		if (start <= 0) {
 			return "";
 		}
 		if (start == end) {
@@ -92,7 +92,7 @@ public class BugDetail {
 	 * @return formatted line number string
 	 */
 	public static String formatSingleLineNumber(int ln) {
-		if (ln == 0) {
+		if (ln <= 0) {
 			return "";
 		}
 		return Integer.toString(ln);
