@@ -34,7 +34,9 @@ import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.SwampSubmitter;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.eclipse.cdt.core.model.ICProject;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.swt.widgets.Shell;
 
 /**
  * Handler for Right Click submit
@@ -42,6 +44,13 @@ import org.eclipse.jface.viewers.IStructuredSelection;
  * @see org.eclipse.core.commands.AbstractHandler
  */
 public class RightClickHandler extends AbstractHandler {
+	
+	private static final String PROJECT_NOT_OPEN_CONSOLE_ERROR = "Error: Project is not open";
+	
+	private static final String ERROR_MESSAGE_DIALOG_TITLE = "Error";
+	
+	private static final String PROJECT_NOT_OPEN_MESSAGE_DIALOG_ERROR = 
+			"The selected project is not open. Please open it and then re-attempt your submission.";
 
 	@Override
 	/**
@@ -69,6 +78,7 @@ public class RightClickHandler extends AbstractHandler {
 			javaProject = (IJavaProject)proj;
 			if (!javaProject.isOpen()) {
 				writeClosedProjectMessage(window);
+				popupErrorDialog(window.getShell());
 				return null;
 			}
 			submitAssessment(javaProject.getProject(), window);
@@ -77,6 +87,7 @@ public class RightClickHandler extends AbstractHandler {
 			cProject = (ICProject)proj;
 			if (!cProject.isOpen()) {
 				writeClosedProjectMessage(window);
+				popupErrorDialog(window.getShell());
 				return null;
 			}
 			submitAssessment(cProject.getProject(), window);
@@ -104,7 +115,14 @@ public class RightClickHandler extends AbstractHandler {
 			e.printStackTrace();
 		}
 		MessageConsoleStream stream = console.newMessageStream();
-		stream.println(Utils.getBracketedTimestamp() + "Error: Project is not open");
+		stream.println(Utils.getBracketedTimestamp() + PROJECT_NOT_OPEN_CONSOLE_ERROR);
+	}
+	
+	private void popupErrorDialog(Shell shell) {
+		if (shell == null) {
+			return;
+		}
+		MessageDialog.openError(shell, ERROR_MESSAGE_DIALOG_TITLE, PROJECT_NOT_OPEN_MESSAGE_DIALOG_ERROR);
 	}
 	
 	/**
