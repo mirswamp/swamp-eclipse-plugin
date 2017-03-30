@@ -13,23 +13,26 @@
 </extension>
 
 <extension point="org.eclipse.ui.views">
+	<category
+		id="org.continuousassurance.swamp.eclipse.ui.SwampCategory"
+		name="SWAMP">
+	</category>
 	<view 
 		name="Weaknesses"
 		class="org.continuousassurance.swamp.eclipse.ui.TableView"
+		category="org.continuousassurance.swamp.eclipse.ui.SwampCategory"
 		id="org.continuousassurance.swamp.eclipse.ui.views.tableview" /> <!-- Add icon -->
-</extension>
 
-<extension point="org.eclipse.ui.views">
 	<view 
 		name="Weakness Details"
 		class="org.continuousassurance.swamp.eclipse.ui.DetailView"
+		category="org.continuousassurance.swamp.eclipse.ui.SwampCategory"
 		id="org.continuousassurance.swamp.eclipse.ui.views.detailview" /> <!-- Add icon -->
-</extension>
 
-<extension point="org.eclipse.ui.views">
 	<view
 		name="Assessment Status Dashboard"
 		class="org.continuousassurance.swamp.eclipse.ui.StatusView"
+		category="org.continuousassurance.swamp.eclipse.ui.SwampCategory"
 		id="org.continuousassurance.swamp.eclipse.ui.views.statusview" /> <!-- Add icon -->
 </extension>
 
