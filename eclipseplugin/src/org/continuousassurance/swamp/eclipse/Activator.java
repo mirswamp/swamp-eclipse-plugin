@@ -29,7 +29,11 @@ import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
 import org.continuousassurance.swamp.cli.SwampApiWrapper;
+import org.continuousassurance.swamp.eclipse.ui.SwampPerspective;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -163,6 +167,16 @@ public class Activator extends AbstractUIPlugin {
 		}
 		
 		getMarkerPreferences();
+		
+		// This is necessary because the perspective may already have been open
+		// from last session
+		IWorkbench wb = PlatformUI.getWorkbench();
+		if (wb != null) {
+			IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
+			if (window != null) {
+				SwampPerspective.initializeFileChangeListener(window);
+			}
+		}
 		
 	}
 	

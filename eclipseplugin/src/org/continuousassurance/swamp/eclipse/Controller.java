@@ -146,7 +146,7 @@ public class Controller {
 			return;
 		}
 		IWorkbenchPage page = window.getActivePage();
-		if ((page == null) || (!swampPerspectiveOpen(page))) {
+		if (page == null) {
 			return;
 		}
 		resetPerspectiveParts(window, page);
