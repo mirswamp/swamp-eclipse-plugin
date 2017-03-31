@@ -69,6 +69,7 @@ public class SwampPerspective implements IPerspectiveFactory {
 	 * 		  IPageLayout is)
 	 */
 	public void createInitialLayout(IPageLayout layout) {
+		System.out.println("Create initial layout invoked!");
 		defineLayout(layout);
 		Controller.refreshWorkspace();
 	}
@@ -78,6 +79,7 @@ public class SwampPerspective implements IPerspectiveFactory {
 	 * @param layout page layout
 	 */
 	public void defineLayout(IPageLayout layout) {
+		System.out.println("Define initial layout invoked!");
 		String editorArea = layout.getEditorArea();
 		IFolderLayout topLeft = layout.createFolder("topLeft", IPageLayout.LEFT, 0.25f, editorArea);
 		topLeft.addView(IPageLayout.ID_PROJECT_EXPLORER);
@@ -87,13 +89,23 @@ public class SwampPerspective implements IPerspectiveFactory {
 		IFolderLayout right = layout.createFolder("right", IPageLayout.RIGHT, 0.60f, editorArea);
 		right.addView(DetailView.ID);
 		IWorkbench wb = PlatformUI.getWorkbench();
+		System.out.println("Attempting to update layout!");
 		if (wb != null) {
 			IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
-			if (window != null) {
-				IPartService service = window.getPartService();
-				service.addPartListener(new FileChangeListener());
-			}
+			initializeFileChangeListener(window);
 		}
+	}
+	
+	/**
+	 * Adds a file change listener to the specified window
+	 * @param window Eclipse window that the new listener will be registered to
+	 */
+	public static void initializeFileChangeListener(IWorkbenchWindow window) {
+		if (window == null) {
+			return;
+		}
+		IPartService service = window.getPartService();
+		service.addPartListener(new FileChangeListener());
 	}
 
 	
@@ -124,18 +136,14 @@ public class SwampPerspective implements IPerspectiveFactory {
 		/**
 		 * Method for refreshing the workspace if the file has changed
 		 */
-		private void refreshWS() {
-			IWorkbench wb = PlatformUI.getWorkbench();
-			if (wb != null) {
-				IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
-				if (window != null) {
-					IProject project = HandlerUtilityMethods.getActiveProject(window);
-					IFile file = HandlerUtilityMethods.getActiveFile(window);
-					if ((project != null) && (file != null) && 
-							(!file.equals(currentlyOpenedFile))) {
-						currentlyOpenedFile = file;
-						Controller.refreshWorkspace();
-					}
+		private void refreshWS(IWorkbenchWindow window) {
+			if (window != null) {
+				IProject project = HandlerUtilityMethods.getActiveProject(window);
+				IFile file = HandlerUtilityMethods.getActiveFile(window);
+				if ((project != null) && (file != null) && 
+					(!file.equals(currentlyOpenedFile))) {
+					currentlyOpenedFile = file;
+					Controller.refreshWorkspace();
 				}
 			}
 		}
@@ -159,7 +167,14 @@ public class SwampPerspective implements IPerspectiveFactory {
 				}
 			}
 			else {
-				refreshWS();
+				IWorkbenchWindow window = getActiveWindow();
+				if (window != null) {
+					if ((Controller.getView(window, TableView.ID) != null) || 
+							Controller.swampPerspectiveOpen(window.getActivePage())) {
+						System.out.println("Swamp Weaknesses View (aka TableView) open");
+						refreshWS(window);
+					}
+				}
 			}
 		}
 		
@@ -185,7 +200,22 @@ public class SwampPerspective implements IPerspectiveFactory {
 
 		@Override
 		public void partOpened(IWorkbenchPartReference part) {
-			refreshWS();
+			IWorkbenchWindow window = getActiveWindow();
+			if (window != null) {
+				if ((Controller.getView(window, TableView.ID) != null) || 
+						Controller.swampPerspectiveOpen(window.getActivePage())) {
+						refreshWS(window);
+				}
+			}
+		}
+		
+		private static IWorkbenchWindow getActiveWindow() {
+			IWorkbench wb = PlatformUI.getWorkbench();
+			if (wb != null) {
+				IWorkbenchWindow window = wb.getActiveWorkbenchWindow();
+				return window;
+			}
+			return null;
 		}
 
 		@Override
