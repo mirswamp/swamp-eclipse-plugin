@@ -284,7 +284,7 @@ public class ConfigDialog extends TitleAreaDialog {
 	/**
 	 * Maven build system
 	 */
-	private static final String BUILD_SYSTEM_MAVEN = "Maven";
+	private static final String BUILD_SYSTEM_MAVEN = "maven";
 	/**
 	 * Make build system
 	 */
@@ -812,7 +812,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			buildSysCombo.setEnabled(true);
 			IProject project = eclipseProjects[index];
 			String lang = getProjectLanguage(project);
-			if (lang.equals("Java")) {
+			if (lang.equals(JAVA_LANG)) {
 				IJavaProject jp = JavaCore.create(project);
 				// JavaCore.COMPILER_COMPLIANCE
 				String complianceVersion = jp.getOption(ECLIPSE_JAVA_COMPLIANCE_OPTION, true);
@@ -832,6 +832,11 @@ public class ConfigDialog extends TitleAreaDialog {
 						//setPackageType(api.getPkgTypeString("Java", "java-8", "", null));
 						setPkgTypeOptions(JAVA_LANG);
 						setPackageType(JAVA_8_SRC_PKG_TYPE);
+						setBuildSysOptions(JAVA_LANG);
+					}
+					else {
+						System.out.println("Other version Java package");
+						setPkgTypeOptions(JAVA_LANG);
 						setBuildSysOptions(JAVA_LANG);
 					}
 				}
