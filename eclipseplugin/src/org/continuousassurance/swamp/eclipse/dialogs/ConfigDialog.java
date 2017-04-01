@@ -423,15 +423,17 @@ public class ConfigDialog extends TitleAreaDialog {
 		buildSysCombo.setEnabled(false);
 		packageRTButton.setSelection(false);
 		packageRTButton.setEnabled(false);
-		setDefaults();	
+		setDefaults(false);	
 	}
 	
 	/**
 	 * Sets defaults
 	 */
-	private void setDefaults() {
+	private void setDefaults(boolean eclipseProjectInitialized) {
 		setSwampProjectDefault();
-		setEclipseProjectDefault();
+		if (!eclipseProjectInitialized) {
+			setEclipseProjectDefault();
+		}
 		setPackageDefault();
 		setBuildSysDefault();
 		setPackageTypeDefault();
@@ -650,9 +652,10 @@ public class ConfigDialog extends TitleAreaDialog {
 		}
 		else if (submissionInfo.isProjectInitialized()) {
 			setupEclipseProject();
+			setDefaults(true);
 		}
 		else {
-			setDefaults();
+			setDefaults(false);
 		}
 		
 		return area;
