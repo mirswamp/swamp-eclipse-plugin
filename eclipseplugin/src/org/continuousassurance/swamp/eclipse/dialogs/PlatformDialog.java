@@ -133,10 +133,19 @@ public class PlatformDialog extends TitleAreaDialog {
 	 * @return List of SWAMP Platforms
 	 */
 	private List<Platform> getPlatforms(String pkgType) {
-		
-		Platform p = api.getDefaultPlatform(pkgType);
-		List<Platform> platformList = new ArrayList<Platform>();
-		platformList.add(p);
+		// This is the workaround documented in GitHub issue #22. It is a way
+		// of keeping the UI/UX simple and intuitive even though platforms
+		// actually depends on tools
+		String GCC_WARN_TOOL_UUID = "7A08B82D-3A3B-45CA-8644-105088741AF6";
+		List<Platform> platformList = null;
+		if (pkgType.equals(SubmissionInfo.C_CPP)) {
+			platformList = api.getSupportedPlatforms(GCC_WARN_TOOL_UUID, submissionInfo.getSelectedProjectID());
+		}
+		else {
+			platformList = new ArrayList<>();
+			Platform p = api.getDefaultPlatform(pkgType);
+			platformList.add(p);
+		}
 		return platformList;
 	}
 	
