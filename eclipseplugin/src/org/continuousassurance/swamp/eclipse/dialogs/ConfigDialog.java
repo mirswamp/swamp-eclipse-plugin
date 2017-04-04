@@ -1036,8 +1036,21 @@ public class ConfigDialog extends TitleAreaDialog {
 			buildSys = submissionInfo.getBuildSystem();
 			String prjLocation = eclipseProjects[eclipsePrjCombo.getSelectionIndex()].getLocation().toOSString();
 			String buildDir = submissionInfo.getBuildDirectory();
+			int idx = buildDir.indexOf(Character.toString(SEPARATOR));
+			if (idx > -1) {
+				buildDir = buildDir.substring(idx+1);
+			}
+			else { // if there is just one directory, this means the build directory is the same as the project directory
+				buildDir = "";
+			}
 			String buildFile = submissionInfo.getBuildFile();
-			String path = prjLocation + SEPARATOR + (buildDir.equals(".") ? buildFile : buildDir + SEPARATOR + buildFile);
+			String path = prjLocation + SEPARATOR;
+			if (buildDir.equals("") || buildDir.equals(".")) {
+				path += buildFile;
+			}
+			else {
+				path += buildDir + SEPARATOR + buildFile;
+			}
 			buildPathText.setText(path);
 			buildTargetText.setText(submissionInfo.getBuildTarget());
 		}
