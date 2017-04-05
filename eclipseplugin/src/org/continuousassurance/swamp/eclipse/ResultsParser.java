@@ -19,7 +19,9 @@ import javaSCARF.ScarfXmlReader;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import dataStructures.*;
 
@@ -98,6 +100,8 @@ public class ResultsParser implements ScarfInterface {
 		for (Location l : bug.getLocations()) {
 			if (l.isPrimary()) {
 				String filename = l.getSourceFile();
+				filename = normalizeFilepath(filename);
+				l.setSourceFile(filename);
 				if (fileBugs.containsKey(filename)) {
 					bugs = fileBugs.get(filename);
 				}
@@ -110,6 +114,40 @@ public class ResultsParser implements ScarfInterface {
 				break;
 			}
 		}
+	}
+	
+	private static String normalizeFilepath(String fp) {
+		String PKG_STR = "pkg1";
+		String DOT = ".";
+		String TWO_DOT = "..";
+		if (fp == null) {
+			return "";
+		}
+		int idx = fp.indexOf(PKG_STR);
+		if (idx > -1) {
+			fp = fp.substring(idx+PKG_STR.length()+1);
+		}
+		Deque<String> filepath = new ArrayDeque<>();
+		String[] parts = fp.split(ResultsUtils.SEPARATOR);
+		for (String part : parts) {
+			if (part.equals(DOT)) {
+				continue;
+			}
+			if (part.equals(TWO_DOT)) {
+				filepath.removeLast();
+			}
+			else {
+				filepath.addLast(part);
+			}
+		}
+		StringBuffer sb = new StringBuffer();
+		for (String s : filepath) {
+			sb.append(s);
+			sb.append(ResultsUtils.SEPARATOR);
+		}
+		String normalizedPath = sb.toString();
+		return normalizedPath.substring(0, normalizedPath.length()-1);
+		
 	}
 	
 	@Override
