@@ -33,7 +33,7 @@ public class ResultsUtils {
 	/**
 	 * System-defined directory separator (e.g. "/" in Unix, Linux)
 	 */
-	private static final String SEPARATOR = System.getProperty("file.separator");
+	public static final String SEPARATOR = System.getProperty("file.separator");
 	
 	/**
 	 * Eclipse property name for user's home directory
