@@ -13,7 +13,9 @@
 package org.continuousassurance.swamp.eclipse.handlers;
 
 import java.io.File;
+import java.io.IOException;
 
+import org.apache.commons.io.FileUtils;
 import org.continuousassurance.swamp.eclipse.Controller;
 import org.continuousassurance.swamp.eclipse.ResultsUtils;
 import org.eclipse.core.commands.AbstractHandler;
@@ -45,7 +47,14 @@ public class ClearResultsHandler extends AbstractHandler {
 		// (2) Clear all results
 		File f = new File(ResultsUtils.getTopLevelResultsDirectory());
 		if (f.exists()) {
-			f.delete();
+			try {
+				FileUtils.deleteDirectory(f);
+			} catch (IOException e) {
+				System.err.println("Error deleting results directory");
+			}
+			catch (IllegalArgumentException e) {
+				System.err.println("File either does not exist or is not a directory");
+			}
 		}
 		Controller.refreshWorkspace();
 		return null;

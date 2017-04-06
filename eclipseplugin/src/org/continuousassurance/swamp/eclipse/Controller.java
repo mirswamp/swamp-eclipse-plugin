@@ -305,14 +305,17 @@ public class Controller {
 	 * @param window currently opened window
 	 */
 	public static void resetFileMarkers(IWorkbenchWindow window) {
+		String DASH = "-";
 		System.out.println("Attempting to reset file markers");
 		IFile file = HandlerUtilityMethods.getActiveFile(window);
 		if (file != null) {
 			System.out.println("Removing file markers for file " + file.getName());
 			try {
 				for (String color : Activator.getValidColors()) {
-					String markerType = color + Activator.MARKER_SUFFIX;
-					file.deleteMarkers(markerType, true, 1);
+					for (String shape: Activator.getValidShapes()) {
+						String markerType = Activator.MARKER_PREFIX + color + DASH + shape + Activator.MARKER_SUFFIX;
+						file.deleteMarkers(markerType, true, 1);
+					}
 				}
 			} catch (CoreException e) {
 				e.printStackTrace();

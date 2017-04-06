@@ -420,4 +420,8 @@ public class Activator extends AbstractUIPlugin {
 		return COLORS;
 	}
 	
+	public static String[] getValidShapes() {
+		return SHAPES;
+	}
+	
 }
