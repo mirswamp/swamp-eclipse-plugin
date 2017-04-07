@@ -49,7 +49,6 @@ public class StatusChecker extends Job {
 	 * @param monitor progress monitor
 	 */
 	protected IStatus run(IProgressMonitor monitor) {
-		System.out.println("\n\nRunning status checker background job\n\n");
 		schedule(30000); // runs once every 30s
 		if (unfinishedAssessmentsExist()) {
 			try {

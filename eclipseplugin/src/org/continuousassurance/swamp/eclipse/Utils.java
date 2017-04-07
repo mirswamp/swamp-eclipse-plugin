@@ -307,7 +307,9 @@ public class Utils {
 		Comparator<TableItem> cmp = new Comparator<TableItem>() {
 			@Override
 			public int compare(TableItem t1, TableItem t2) {
-				return t1.getText(col).compareTo(t2.getText(col));
+				String t1Caps = t1.getText(col).toUpperCase();
+				String t2Caps = t2.getText(col).toUpperCase();
+				return t1Caps.compareTo(t2Caps);
 			}
 		};
 		return cmp;
