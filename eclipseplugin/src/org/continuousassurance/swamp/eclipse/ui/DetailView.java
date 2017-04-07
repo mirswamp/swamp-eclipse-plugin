@@ -34,6 +34,10 @@ public class DetailView extends ViewPart {
 	 */
 	private static final String MESSAGE_LABEL = "Message: ";
 	/**
+	 * Label for bug resolution suggestion
+	 */
+	private static final String RESOLUTION_SUGGESTION_LABEL = "Resolution: ";
+	/**
 	 * Label for line number or line number range
 	 */
 	private static final String LINE_NUMBER_LABEL = "Line number: ";
@@ -158,6 +162,10 @@ public class DetailView extends ViewPart {
 		StringBuffer sb = new StringBuffer("<body>");
 		BugInstance bug = bugInfo.getBugInstance();
 		sb.append(constructParagraph(fmtBold(MESSAGE_LABEL), bug.getBugMessage()));
+		String resolution = bug.getResolutionSuggestion();
+		if (!("".equals(resolution))) {
+			sb.append(constructParagraph(fmtBold(RESOLUTION_SUGGESTION_LABEL), resolution));
+		}
 		sb.append(constructParagraph(fmtBold(LINE_NUMBER_LABEL), bugInfo.getPrimaryLineNumber()));
 		sb.append(constructParagraph(fmtBold(FILENAME_LABEL), bugInfo.getPrimaryFilename()));
 		sb.append(constructParagraph(fmtBold(GROUP_LABEL), bug.getBugGroup()));
