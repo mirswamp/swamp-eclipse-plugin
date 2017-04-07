@@ -19,10 +19,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 import org.continuousassurance.swamp.eclipse.handlers.HandlerUtilityMethods;
 import org.continuousassurance.swamp.eclipse.ui.DetailView;
+import org.continuousassurance.swamp.eclipse.ui.SortListener;
 import org.continuousassurance.swamp.eclipse.ui.StatusView;
 import org.continuousassurance.swamp.eclipse.ui.SwampPerspective;
 import org.continuousassurance.swamp.eclipse.ui.TableView;
@@ -32,7 +34,9 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IPerspectiveDescriptor;
@@ -185,13 +189,31 @@ public class Controller {
 				for (File r : files) {
 					bugs = new ArrayList<>();
 					rp = new ResultsParser(r);
-					filepath = file.getFullPath().toString();
+					filepath = file.getFullPath().toString(); // TODO: Change this to show all files
 					filepath = filepath.substring(1);
 					bugs.addAll(rp.getFileBugs(filepath));
 					updateEditorAndViews(file, page, bugs, rp.getToolName(), rp.getPlatformName());
 				}
+				Table table = getTable(page);
+				if (table != null) {
+					TableColumn col = table.getSortColumn();
+					if (col != null) {
+						SortListener.sortByCol(col);
+					}
+				}
 			}
 		}
+	}
+	
+	private static Table getTable(IWorkbenchPage page) {
+		if (page == null) {
+			return null;
+		}
+		TableView view = (TableView) getView(page, TableView.ID);
+		if (view == null) {
+			return null;
+		}
+		return view.getTable();
 	}
 	
 	/**
@@ -204,11 +226,7 @@ public class Controller {
 	 * found these bugs was run
 	 */
 	private static void updateEditorAndViews(IFile file, IWorkbenchPage page, List<BugInstance> bugs, String toolName, String platformName) {
-		TableView view = (TableView) getView(page, TableView.ID);
-		Table table = null;
-		if (view != null) {
-			table = view.getTable();
-		}
+		Table table = getTable(page);
 		System.out.println("Is table null? " + (table == null));
 		List<TableItem> rows = new ArrayList<>();
 		for (BugInstance bug : bugs) {

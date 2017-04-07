@@ -14,6 +14,7 @@
 package org.continuousassurance.swamp.eclipse.ui;
 
 import java.io.File;
+import java.util.Comparator;
 import java.util.List;
 import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.AssessmentDetails;
@@ -32,6 +33,7 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -212,6 +214,10 @@ public class StatusView extends ViewPart {
 			}
 			item.setData(ASSESS_UUID, parts[AssessmentDetails.ASSESS_UUID_PART]);
 			item.setData(RESULTS_FILEPATH, parts[AssessmentDetails.RESULTS_FILEPATH_PART]);
+		}
+		TableColumn col = table.getSortColumn();
+		if (col != null) {
+			SortListener.sortByCol(col);
 		}
 	}
 }

@@ -50,9 +50,17 @@ public class SortListener implements Listener {
 			table.setSortColumn(selectedCol);
 		}
 		table.setSortDirection(dir);
-		TableItem[] items = table.getItems();
 		@SuppressWarnings("unchecked")
 		Comparator<TableItem> comparator = (Comparator<TableItem>) selectedCol.getData();
+		sortRows(table, comparator);
+	}
+	
+	private void sortRows(Table table, Comparator<TableItem> comparator) {
+		if (comparator == null || table == null) {
+			return;
+		}
+		TableItem[] items = table.getItems();
+		int dir = table.getSortDirection();
 		for (int i = 1; i < items.length; i++) {
 			for (int j = 0; j < i; j++) {
 	            if ((comparator.compare(items[i], items[j]) < 0 && dir == SWT.UP) || (comparator.compare(items[i], items[j]) > 0 && dir == SWT.DOWN)) {
@@ -80,6 +88,16 @@ public class SortListener implements Listener {
 	            	break;
 	            }
 			}
+		}
+	}
+	
+	public static void sortByCol(TableColumn col) {
+		Listener[] listeners = col.getListeners(SWT.Selection);
+		if (listeners.length > 0) {
+			SortListener sl = (SortListener)listeners[0];
+			@SuppressWarnings("unchecked")
+			Comparator<TableItem> comparator = (Comparator<TableItem>)col.getData();
+			sl.sortRows(col.getParent(), comparator);
 		}
 	}
 }
