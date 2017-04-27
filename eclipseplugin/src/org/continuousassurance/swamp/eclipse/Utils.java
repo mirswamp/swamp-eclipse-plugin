@@ -17,6 +17,7 @@ import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -220,7 +221,15 @@ public class Utils {
 			filename = pathname + SEPARATOR + files[i];
 			f = new File(filename);
 			if (f.isDirectory()) {
-				addEntries(filename, "".equals(basePath) ? files[i]:basePath + SEPARATOR + files[i], out);
+				String dirPath = "".equals(basePath) ? files[i]:basePath + SEPARATOR + files[i];
+				ZipEntry entry = new ZipEntry(dirPath + SEPARATOR);
+				try {
+					out.putNextEntry(entry);
+					out.closeEntry();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				addEntries(filename, dirPath, out);
 			}
 			else {
 				System.out.println("File name: " + filename);
@@ -248,6 +257,7 @@ public class Utils {
 			while ((cnt = in.read(data, 0, BUF_SIZE)) != -1) {
 				out.write(data, 0, cnt);
 			}
+			out.closeEntry();
 			in.close();
 		}
 		catch (Exception e) {
