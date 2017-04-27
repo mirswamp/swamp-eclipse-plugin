@@ -60,6 +60,12 @@ public class ResultsRetriever {
 	 */
 	private static final String FINISHED_WITH_ERRORS = "Finished with Errors";
 	
+	private static final String FAILED_TO_VALIDATE_ASSESSMENT_DATA = "FAILED TO VALIDATE ASSESSMENT DATA";
+	
+	private static final String FAILED_TO_START = "FAILED TO START";
+	
+	private static final String FINISHED_WITH_ERRORS_RETRY = "Finished with Errors - Retry";
+	
 	/**
 	 * Set of assessments to be "deleted/removed"
 	 */
@@ -368,7 +374,7 @@ public class ResultsRetriever {
 				}
 				writer.write(newDetailInfo);
 			}
-			else if (FINISHED_WITH_ERRORS.equals(status)) { // Note: This will break if the labels are changed, so MIR shouldn't do that
+			else if (isErrorStatus(status)) { // Note: This will break if the labels are changed, so MIR shouldn't do that
 				System.out.println("Finished with errors!");
 				newDetailInfo = ad.serialize();
 				writeToFinishedFile(newDetailInfo);
@@ -383,5 +389,13 @@ public class ResultsRetriever {
 			e.printStackTrace();
 		}
 		return newDetailInfo;
+	}
+	
+	private static boolean isErrorStatus(String status) {
+		if (status == null) {
+			return false;
+		}
+		return FINISHED_WITH_ERRORS.equals(status) || FAILED_TO_VALIDATE_ASSESSMENT_DATA.equals(status) || 
+				FAILED_TO_START.equals(status) || FINISHED_WITH_ERRORS_RETRY.equals(status);
 	}
 }
