@@ -1,3 +1,8 @@
+2017-04-27
+-Plug-in no longer queries for assessments that finish with errors
+-Archiving works properly for empty directories
+-Advanced settings (i.e. build options, config script, and config options) now fill in for previously submitted assessments
+
 2017-04-06
 -Plug-in now shows bug resolution if the tool provides it
 -Fixed issue with rows becoming unsorted when new rows were added or rows' content changed
