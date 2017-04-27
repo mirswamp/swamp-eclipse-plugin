@@ -1053,6 +1053,9 @@ public class ConfigDialog extends TitleAreaDialog {
 			}
 			buildPathText.setText(path);
 			buildTargetText.setText(submissionInfo.getBuildTarget());
+			buildOpts = submissionInfo.getBuildOpts();
+			configScriptPath = submissionInfo.getConfigCmd();
+			configOpts = submissionInfo.getConfigOpts();
 		}
 		for (int i = 0; i < buildSysCombo.getItemCount(); i++) {
 			if (buildSys.equals(buildSysCombo.getItem(i))) {
