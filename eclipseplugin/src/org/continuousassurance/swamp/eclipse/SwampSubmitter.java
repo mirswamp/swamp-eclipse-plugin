@@ -588,7 +588,6 @@ public class SwampSubmitter {
 		try {
 			System.out.println("Initialized SWAMP API");
 			api = new SwampApiWrapper();
-			api.setHostName(Activator.getLastHostname());
 		} catch (Exception e) {
 			printToConsole(Utils.getBracketedTimestamp() + "Error: Unable to initialize SWAMP API.");
 			e.printStackTrace();

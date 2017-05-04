@@ -157,7 +157,6 @@ public class Activator extends AbstractUIPlugin {
 				reader.close();
 				if ((host != null) && (!host.equals(""))) {
 					api = new SwampApiWrapper();
-					api.setHostName(host);
 					hostname = host;
 					setLoggedIn(api.restoreSession());
 				}
