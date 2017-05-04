@@ -86,7 +86,8 @@ public class ResultsRetriever {
 		SwampApiWrapper api = null;
 		if (Activator.getLoggedIn()) {
 			try {
-				api = new SwampApiWrapper(Activator.getLastHostname());
+				api = new SwampApiWrapper();
+				api.setHostName(Activator.getLastHostname());
 				if (!api.restoreSession()) {
 					api = null;
 				}
