@@ -16,6 +16,8 @@ import org.continuousassurance.swamp.eclipse.BugDetail;
 import org.continuousassurance.swamp.eclipse.Controller;
 import org.continuousassurance.swamp.eclipse.Utils;
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -64,6 +66,7 @@ public class TableView extends ViewPart {
 	public static final String ID = 
 			"org.continuousassurance.swamp.eclipse.ui.views.tableview";
 	
+	private Action showAllAction;
 	/**
 	 * Constructor for TableView
 	 */
@@ -105,6 +108,8 @@ public class TableView extends ViewPart {
 			}
 		});
 		Controller.refreshWorkspace();
+		createActions();
+		createToolbar();
 	}
 	
 	/**
@@ -114,6 +119,22 @@ public class TableView extends ViewPart {
 		if (table != null) {
 			table.removeAll();
 		}
+	}
+	
+	private void createActions() {
+		showAllAction = new Action("Show All/Show File") {
+			
+			@Override
+			public void run() {
+				Controller.toggleShowAll();
+				Controller.refreshWorkspace();
+			}
+		};
+	}
+	
+	private void createToolbar() {
+		IToolBarManager mgr = getViewSite().getActionBars().getToolBarManager();
+		mgr.add(showAllAction);
 	}
 	
 	@Override

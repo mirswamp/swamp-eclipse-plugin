@@ -131,6 +131,8 @@ public class SwampPerspective implements IPerspectiveFactory {
 		 */
 		private IFile currentlyOpenedFile = null;
 		
+		private IProject currentlyOpenedProject = null;
+		
 		private boolean statusViewInitialized = false;
 		
 		/**
@@ -140,10 +142,20 @@ public class SwampPerspective implements IPerspectiveFactory {
 			if (window != null) {
 				IProject project = HandlerUtilityMethods.getActiveProject(window);
 				IFile file = HandlerUtilityMethods.getActiveFile(window);
-				if ((project != null) && (file != null) && 
-					(!file.equals(currentlyOpenedFile))) {
-					currentlyOpenedFile = file;
-					Controller.refreshWorkspace();
+				if ((project != null) && (file != null)) {
+					if (Controller.showAll) {
+						if (!project.equals(currentlyOpenedProject)) {
+							currentlyOpenedFile = file;
+							currentlyOpenedProject = project;
+							Controller.refreshWorkspace();
+						}
+					}
+					else {
+						if (!file.equals(currentlyOpenedFile)) {
+							currentlyOpenedFile = file;
+							Controller.refreshWorkspace();
+						}
+					}
 				}
 			}
 		}

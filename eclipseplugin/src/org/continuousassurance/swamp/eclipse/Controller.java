@@ -20,7 +20,9 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.continuousassurance.swamp.eclipse.handlers.HandlerUtilityMethods;
 import org.continuousassurance.swamp.eclipse.ui.DetailView;
@@ -31,6 +33,7 @@ import org.continuousassurance.swamp.eclipse.ui.TableView;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.swt.SWT;
@@ -45,6 +48,7 @@ import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 
@@ -68,6 +72,8 @@ public class Controller {
 	 * Key for storing BugDetail object with row (TableItem)
 	 */
 	public static final String BUG_DETAIL_OBJ = "bugdetail";
+	
+	public static boolean showAll = true;
 	
 	/**
 	 * Utility method for getting a view in the window given its ID
@@ -98,6 +104,10 @@ public class Controller {
 			}
 		}
 		return null;
+	}
+	
+	public static void toggleShowAll() {
+		showAll = !showAll;
 	}
 	
 	/**
@@ -182,17 +192,21 @@ public class Controller {
 			File resultsDir = new File(ResultsUtils.constructFilepath(pkgThingUUID));
 			File[] files = resultsDir.listFiles();
 			if (files != null && files.length > 0) {
-				IFile file = HandlerUtilityMethods.getActiveFile(window);
 				List<BugInstance> bugs;
 				ResultsParser rp;
-				String filepath;
 				for (File r : files) {
 					bugs = new ArrayList<>();
 					rp = new ResultsParser(r);
-					filepath = file.getFullPath().toString(); // TODO: Change this to show all files
-					filepath = filepath.substring(1);
-					bugs.addAll(rp.getFileBugs(filepath));
-					updateEditorAndViews(file, page, bugs, rp.getToolName(), rp.getPlatformName());
+					;
+					if (showAll) {
+						bugs.addAll(rp.getAllBugs());
+					}
+					else {
+						IFile file = HandlerUtilityMethods.getActiveFile(window);
+						String filepath = eclipseToSCARFFilepath(file);
+						bugs.addAll(rp.getFileBugs(filepath));
+					}
+					updateEditorAndViews(page, bugs, rp.getToolName(), rp.getPlatformName());
 				}
 				Table table = getTable(page);
 				if (table != null) {
@@ -203,6 +217,16 @@ public class Controller {
 				}
 			}
 		}
+	}
+	
+	private static String eclipseToSCARFFilepath(IFile file) {
+		String filepath = file.getFullPath().toString(); 
+		return filepath.substring(1);
+	}
+	
+	private static IFile SCARFtoEclipseFile(String filepath) {
+		Path path = new Path(filepath);
+		return ResourcesPlugin.getWorkspace().getRoot().getFile(path);
 	}
 	
 	private static Table getTable(IWorkbenchPage page) {
@@ -225,18 +249,34 @@ public class Controller {
 	 * @param platformName name of the platform on which the assessment that
 	 * found these bugs was run
 	 */
-	private static void updateEditorAndViews(IFile file, IWorkbenchPage page, List<BugInstance> bugs, String toolName, String platformName) {
+	private static void updateEditorAndViews(IWorkbenchPage page, List<BugInstance> bugs, String toolName, String platformName) {
 		Table table = getTable(page);
 		System.out.println("Is table null? " + (table == null));
 		List<TableItem> rows = new ArrayList<>();
+		Map<String, IFile> filePathToEclipseFile = new HashMap<>();
 		for (BugInstance bug : bugs) {
-			IMarker marker = createMarkerForResource(file, bug, toolName);
+			BugDetail details = new BugDetail(bug, toolName, platformName);
+			TableItem item = null;
 			if (table != null) {
-				BugDetail details = new BugDetail(bug, toolName, platformName);
-				TableItem item = new TableItem(table, SWT.NONE);
-				for (Location loc : bug.getLocations()) {
-					if (loc.isPrimary()) {
-						String filename = loc.getSourceFile();
+				item = new TableItem(table, SWT.NONE);
+			}
+			for (Location loc : bug.getLocations()) {
+				if (loc.isPrimary()) {
+					IFile file = null;
+					IMarker marker = null;
+					String filename = loc.getSourceFile();
+					if (filePathToEclipseFile.containsKey(filename)) {
+						file = filePathToEclipseFile.get(filename);
+					}
+					else {
+						file = SCARFtoEclipseFile(filename);
+						System.out.println("Found the matching file: " + file);
+						filePathToEclipseFile.put(filename, file);
+					}
+					if (file != null) {
+						marker = createMarkerForResource(file, loc, bug, toolName);
+					}
+					if (table != null) {
 						details.setPrimaryFilename(filename);
 						details.setPrimaryLineNumber(loc);
 						item.setText(0, filename);
@@ -245,13 +285,15 @@ public class Controller {
 						item.setText(3, bug.getBugGroup());
 						item.setText(4, toolName);
 						item.setText(5, platformName);
+						if (marker != null) {
+							item.setData(MARKER_OBJ, marker);
+						}
 					}
-					details.addLocation(loc);
 				}
-				item.setData(MARKER_OBJ, marker);
-				item.setData(BUG_DETAIL_OBJ, details);
-				rows.add(item);
+				details.addLocation(loc);
 			}
+			item.setData(BUG_DETAIL_OBJ, details);
+			rows.add(item);
 		}
 		resetDetailView(page);
 	}
@@ -263,9 +305,7 @@ public class Controller {
 	 * @param toolName tool that found this weakness
 	 * @return editor marker
 	 */
-	private static IMarker createMarkerForResource(IFile resource, BugInstance bug, String toolName) {
-		for (Location l : bug.getLocations()) {
-			if (l.isPrimary()) {
+	private static IMarker createMarkerForResource(IFile resource, Location l, BugInstance bug, String toolName) {
 				try {
 					String markerType = Activator.getMarkerType(toolName, bug.getBugGroup(), bug.getBugSeverity());
 					System.out.println("MARKER TYPE: " + markerType);
@@ -279,9 +319,7 @@ public class Controller {
 					System.err.println("Core exception when creating marker");
 					e.printStackTrace();
 				}
-			}
 			// TODO Maybe add some marker for non-primary bugs? This would probably get too noisy
-		}
 		return null;
 	}
 	
@@ -383,8 +421,16 @@ public class Controller {
 		}
 		IWorkbenchWindow window = getActiveWorkbenchWindow();
 		if (window != null) {
-			IEditorPart editor = getEditor(window);
+			IFile file = (IFile) marker.getResource();
+			IEditorPart editor = null;
+			try {
+				editor = IDE.openEditor(window.getActivePage(), file, true);
+			} catch (PartInitException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			if (editor != null) {
+				System.out.println("Going to marker at: " + marker.getAttribute(IMarker.LINE_NUMBER, 0));
 				IDE.gotoMarker(editor, marker);
 			}
 		}

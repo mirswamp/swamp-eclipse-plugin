@@ -116,6 +116,14 @@ public class ResultsParser implements ScarfInterface {
 		}
 	}
 	
+	public List<BugInstance> getAllBugs() {
+		List<BugInstance> bugs = new ArrayList<>();
+		for (String filename : fileBugs.keySet()) {
+			bugs.addAll(fileBugs.get(filename));
+		}
+		return bugs;
+	}
+	
 	private static String normalizeFilepath(String fp) {
 		String PKG_STR = "pkg1";
 		String DOT = ".";
