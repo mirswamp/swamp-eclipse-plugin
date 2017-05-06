@@ -292,7 +292,9 @@ public class Controller {
 				}
 				details.addLocation(loc);
 			}
-			item.setData(BUG_DETAIL_OBJ, details);
+			if (table != null) {
+				item.setData(BUG_DETAIL_OBJ, details);
+			}
 			rows.add(item);
 		}
 		resetDetailView(page);
