@@ -38,7 +38,9 @@ ARCHIVE_NAME="swamp_eclipse_plugin"
 START_DIR=$PWD
 SEPARATOR_LINE="---------------------------------------------"
 TIMESTAMP=$(date +%Y-%m-%d)
-VERSION=$1"v"$TIMESTAMP
+VERSION=$1
+
+echo "Version: "$VERSION
 
 dir_name=$HOME/Desktop/
 dir_name+=$TIMESTAMP
@@ -92,12 +94,12 @@ zip -r $dir_name{.zip,}
 
 echo "Created archive for GitHub releases and Google Drive"
 
-cp -r $HOME/public/html-s/swamp-eclipse swamp-eclipse-plugin-$version
+cp -r $HOME/public/html-s/swamp-eclipse swamp-eclipse-plugin-$VERSION
 
-tar -cvf swamp-eclipse-plugin-${version}.tar swamp-eclipse-plugin-$version
+tar -cvzf $HOME/Desktop/swamp-eclipse-plugin-${VERSION}.tar swamp-eclipse-plugin-$VERSION
 
-cp swamp-eclipse-plugin-${version}.tar $HOME/Desktop
+rm -rf swamp-eclipse-plugin-$VERSION
 
-echo "Created archive for update site and moved to $HOME/Desktop"
+echo "Created archive for update site"
 
 cd $START_DIR
