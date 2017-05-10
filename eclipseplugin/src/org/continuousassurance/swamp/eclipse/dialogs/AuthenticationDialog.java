@@ -326,6 +326,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 	
 		try {
 			api = new SwampApiWrapper();
+			System.out.println("Hostname: " + hostname);
 			id = api.login(username, password, hostname);
 			api.saveSession();
 		}
