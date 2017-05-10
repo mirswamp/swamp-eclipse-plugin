@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<site>
-   <feature url="features/swamp_eclipse_plugin_0.8.0.qualifier.jar" id="swamp_eclipse_plugin" version="0.8.0.qualifier">
-      <category name="SWAMP"/>
-   </feature>
-   <category-def name="SWAMP" label="SWAMP"/>
-</site>
