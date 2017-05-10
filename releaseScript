@@ -30,6 +30,7 @@
 # (10) add to RELEASE_NOTES.txt
 # (11) copy update-site into the Desktop dir
 # (12) zip it
+# (13) Create an archive and put it in the Desktop dir
 
 : ${1?"Usage: $0 versionNumber"}
 
@@ -88,5 +89,15 @@ echo "Formatted release_notes and moved RELEASE_NOTES.txt to "$dir_name
 cp -r $HOME/public/html-s/swamp-eclipse $dir_name/update-site
 
 zip -r $dir_name{.zip,}
+
+echo "Created archive for GitHub releases and Google Drive"
+
+cp -r $HOME/public/html-s/swamp-eclipse swamp-eclipse-plugin-$version
+
+tar -cvf swamp-eclipse-plugin-${version}.tar swamp-eclipse-plugin-$version
+
+cp swamp-eclipse-plugin-${version}.tar $HOME/Desktop
+
+echo "Created archive for update site and moved to $HOME/Desktop"
 
 cd $START_DIR
