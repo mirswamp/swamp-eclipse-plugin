@@ -13,8 +13,8 @@
 
 package org.continuousassurance.swamp.eclipse;
 
-import javaSCARF.ScarfInterface;
-import javaSCARF.ScarfXmlReader;
+import org.continuousassurance.scarf.parser.ScarfInterface;
+import org.continuousassurance.scarf.parser.ScarfXmlReader;
 
 import java.io.File;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
-import dataStructures.*;
+import org.continuousassurance.scarf.datastructures.*;
 
 /**
  * This class collects the information that the plug-in needs from 
@@ -213,5 +213,10 @@ public class ResultsParser implements ScarfInterface {
 	 */
 	public String getPlatformName() {
 		return platform;
+	}
+
+	@Override
+	public void finalCallback() {
+		System.out.println("Final callback");
 	}
 }

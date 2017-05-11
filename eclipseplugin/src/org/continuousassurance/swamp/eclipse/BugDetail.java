@@ -16,8 +16,8 @@ package org.continuousassurance.swamp.eclipse;
 import java.util.ArrayList;
 import java.util.List;
 
-import dataStructures.BugInstance;
-import dataStructures.Location;
+import org.continuousassurance.scarf.datastructures.BugInstance;
+import org.continuousassurance.scarf.datastructures.Location;
 
 /** This is an object to store detailed information about a bug and its source
  * for display in the BugDetail view

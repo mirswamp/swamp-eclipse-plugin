@@ -97,7 +97,7 @@ echo "Created archive for GitHub releases and Google Drive"
 #cp -r $HOME/public/html-s/swamp-eclipse swamp-eclipse-plugin-$VERSION
 cp -r $START_DIR/swamp-eclipse swamp-eclipse-plugin-$VERSION
 
-tar -cvzf $HOME/Desktop/swamp-eclipse-plugin-${VERSION}.tar swamp-eclipse-plugin-$VERSION
+tar -cvzf $START_DIR/swamp-eclipse-plugin-${VERSION}.tar swamp-eclipse-plugin-$VERSION
 
 rm -rf swamp-eclipse-plugin-$VERSION
 

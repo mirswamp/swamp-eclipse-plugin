@@ -20,7 +20,7 @@ import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 
-import dataStructures.BugInstance;
+import org.continuousassurance.scarf.datastructures.BugInstance;
 
 /**
  * This class shows detailed information about a bug selected in the TableView.
