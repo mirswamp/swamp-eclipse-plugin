@@ -88,14 +88,14 @@ mv tmpfile $dir_name"/RELEASE_NOTES.txt"
 
 echo "Formatted release_notes and moved RELEASE_NOTES.txt to "$dir_name
 
-cp -r $HOME/public/html-s/swamp-eclipse $dir_name/update-site
+cp -r $START_DIR/swamp-eclipse $dir_name/update-site
 
 zip -r $dir_name{.zip,}
 
 echo "Created archive for GitHub releases and Google Drive"
 
 #cp -r $HOME/public/html-s/swamp-eclipse swamp-eclipse-plugin-$VERSION
-cp -r /p/releases/swamp-eclipse swamp-eclipse-plugin-$VERSION
+cp -r $START_DIR/swamp-eclipse swamp-eclipse-plugin-$VERSION
 
 tar -cvzf $HOME/Desktop/swamp-eclipse-plugin-${VERSION}.tar swamp-eclipse-plugin-$VERSION
 
