@@ -61,7 +61,8 @@ cp -r eclipseplugin/doc/images $dir_name
 
 echo "Moved README.html to "$dir_name
 
-/p/swamp/bin/asciidoctor -r asciidoctor-pdf -b pdf README.adoc
+#/p/swamp/bin/asciidoctor -r asciidoctor-pdf -b pdf README.adoc
+asciidoctor-pdf -b pdf README.adoc
 
 echo "Generated README.pdf"
 
@@ -88,14 +89,16 @@ mv tmpfile $dir_name"/RELEASE_NOTES.txt"
 
 echo "Formatted release_notes and moved RELEASE_NOTES.txt to "$dir_name
 
-cp -r $START_DIR/swamp-eclipse $dir_name/update-site
+cp -r $START_DIR/swamp-eclipse-update-site/ $dir_name/update-site
+rm -rf $dir_name/update-site/.git
 
 zip -r $dir_name{.zip,}
 
 echo "Created archive for GitHub releases and Google Drive"
 
 #cp -r $HOME/public/html-s/swamp-eclipse swamp-eclipse-plugin-$VERSION
-cp -r $START_DIR/swamp-eclipse swamp-eclipse-plugin-$VERSION
+cp -r $START_DIR/swamp-eclipse-update-site swamp-eclipse-plugin-$VERSION
+rm -rf swamp-eclipse-plugin-$VERSION/.git
 
 tar -cvzf $START_DIR/swamp-eclipse-plugin-${VERSION}.tar swamp-eclipse-plugin-$VERSION
 
