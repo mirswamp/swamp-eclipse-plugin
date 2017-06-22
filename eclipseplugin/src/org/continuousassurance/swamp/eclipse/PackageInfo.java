@@ -81,8 +81,11 @@ public class PackageInfo {
 	 * @param configOpts <see package.conf documentation>
 	 * @return file object representing the newly-created package.conf file
 	 */
-	public static File generatePkgConfFile(Path archivePath, String outputDir, String shortName, String version, String pkgDir, String language, String pkgType, String buildSys, String buildDir, String buildFile, String buildTarget,
-			String buildOpts, String configDir, String configCmd, String configOpts) {
+	public static File generatePkgConfFile(Path archivePath, String outputDir, String shortName, 
+			String version, String pkgDir, String language, 
+			String pkgType, String buildSys, String buildDir, 
+			String buildFile, String buildTarget, String buildOpts,
+			String configDir, String configCmd, String configOpts) {
 		MessageDigest md5 = null;
 		MessageDigest sha512 = null;
 		try {

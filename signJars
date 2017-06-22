@@ -1,0 +1,17 @@
+#! /bin/bash
+
+die () {
+    echo "$@" && exit 1;
+}
+
+main () {
+    local Keystore="$HOME/swamp/docs/vbasupalliStore.jks"
+
+    find "$1" -type f -name '*.jar' \
+         -exec jarsigner \
+         -storepass:env STOREPASS \
+         -keypass:env KEYPASS \
+         --keystore "$Keystore" '{}' vbasupallikey ';'
+}
+
+main "$@"
