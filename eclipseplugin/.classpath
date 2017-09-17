@@ -22,7 +22,8 @@
 	<classpathentry exported="true" kind="lib" path="lib/commons-logging-1.1.3.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/commons-io-2.5.jar"/>
 	<classpathentry kind="lib" path="lib/javax.json-1.0.4.jar"/>
-	<classpathentry kind="lib" path="lib/java-cli-1.1-jar-with-dependencies.jar"/>
-	<classpathentry kind="lib" path="lib/scarf-io-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/java-cli-1.2-jar-with-dependencies.jar"/>
+	<classpathentry kind="lib" path="lib/scarf-io-1.2.jar"/>
+	<classpathentry kind="lib" path="lib/commons-compress-1.14.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

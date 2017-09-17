@@ -37,8 +37,9 @@ Bundle-ClassPath: .,
  lib/javax.json-1.0.4.jar,
  lib/slf4j-api-1.7.25.jar,
  lib/slf4j-simple-1.7.25.jar,
- lib/java-cli-1.1-jar-with-dependencies.jar,
- lib/scarf-io-1.1.jar
+ lib/java-cli-1.2-jar-with-dependencies.jar,
+ lib/scarf-io-1.2.jar,
+ lib/commons-compress-1.14.jar
 Import-Package: org.eclipse.jdt.core,
  org.eclipse.jdt.internal.core,
  org.eclipse.ui.console

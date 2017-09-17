@@ -16,7 +16,7 @@ package org.continuousassurance.swamp.eclipse.dialogs;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.continuousassurance.swamp.api.Platform;
+import org.continuousassurance.swamp.api.PlatformVersion;
 import org.continuousassurance.swamp.cli.SwampApiWrapper;
 import org.continuousassurance.swamp.eclipse.SubmissionInfo;
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -41,7 +41,7 @@ public class PlatformDialog extends TitleAreaDialog {
 	/**
 	 * The List of SWAMP Platforms
 	 */
-	private List<Platform> platforms;
+	private List<PlatformVersion> platforms;
 	/**
 	 * The List widget for selecting Platforms
 	 */
@@ -132,18 +132,18 @@ public class PlatformDialog extends TitleAreaDialog {
 	 * @param pkgType the package type of the package being assessed
 	 * @return List of SWAMP Platforms
 	 */
-	private List<Platform> getPlatforms(String pkgType) {
+	private List<PlatformVersion> getPlatforms(String pkgType) {
 		// This is the workaround documented in GitHub issue #22. It is a way
 		// of keeping the UI/UX simple and intuitive even though platforms
 		// actually depends on tools
 		String GCC_WARN_TOOL_UUID = "7A08B82D-3A3B-45CA-8644-105088741AF6";
-		List<Platform> platformList = null;
+		List<PlatformVersion> platformList = null;
 		if (pkgType.equals(SubmissionInfo.C_CPP)) {
-			platformList = api.getSupportedPlatforms(GCC_WARN_TOOL_UUID, submissionInfo.getSelectedProjectID());
+			platformList = api.getSupportedPlatformVersions(GCC_WARN_TOOL_UUID, submissionInfo.getSelectedProjectID());
 		}
 		else {
 			platformList = new ArrayList<>();
-			Platform p = api.getDefaultPlatform(pkgType);
+			PlatformVersion p = api.getDefaultPlatformVersion(pkgType);
 			platformList.add(p);
 		}
 		return platformList;
@@ -247,7 +247,7 @@ public class PlatformDialog extends TitleAreaDialog {
 		int[] selectedIndices = swtPlatformList.getSelectionIndices();
 		List<String> selectedPlatformIDs = new ArrayList<String>(selectedIndices.length);
 		for (int i : selectedIndices) {
-			Platform platform = platforms.get(i);
+			PlatformVersion platform = platforms.get(i);
 			selectedPlatformIDs.add(platform.getUUIDString());
 		}
 		return selectedPlatformIDs;

@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
+import org.continuousassurance.swamp.api.AssessmentRun;
 import org.continuousassurance.swamp.api.PackageThing;
 import org.continuousassurance.swamp.api.PackageVersion;
 import org.continuousassurance.swamp.cli.SwampApiWrapper;
@@ -222,7 +223,8 @@ public class SwampSubmitter {
 				String pluginLoc = si.getProject().getWorkingLocation(PLUGIN_ID).toOSString();
 				Date date = new Date();
 				String timestamp = date.toString();
-				String filename = timestamp + "-" + si.getPackageName() + ".zip";
+				//String filename = timestamp + "-" + si.getPackageName() + ".zip";
+				String filename = timestamp + "-" + si.getPackageName() + ".tar.gz";
 				String archiveName = filename.replace(" ", "-").replace(":", "").toLowerCase(); 
 				Set<String> files = new HashSet<String>();
 				files.add(si.getProjectPath());
@@ -235,7 +237,17 @@ public class SwampSubmitter {
 				}
 
 				subMonitor.split(ZIP_TICKS);
-				Path archivePath = Utils.zipFiles(files, pluginLoc, archiveName);
+				//Path archivePath = Utils.zipFiles(files, pluginLoc, archiveName);
+				Path archivePath = null;
+				try {
+					archivePath = TarUtils.createTarGzip(files, pluginLoc, archiveName);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
 				
 				if (subMonitor.isCanceled()) {
 					IStatus status = Status.CANCEL_STATUS;
@@ -293,7 +305,7 @@ public class SwampSubmitter {
 						subMonitor.split(SUBMISSION_TICKS);
 						details.setResultsFilepath(ResultsUtils.constructFilepath(prjUUID, pkgThingUUID, toolUUID, platformUUID));
 						details.setToolName(api.getTool(toolUUID, prjUUID).getName());
-						details.setPlatformName(api.getPlatform(platformUUID).getName());
+						details.setPlatformName(api.getPlatformVersion(platformUUID).getName());
 						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID, details);
 					}
 				}
@@ -387,9 +399,20 @@ public class SwampSubmitter {
 				String pluginLoc = ich.getRootProjectPluginLocation();
 				Date date = new Date();
 				String timestamp = date.toString();
-				String filename = timestamp + "-" + si.getPackageName() + ".zip";
+				//String filename = timestamp + "-" + si.getPackageName() + ".zip";
+				String filename = timestamp + "-" + si.getPackageName() + ".tar.gz";
 				String archiveName = filename.replace(" ", "-").replace(":", "").toLowerCase(); 
-				Path archivePath = Utils.zipFiles(files, ich.getRootProjectPluginLocation(), archiveName);
+				//Path archivePath = Utils.zipFiles(files, ich.getRootProjectPluginLocation(), archiveName);
+				Path archivePath = null;
+				try {
+					archivePath = TarUtils.createTarGzip(files, ich.getRootProjectPluginLocation(), archiveName);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					IStatus status = Status.CANCEL_STATUS;
+					done(status);
+					return status;
+				}
 				
 				if (subMonitor.isCanceled()) {
 					IStatus status = Status.CANCEL_STATUS;
@@ -449,7 +472,7 @@ public class SwampSubmitter {
 						subMonitor.split(SUBMISSION_TICKS);
 						details.setResultsFilepath(ResultsUtils.constructFilepath(prjUUID, pkgThingUUID, toolUUID, platformUUID));
 						details.setToolName(api.getTool(toolUUID, prjUUID).getName());
-						details.setPlatformName(api.getPlatform(platformUUID).getName());
+						details.setPlatformName(api.getPlatformVersion(platformUUID).getName());
 						submitAssessment(pkgVersUUID, toolUUID, prjUUID, platformUUID, details);
 					}
 				}
@@ -564,7 +587,7 @@ public class SwampSubmitter {
 		System.out.println("Project UUID: " + prjUUID);
 		String pkgVersUUID = null;
 		try {
-			pkgVersUUID = api.uploadPackage(pkgConfPath, archivePath, prjUUID, newPackage);
+			pkgVersUUID = api.uploadPackage(pkgConfPath, archivePath, prjUUID, null, newPackage);
 		} catch (InvalidIdentifierException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -852,11 +875,12 @@ public class SwampSubmitter {
 		PackageThing pkgThing = pkg.getPackageThing();
 		assert (pkgThing != null);
 		String pkgName = pkgThing.getName();
-		String platformName = api.getPlatform(pltUUID).getName();
+		String platformName = api.getPlatformVersion(pltUUID).getName();
 
 		String assessUUID = null;
 		try {
-			assessUUID = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
+			AssessmentRun arun = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
+			assessUUID = arun.getIdentifierString();
 		} catch (InvalidIdentifierException | IncompatibleAssessmentTupleException e) {
 			printToConsole(Utils.getBracketedTimestamp() + "Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");
 			// TODO handle error here

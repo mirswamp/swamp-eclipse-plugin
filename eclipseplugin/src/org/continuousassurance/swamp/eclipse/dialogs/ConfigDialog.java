@@ -1324,7 +1324,8 @@ public class ConfigDialog extends TitleAreaDialog {
 					String cCmd = "";
 					if (!configScriptPath.equals("")) {
 						cDir = getRelDir(prjDir, configScriptPath, true);
-						cCmd = configScriptPath.substring(configScriptPath.lastIndexOf(SEPARATOR)+1);
+						//cCmd = configScriptPath.substring(configScriptPath.lastIndexOf(SEPARATOR)+1);
+						cCmd = "." + SEPARATOR + configScriptPath.substring(configScriptPath.lastIndexOf(SEPARATOR)+1);
 					}
 					submissionInfo.setConfigInfo(cDir, cCmd, configOpts);
 				}
