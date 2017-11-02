@@ -405,6 +405,9 @@ public class Activator extends AbstractUIPlugin {
 	 */
 	public static String getMarkerType(String toolName, String bugGroup, String bugSeverity) {
 		String DELIMITER = ":";
+		if (bugGroup == null){
+			bugGroup = "";
+		}
 		String input = toolName + DELIMITER + bugGroup + DELIMITER + bugSeverity;
 		System.out.println("Input: " + input);
 		for (int i = 0; i < patterns.size(); i++) {

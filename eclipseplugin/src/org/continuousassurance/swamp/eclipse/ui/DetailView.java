@@ -168,7 +168,11 @@ public class DetailView extends ViewPart {
 		}
 		sb.append(constructParagraph(fmtBold(LINE_NUMBER_LABEL), bugInfo.getPrimaryLineNumber()));
 		sb.append(constructParagraph(fmtBold(FILENAME_LABEL), bugInfo.getPrimaryFilename()));
-		sb.append(constructParagraph(fmtBold(GROUP_LABEL), bug.getBugGroup()));
+		if (bug.getBugGroup() != null) {
+			sb.append(constructParagraph(fmtBold(GROUP_LABEL), bug.getBugGroup()));
+		}else{
+			sb.append(constructParagraph(fmtBold(GROUP_LABEL), ""));
+		}
 		sb.append(constructParagraph(fmtBold(CODE_LABEL), bug.getBugCode()));
 		sb.append(constructParagraph(fmtBold(TOOL_LABEL), bugInfo.getTool()));
 		sb.append(constructParagraph(fmtBold(PLATFORM_LABEL), bugInfo.getPlatform()));

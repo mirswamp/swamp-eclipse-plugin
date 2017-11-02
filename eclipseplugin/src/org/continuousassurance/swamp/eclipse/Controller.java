@@ -280,7 +280,11 @@ public class Controller {
 						item.setText(0, filename);
 						item.setText(1, BugDetail.formatSingleLineNumber(loc.getStartLine()));
 						item.setText(2, BugDetail.formatSingleLineNumber(loc.getEndLine()));
-						item.setText(3, bug.getBugGroup());
+						if (bug.getBugGroup() != null) {
+							item.setText(3, bug.getBugGroup());
+						}else{
+							item.setText(3, "");
+						}
 						item.setText(4, toolName);
 						item.setText(5, platformName);
 						if (marker != null) {

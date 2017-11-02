@@ -34,7 +34,7 @@ import org.continuousassurance.swamp.cli.exceptions.InvalidIdentifierException;
 import org.continuousassurance.swamp.eclipse.exceptions.ResultsRetrievalException;
 import org.continuousassurance.swamp.eclipse.exceptions.UserNotLoggedInException;
 import org.eclipse.swt.widgets.Display;
-
+import org.continuousassurance.swamp.cli.util.AssessmentStatus;
 /**
  * This class retrieves assessment statuses from the SWAMP, downloads results
  * as they become available, and updates the local assessment statuses
@@ -351,7 +351,8 @@ public class ResultsRetriever {
 		ad.updateStatus(status);
 		String newDetailInfo = "";
 		try {
-			if (FINISHED.equals(status)) { // Note: This will break if the labels are changed, so MIR shouldn't do that
+			//if (FINISHED.equals(status)) { // Note: This will break if the labels are changed, so MIR shouldn't do that
+			if (AssessmentStatus.SUCCESS == AssessmentStatus.translateAssessmentStatus(status)) {
 				System.out.println("Finished with no errors!");
 				System.out.println("Bug count: " + rec.getWeaknessCount());
 				ad.setBugCount(rec.getWeaknessCount());
@@ -374,8 +375,9 @@ public class ResultsRetriever {
 				}
 				writer.write(newDetailInfo);
 			}
-			else if (isErrorStatus(status)) { // Note: This will break if the labels are changed, so MIR shouldn't do that
-				System.out.println("Finished with errors!");
+			//else if (isErrorStatus(status)) { // Note: This will break if the labels are changed, so MIR shouldn't do that
+			else if (AssessmentStatus.FAILED == AssessmentStatus.translateAssessmentStatus(status)) { 
+			System.out.println("Finished with errors!");
 				newDetailInfo = ad.serialize();
 				writeToFinishedFile(newDetailInfo);
 				return null;
