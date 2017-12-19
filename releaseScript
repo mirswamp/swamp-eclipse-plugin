@@ -100,6 +100,7 @@ echo "Created archive for GitHub releases and Google Drive"
 #cp -r $HOME/public/html-s/swamp-eclipse swamp-eclipse-plugin-$VERSION
 cp -r $START_DIR/swamp-eclipse-update-site swamp-eclipse-plugin-$VERSION
 $START_DIR/signJars swamp-eclipse-plugin-$VERSION
+echo rm -rf swamp-eclipse-plugin-$VERSION/.git
 rm -rf swamp-eclipse-plugin-$VERSION/.git
 
 tar -cvzf $START_DIR/swamp-eclipse-plugin-${VERSION}.tar swamp-eclipse-plugin-$VERSION

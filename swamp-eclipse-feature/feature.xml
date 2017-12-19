@@ -2,7 +2,7 @@
 <feature
       id="swamp_eclipse_plugin"
       label="Swamp_eclipse_plugin"
-      version="1.0.5.qualifier"
+      version="1.0.6.qualifier"
       provider-name="SWAMP">
 
    <description>
@@ -39,6 +39,6 @@ limitations under the License.
          id="eclipseplugin"
          download-size="0"
          install-size="0"
-         version="1.0.5.qualifier"/>
+         version="1.0.6.qualifier"/>
 
 </feature>
