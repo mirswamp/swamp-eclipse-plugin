@@ -13,6 +13,7 @@
 
 package org.continuousassurance.swamp.eclipse.dialogs;
 
+import org.apache.commons.io.FilenameUtils;
 import org.continuousassurance.swamp.api.PackageThing;
 import org.continuousassurance.swamp.api.Project;
 import org.continuousassurance.swamp.cli.SwampApiWrapper;
@@ -53,9 +54,11 @@ import org.eclipse.swt.widgets.Text;
 import static org.continuousassurance.swamp.eclipse.SubmissionInfo.AUTO_GENERATE_BUILD_STRING;
 import static org.continuousassurance.swamp.eclipse.SubmissionInfo.ECLIPSE_GENERATED_STRING;
 import static org.continuousassurance.swamp.eclipse.SubmissionInfo.NO_BUILD_STRING;
-import static org.eclipse.core.runtime.Path.SEPARATOR;
+//import static org.eclipse.core.runtime.Path.File.separatorChar;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -721,7 +724,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			for (int i = 0; i < files.length; i++) {
 				String filename = files[i];
 				System.out.println("Filename: " + filename);
-				String filepath = path + SEPARATOR + filename;
+				String filepath = path + File.separatorChar + filename;
 				File f = new File(filepath);
 				if (f.isDirectory()) {
 					continue;
@@ -759,7 +762,7 @@ public class ConfigDialog extends TitleAreaDialog {
 		if (fileList != null && fileList.length > 0) {
 			for (String f : fileList) {
 				if (f.equals(filename)) {
-					buildPathText.setText(dirPath + SEPARATOR + filename);
+					buildPathText.setText(dirPath + File.separatorChar + filename);
 					return;
 				}
 			}
@@ -1036,7 +1039,7 @@ public class ConfigDialog extends TitleAreaDialog {
 			buildSys = submissionInfo.getBuildSystem();
 			String prjLocation = eclipseProjects[eclipsePrjCombo.getSelectionIndex()].getLocation().toOSString();
 			String buildDir = submissionInfo.getBuildDirectory();
-			int idx = buildDir.indexOf(Character.toString(SEPARATOR));
+			int idx = buildDir.indexOf(Character.toString(File.separatorChar));
 			if (idx > -1) {
 				buildDir = buildDir.substring(idx+1);
 			}
@@ -1044,12 +1047,12 @@ public class ConfigDialog extends TitleAreaDialog {
 				buildDir = "";
 			}
 			String buildFile = submissionInfo.getBuildFile();
-			String path = prjLocation + SEPARATOR;
+			String path = prjLocation + File.separatorChar;
 			if (buildDir.equals("") || buildDir.equals(".")) {
 				path += buildFile;
 			}
 			else {
-				path += buildDir + SEPARATOR + buildFile;
+				path += buildDir + File.separatorChar + buildFile;
 			}
 			buildPathText.setText(path);
 			buildTargetText.setText(submissionInfo.getBuildTarget());
@@ -1317,15 +1320,15 @@ public class ConfigDialog extends TitleAreaDialog {
 					String prjDir = project.getLocation().toOSString();
 					String buildPath = buildPathText.getText();
 					relBuildDir = getRelDir(prjDir, buildPath, true);
-					buildFileName = buildPath.substring(buildPath.lastIndexOf(SEPARATOR)+1);
+					buildFileName = buildPath.substring(buildPath.lastIndexOf(File.separatorChar)+1);
 					System.out.println("Relative Directory: " + relBuildDir);
 					System.out.println("Build file: " + buildFileName);
 					String cDir = "";
 					String cCmd = "";
 					if (!configScriptPath.equals("")) {
 						cDir = getRelDir(prjDir, configScriptPath, true);
-						//cCmd = configScriptPath.substring(configScriptPath.lastIndexOf(SEPARATOR)+1);
-						cCmd = "." + SEPARATOR + configScriptPath.substring(configScriptPath.lastIndexOf(SEPARATOR)+1);
+						//cCmd = configScriptPath.substring(configScriptPath.lastIndexOf(File.separatorChar)+1);
+						cCmd = "." + File.separatorChar + configScriptPath.substring(configScriptPath.lastIndexOf(File.separatorChar)+1);
 					}
 					submissionInfo.setConfigInfo(cDir, cCmd, configOpts);
 				}
@@ -1343,10 +1346,26 @@ public class ConfigDialog extends TitleAreaDialog {
 	 * @param isFilePath true if path is for a file rather than a directory
 	 * @return relative directory
 	 */
-	private String getRelDir(String projectDir, String path, boolean isFilePath) {
-		int prjIndex = projectDir.lastIndexOf(SEPARATOR);
-		int fileIndex = isFilePath ? path.lastIndexOf(SEPARATOR) : path.length();
+	private String getRelDirOld(String projectDir, String path, boolean isFilePath) {
+		int prjIndex = projectDir.lastIndexOf(File.separatorChar);
+		int fileIndex = isFilePath ? path.lastIndexOf(File.separatorChar) : path.length();
 		String relDir = path.substring(prjIndex+1, fileIndex);
+		if (relDir.equals("")) {
+			return ".";
+		}
+		return relDir;
+	}
+	
+	private String getRelDir(String projectDir, String path, boolean isFilePath) {
+	    Path p1 = Paths.get(FilenameUtils.getPath(projectDir));
+	    
+	    Path p2 = Paths.get(FilenameUtils.getPath(path));
+	    if (isFilePath) {
+	    	p2 = Paths.get(FilenameUtils.getPath(path));
+	    }
+	    
+    	String relDir = p1.relativize(p2).toString();
+
 		if (relDir.equals("")) {
 			return ".";
 		}

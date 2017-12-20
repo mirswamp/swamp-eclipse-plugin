@@ -17,6 +17,7 @@ import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
 
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
 import org.continuousassurance.swamp.api.PackageThing;
 import org.continuousassurance.swamp.cli.SwampApiWrapper;
 import org.eclipse.cdt.core.model.CoreModel;
@@ -580,7 +581,8 @@ public class SubmissionInfo {
 		}
 		else {
 			buildSystem = buildSys.equals(ECLIPSE_GENERATED_STRING) ? "make" : buildSys;
-			buildDirectory = buildDir;
+			//buildDirectory = buildDir;
+			buildDirectory = FilenameUtils.separatorsToUnix(buildDir);
 			this.buildFile = buildFile;
 			buildTarget = target;
 			buildOpts = buildOptions;
@@ -594,8 +596,10 @@ public class SubmissionInfo {
 	 * @param configOptions config options
 	 */
 	public void setConfigInfo(String configDir, String configCmd, String configOptions) {
-		this.configDir = configDir;
-		this.configCmd = configCmd;
+		//this.configDir = configDir;
+		//this.configCmd = configCmd;
+		this.configDir =  FilenameUtils.separatorsToUnix(configDir);
+		this.configCmd =  FilenameUtils.separatorsToUnix(configCmd);
 		this.configOpts = configOptions;
 	}
 	

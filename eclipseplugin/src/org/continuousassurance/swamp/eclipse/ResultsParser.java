@@ -23,6 +23,8 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashMap;
+
+import org.apache.commons.io.FilenameUtils;
 import org.continuousassurance.scarf.datastructures.*;
 
 /**
@@ -137,7 +139,15 @@ public class ResultsParser implements ScarfInterface {
 			fp = fp.substring(idx+PKG_STR.length()+1);
 		}
 		Deque<String> filepath = new ArrayDeque<>();
-		String[] parts = fp.split(ResultsUtils.SEPARATOR);
+		fp = FilenameUtils.separatorsToSystem(fp);
+		String[] parts = null;
+		if (System.getProperty("os.name").toLowerCase().contains("windows")) {
+			// The pattern must be '\\\\'
+			parts = fp.split(File.separator + File.separator);		
+		}else {
+			parts = fp.split(File.separator);
+		}
+
 		for (String part : parts) {
 			if (part.equals(DOT)) {
 				continue;

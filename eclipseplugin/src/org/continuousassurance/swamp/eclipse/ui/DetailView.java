@@ -161,7 +161,13 @@ public class DetailView extends ViewPart {
 	private String getBody(BugDetail bugInfo) {
 		StringBuffer sb = new StringBuffer("<body>");
 		BugInstance bug = bugInfo.getBugInstance();
-		sb.append(constructParagraph(fmtBold(MESSAGE_LABEL), bug.getBugMessage()));
+		//Added by Vamshi to fix FindBugs/Spotbugs messages
+		if (bug.getBugMessage().endsWith("Bug Path:")) {
+			sb.append(constructParagraph(fmtBold(MESSAGE_LABEL), 
+					bug.getBugMessage().substring(0, bug.getBugMessage().lastIndexOf("Bug Path:"))));
+		} else {
+			sb.append(constructParagraph(fmtBold(MESSAGE_LABEL), bug.getBugMessage()));
+		}
 		String resolution = bug.getResolutionSuggestion();
 		if (!("".equals(resolution))) {
 			sb.append(constructParagraph(fmtBold(RESOLUTION_SUGGESTION_LABEL), resolution));
