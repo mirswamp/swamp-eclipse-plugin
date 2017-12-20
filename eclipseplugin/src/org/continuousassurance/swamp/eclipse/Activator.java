@@ -119,11 +119,11 @@ public class Activator extends AbstractUIPlugin {
 	
 	public static final String MARKER_PREFIX = "eclipseplugin.";
 	
-	private static final String SEPARATOR = System.getProperty("file.separator");
+	//private static final String SEPARATOR = System.getProperty("file.separator");
 	
 	private static final String SWAMP_SETTINGS_DIR_NAME = ".SWAMP_SETTINGS";
 	
-	private static final String SWAMP_SETTINGS_PATH = System.getProperty("user.home") + SEPARATOR + SWAMP_SETTINGS_DIR_NAME; 
+	private static final String SWAMP_SETTINGS_PATH = System.getProperty("user.home") + File.separator + SWAMP_SETTINGS_DIR_NAME; 
 	/**
 	 * The constructor
 	 */
@@ -301,7 +301,7 @@ public class Activator extends AbstractUIPlugin {
 	}
 	
 	private static String getMarkerPrefsPath() {
-		return SWAMP_SETTINGS_PATH + SEPARATOR + MARKER_PREFS_FILENAME;
+		return SWAMP_SETTINGS_PATH + File.separator + MARKER_PREFS_FILENAME;
 	}
 	
 	/**
@@ -309,7 +309,7 @@ public class Activator extends AbstractUIPlugin {
 	 * @return path
 	 */
 	public static String getUnfinishedAssessmentsPath() {
-		return ResultsUtils.getTopLevelResultsDirectory() + SEPARATOR + UNFINISHED_ASSESS_FILENAME;
+		return ResultsUtils.getTopLevelResultsDirectory() + File.separator + UNFINISHED_ASSESS_FILENAME;
 	}
 	
 	/**
@@ -317,7 +317,7 @@ public class Activator extends AbstractUIPlugin {
 	 * @return path
 	 */
 	public static String getFinishedAssessmentsPath() {
-		return ResultsUtils.getTopLevelResultsDirectory() + SEPARATOR + FINISHED_ASSESS_FILENAME;
+		return ResultsUtils.getTopLevelResultsDirectory() + File.separator + FINISHED_ASSESS_FILENAME;
 	}
 
 	/*

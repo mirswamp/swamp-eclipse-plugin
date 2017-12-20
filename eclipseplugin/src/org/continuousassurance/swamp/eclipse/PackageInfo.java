@@ -24,7 +24,7 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import org.apache.commons.codec.binary.Hex;
-import static org.eclipse.core.runtime.Path.SEPARATOR;
+
 
 /**
  * This class process information and generates the package.conf
@@ -113,7 +113,7 @@ public class PackageInfo {
 		String md5hash = getDigest(zipBytes, md5);
 		String sha512hash = getDigest(zipBytes, sha512);
 		
-		File pkgConf = new File(outputDir + SEPARATOR + PACKAGE_CONF_NAME);
+		File pkgConf = new File(outputDir + File.separator + PACKAGE_CONF_NAME);
 		PrintWriter writer = null;
 		try {
 			writer = new PrintWriter(pkgConf.getAbsolutePath(), UTF_8_ENCODING);

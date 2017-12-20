@@ -1,7 +1,5 @@
 package org.continuousassurance.swamp.eclipse;
 
-//import static org.eclipse.core.runtime.IPath.SEPARATOR;
-
 import java.io.*; 
 import java.util.*; 
 import org.apache.commons.compress.archivers.tar.*; 

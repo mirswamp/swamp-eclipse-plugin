@@ -162,7 +162,7 @@ public class ResultsParser implements ScarfInterface {
 		StringBuffer sb = new StringBuffer();
 		for (String s : filepath) {
 			sb.append(s);
-			sb.append(ResultsUtils.SEPARATOR);
+			sb.append(File.separator);
 		}
 		String normalizedPath = sb.toString();
 		return normalizedPath.substring(0, normalizedPath.length()-1);

@@ -14,7 +14,6 @@
 package org.continuousassurance.swamp.eclipse;
 
 import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
-import static org.eclipse.core.runtime.IPath.SEPARATOR;
 
 import java.io.File;
 import java.io.IOException;
@@ -223,7 +222,7 @@ public class ImprovedClasspathHandler {
 	 */
 	private IPath setupBinDir(IProject project) {
 		// make SWAMPBIN directory
-		String path = project.getWorkingLocation(PLUGIN_ID).toOSString() + SEPARATOR + SWAMPBIN_DIR;
+		String path = project.getWorkingLocation(PLUGIN_ID).toOSString() + File.separator + SWAMPBIN_DIR;
 		File f = new File(path);
 		if (f.exists()) {
 			System.out.println("SWAMPBIN already exists but we should be deleting it now!");
@@ -257,7 +256,7 @@ public class ImprovedClasspathHandler {
 		
 		// (1) Copy the files from here to plug-in area
 		File src = new File(projectPath.toOSString());
-		File dst = new File(getRootProjectPluginLocation() + SEPARATOR + project.getName());
+		File dst = new File(getRootProjectPluginLocation() + File.separator + project.getName());
 		System.out.println("Src path: " + src.getPath());
 		System.out.println("Dst path: " + dst.getPath());
 		try {
@@ -426,7 +425,7 @@ public class ImprovedClasspathHandler {
 	 */
 	private static String getProjectLibraryLocation(IProject project, IPath entryPath) {
 		String projectDir = project.getLocation().toOSString();
-		String srcFile = projectDir + SEPARATOR + entryPath.removeFirstSegments(1);
+		String srcFile = projectDir + File.separator + entryPath.removeFirstSegments(1);
 		return srcFile;
 	}
 	
@@ -439,11 +438,11 @@ public class ImprovedClasspathHandler {
 	 * @throws CoreException
 	 */
 	private static IPath copyWorkspacePathIntoBinDir(IFile file, String filename, IPath swampBinPath) throws CoreException {
-		String filePath = swampBinPath.toOSString() + SEPARATOR + filename;
+		String filePath = swampBinPath.toOSString() + File.separator + filename;
 		IPath destPath = new org.eclipse.core.runtime.Path(filePath);
 		file.copy(destPath, true, null);
 		//return destPath;
-		return new org.eclipse.core.runtime.Path(SEPARATOR + SWAMPBIN_DIR + SEPARATOR + filename);
+		return new org.eclipse.core.runtime.Path(File.separator + SWAMPBIN_DIR + File.separator + filename);
 	}
 	
 	/**
@@ -455,7 +454,7 @@ public class ImprovedClasspathHandler {
 	 * @throws IOException
 	 */
 	private static IPath copyAbsolutePathIntoBinDir(String srcStr, String filename, IPath swampBinPath) throws IOException {
-		String destStr = swampBinPath.toOSString() + SEPARATOR + filename;
+		String destStr = swampBinPath.toOSString() + File.separator + filename;
 		Path destPath = new File(destStr).toPath();
 		Path srcPath = new File(srcStr).toPath();
 		// This copy needs to be forced to disk
@@ -465,7 +464,7 @@ public class ImprovedClasspathHandler {
 		OpenOption options[] = {StandardOpenOption.DSYNC , StandardOpenOption.CREATE , StandardOpenOption.WRITE};
 		System.out.println("Path we're writing to: " + destPath);
 		Files.write(destPath, bytes, options);
-		return new org.eclipse.core.runtime.Path(SEPARATOR + SWAMPBIN_DIR + SEPARATOR + filename);
+		return new org.eclipse.core.runtime.Path(File.separator + SWAMPBIN_DIR + File.separator + filename);
 	}
 	
 	/**
@@ -475,10 +474,13 @@ public class ImprovedClasspathHandler {
 	 */
 	private static String getLibraryFileName(IPath path) {
 		String strPath = path.toOSString();
-		if (strPath.charAt(0) == IPath.SEPARATOR) {
+		
+		//if (strPath.charAt(0) == IPath.SEPARATOR) {
+		if (strPath.charAt(0) == File.separatorChar) {
 			strPath = strPath.substring(1);
 		}
-		strPath = strPath.replace(IPath.SEPARATOR, DASH);
+		//strPath = strPath.replace(IPath.SEPARATOR, DASH);
+		strPath = strPath.replace(File.separatorChar, DASH);
 		strPath = strPath.replace(IPath.DEVICE_SEPARATOR, DASH);
 		return strPath;
 	}

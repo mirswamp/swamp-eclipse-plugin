@@ -13,6 +13,8 @@
 
 package org.continuousassurance.swamp.eclipse;
 
+import java.io.File;
+
 /**
  * Utility functions for results handling and retrieval
  * @author reid-jr
@@ -29,12 +31,7 @@ public class ResultsUtils {
 	 * Name of file storing the mapping from Eclipse project to SWAMP package
 	 */
 	public static final String ECLIPSE_TO_SWAMP_FILENAME = "eclipse-swamp.txt";
-	
-	/**
-	 * System-defined directory separator (e.g. "/" in Unix, Linux)
-	 */
-	public static final String SEPARATOR = System.getProperty("file.separator");
-	
+		
 	/**
 	 * Eclipse property name for user's home directory
 	 */
@@ -52,7 +49,7 @@ public class ResultsUtils {
 	 * @return file path that the SCARF results should be downloaded to
 	 */
 	public static String constructFilepath(String projectUUID, String pkgUUID, String toolUUID, String platformUUID) {
-		return constructFilepath(pkgUUID) + SEPARATOR + toolUUID + "-" + platformUUID + "-" + FILE_SUFFIX;
+		return constructFilepath(pkgUUID) + File.separator + toolUUID + "-" + platformUUID + "-" + FILE_SUFFIX;
 	}
 	
 	/**
@@ -63,7 +60,7 @@ public class ResultsUtils {
 	 * the specified Package Thing should be downloaded
 	 */
 	public static String constructFilepath(String pkgThingUUID) {
-		return getTopLevelResultsDirectory() + SEPARATOR + pkgThingUUID;
+		return getTopLevelResultsDirectory() + File.separator + pkgThingUUID;
 	}
 	
 	/**
@@ -72,6 +69,6 @@ public class ResultsUtils {
 	 * downloaded
 	 */
 	public static String getTopLevelResultsDirectory() {
-		return System.getProperty(USER_HOME_PROPERTY) + SEPARATOR + SwampSubmitter.SWAMP_RESULTS_DIRNAME;
+		return System.getProperty(USER_HOME_PROPERTY) + File.separator + SwampSubmitter.SWAMP_RESULTS_DIRNAME;
 	}
 }

@@ -67,7 +67,7 @@ import org.eclipse.ui.console.MessageConsoleStream;
 import org.osgi.framework.Version;
 
 import static org.continuousassurance.swamp.eclipse.Activator.PLUGIN_ID;
-import static org.eclipse.core.runtime.Path.SEPARATOR;
+
 
 public class SwampSubmitter {
 
@@ -496,7 +496,9 @@ public class SwampSubmitter {
 	 * @param projectPluginLoc file path of project's plug-in directory
 	 */
 	private void setEclipseProjectToPackageThingMapping(String pkgThingUUID, String projectPluginLoc) {
-		String path = projectPluginLoc + org.eclipse.core.runtime.Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
+		//String path = projectPluginLoc + org.eclipse.core.runtime.Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
+		String path = projectPluginLoc + File.separator + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
+		
 		File f = new File(path);
 		if (f.exists()) {
 			f.delete();
@@ -662,7 +664,7 @@ public class SwampSubmitter {
 			return;
 		}
 	
-		configFilepath = project.getWorkingLocation(PLUGIN_ID).toOSString() + SEPARATOR + CONFIG_FILENAME;
+		configFilepath = project.getWorkingLocation(PLUGIN_ID).toOSString() + File.separator + CONFIG_FILENAME;
 		SubmissionInfo si = new SubmissionInfo(this.api);
 		if ((configFilepath == null) || (!new File(configFilepath).exists())) {
 			printToConsole(Utils.getBracketedTimestamp() + "Error: No previous assessment found.");
@@ -759,7 +761,7 @@ public class SwampSubmitter {
 		
 		// save plug-in preferences
 		si.savePluginSettings();
-		configFilepath = si.getProjectWorkingLocation() + SEPARATOR + CONFIG_FILENAME;
+		configFilepath = si.getProjectWorkingLocation() + File.separator + CONFIG_FILENAME;
 		FileSerializer.serializeSubmissionInfo(configFilepath, si);
 		if (si.isCProject()) {
 			submitPreConfiguredJob(si);
@@ -810,7 +812,7 @@ public class SwampSubmitter {
 		
 		// TODO we can fail here, i.e. by not connecting and we're not handling it as of now
 		SubmissionInfo si = new SubmissionInfo(this.api);
-		configFilepath = project.getWorkingLocation(PLUGIN_ID).toOSString() + SEPARATOR + CONFIG_FILENAME;
+		configFilepath = project.getWorkingLocation(PLUGIN_ID).toOSString() + File.separator + CONFIG_FILENAME;
 		if ((configFilepath == null) || ((!(new File(configFilepath).exists()))) || (!FileSerializer.deserializeSubmissionInfo(configFilepath, si))) {
 			si.initializeProject(project.getName(), project.getLocation().toOSString());
 		}

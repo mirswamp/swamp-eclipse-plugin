@@ -40,7 +40,6 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-import static org.eclipse.core.runtime.IPath.SEPARATOR;
 
 /**
  * This class provides static utility methods that provide basic functionality 
@@ -173,7 +172,7 @@ public class Utils {
 	 * @return path of the .zip file
 	 */
 	public static java.nio.file.Path zipFiles(Set<String> files, String zipFilePath, String zipFileName) {
-		String finalPath = zipFilePath + SEPARATOR + zipFileName;
+		String finalPath = zipFilePath + File.separator + zipFileName;
 		FileOutputStream fileOS = null;
 		try {
 			fileOS = new FileOutputStream(finalPath);
@@ -218,11 +217,11 @@ public class Utils {
 		
 		File f;
 		for (int i = 0; i < files.length; i++) {
-			filename = pathname + SEPARATOR + files[i];
+			filename = pathname + File.separator + files[i];
 			f = new File(filename);
 			if (f.isDirectory()) {
-				String dirPath = "".equals(basePath) ? files[i]:basePath + SEPARATOR + files[i];
-				ZipEntry entry = new ZipEntry(dirPath + SEPARATOR);
+				String dirPath = "".equals(basePath) ? files[i]:basePath + File.separator + files[i];
+				ZipEntry entry = new ZipEntry(dirPath + File.separator);
 				try {
 					out.putNextEntry(entry);
 					out.closeEntry();
@@ -233,7 +232,7 @@ public class Utils {
 			}
 			else {
 				System.out.println("File name: " + filename);
-				addFileToZip(filename, basePath + SEPARATOR + files[i], out);
+				addFileToZip(filename, basePath + File.separator + files[i], out);
 			}
 		}
 	}

@@ -36,7 +36,7 @@ import org.eclipse.jdt.core.IClasspathEntry;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import static org.eclipse.core.runtime.Path.SEPARATOR;
+
 
 /**
  * This class does the actual generation of the build files.
@@ -157,7 +157,7 @@ public class BuildfileGenerator {
 			Transformer transformer = transformerFactory.newTransformer();
 			transformer.setOutputProperty(OutputKeys.INDENT, ANT_YES);
 			DOMSource source = new DOMSource(doc);
-			String buildFilePath = project.getRootProjectPluginLocation() + SEPARATOR + project.getProjectName() + BUILDFILE_EXT;
+			String buildFilePath = project.getRootProjectPluginLocation() + File.separator + project.getProjectName() + BUILDFILE_EXT;
 			File buildFile = new File(buildFilePath);
 			if (buildFile.exists()) {
 				System.out.println("Build file exists");

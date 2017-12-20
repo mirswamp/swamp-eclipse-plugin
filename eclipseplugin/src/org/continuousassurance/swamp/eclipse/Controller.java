@@ -169,7 +169,7 @@ public class Controller {
 		}
 
 		System.out.println("Refreshing workspace with project " + project.getName());
-		String path = project.getProject().getWorkingLocation(PLUGIN_ID).toOSString() + Path.SEPARATOR + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
+		String path = project.getProject().getWorkingLocation(PLUGIN_ID).toOSString() + File.separator + ResultsUtils.ECLIPSE_TO_SWAMP_FILENAME;
 		
 		File f = new File(path); 
 		if (f.exists()) {
