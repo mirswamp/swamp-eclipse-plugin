@@ -17,6 +17,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 import javax.json.Json;
@@ -290,11 +292,17 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		return api;
 	}
 	
-	protected Proxy getProxy() {
+	protected Proxy getProxy(String swamp_host) {
 	    Proxy proxy = new Proxy();
 
         IProxyService service = Activator.getDefault().getProxyService();
         if (service != null && service.isProxiesEnabled()) {
+            
+            for (String host : service.getNonProxiedHosts()) {
+                if (host.equalsIgnoreCase(swamp_host)) {
+                    return proxy;
+                }
+            }
             
             IProxyData iproxy_data = null;
             
@@ -362,7 +370,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		try {
 			api = new SwampApiWrapper();
 			System.out.println("Hostname: " + hostname);
-			id = api.login(username, password, hostname, getProxy());
+			id = api.login(username, password, hostname, getProxy((new URL(hostname)).getHost()));
 			api.saveSession();
 		}
 		catch (Exception h) {

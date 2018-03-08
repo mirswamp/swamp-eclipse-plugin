@@ -13,7 +13,7 @@ To use this plug-in, the user must have an account on a SWAMP instance. Users ca
 [[introduction]]
 == **introduction**
 
-This document describes the SWAMP Eclipse plug-in, an extension to the Eclipse IDE that allows users with SWAMP accounts to submit Java code to the SWAMP. 
+This document describes the SWAMP Eclipse plug-in, an extension to the Eclipse IDE that allows users with SWAMP accounts to submit Java code to the SWAMP.
 
 toc::[]
 
@@ -22,7 +22,7 @@ toc::[]
 == **plug-in installation**
 To install the Eclipse plug-in, a user may either download the plug-in archive and install it into Eclipse or download the plug-in directly from the Eclipse Marketplace.
 
-=== **download and install plug-in**
+=== **Download and install plug-in**
 To download and install, follow these steps:
 
 	. Download the archive from the SWAMP https://github.com/mirswamp/swamp-eclipse-plugin/releases[releases] page and unzip it.
@@ -40,11 +40,15 @@ image:eclipseplugin/doc/images/menuAndToolbar.png[Menubar and Toolbar]
 
 [[plug-in-config]]
 == **set up plug-in preferences (optional)**
-=== **available SWAMP hosts**
+=== **Available SWAMP hosts**
 For shared Eclipse installations and individual installations, system administrators and users may control what SWAMP hosts are accessible by modifying SWAMP_hosts.json and adding it to the installation directory (this can be found by clicking on Help > Installation Details, switching to the "Configuration" tab, and viewing the value for "eclipse.home.location" in the "System properties" section). By default, the MIR host is available to all users.
 
-=== **editor markers**
+=== **Editor markers**
 The SWAMP perspective adds colored markers to the left-hand ruler to annotate weaknesses found by the SWAMP. A user may set preferences for these markers by modifying .marker_preferences and copying it to a directory named .SWAMP_SETTINGS in the user's home directory.
+
+=== **Using http proxy**
+
+The SWAMP plugin versions 1.1.0 and above can work with **http proxies**. If a *https* or *http* proxy is set via https://help.eclipse.org/mars/index.jsp?topic=%2Forg.eclipse.platform.doc.user%2Freference%2Fref-net-preferences.htm[standard eclipse proxy configuration], the SWAMP plugin will use the proxy to talk to SWAMP. Incase, if you do not want SWAMP plugin to use the proxy, specify the *SWAMP host* name in **proxy bypass** settings.
 
 [[configuration-and-submission]]
 == **configuration and submission**
@@ -98,7 +102,7 @@ image:eclipseplugin/doc/images/RightClickMenu.png[Right Click Submission]
 [[view-results]]
 == **View assessment results**
 
-This plug-in comes with a new perspective named "SWAMP." When a user opens the SWAMP perspective (by clicking on the "Open Perspective" button in the top right corner and selecting the perspective), he or she will see an editor and four views: the package explorer, the weakness table view, the assessment status view, and the weakness detail view. 
+This plug-in comes with a new perspective named "SWAMP." When a user opens the SWAMP perspective (by clicking on the "Open Perspective" button in the top right corner and selecting the perspective), he or she will see an editor and four views: the package explorer, the weakness table view, the assessment status view, and the weakness detail view.
 
 image:eclipseplugin/doc/images/SwampPerspective.png[SWAMP Perspective]
 
