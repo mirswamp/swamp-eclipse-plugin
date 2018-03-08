@@ -881,7 +881,11 @@ public class SwampSubmitter {
 
 		String assessUUID = null;
 		try {
-			AssessmentRun arun = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
+			//AssessmentRun arun = api.runAssessment(pkgUUID, toolUUID, prjUUID, pltUUID);
+		    AssessmentRun arun = api.runAssessment(pkg, 
+		            api.getTool(toolUUID, prjUUID), 
+		            api.getProject(prjUUID),
+		            api.getPlatformVersion(pltUUID));
 			assessUUID = arun.getIdentifierString();
 		} catch (InvalidIdentifierException | IncompatibleAssessmentTupleException e) {
 			printToConsole(Utils.getBracketedTimestamp() + "Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");

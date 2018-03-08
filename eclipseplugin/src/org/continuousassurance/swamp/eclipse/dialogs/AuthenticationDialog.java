@@ -27,6 +27,7 @@ import javax.json.JsonReader;
 import org.continuousassurance.swamp.cli.SwampApiWrapper;
 import org.continuousassurance.swamp.eclipse.Activator;
 import org.continuousassurance.swamp.eclipse.Utils;
+import org.continuousassurance.swamp.session.util.Proxy;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -39,6 +40,8 @@ import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.*;
+import org.eclipse.core.net.proxy.IProxyData;
+import org.eclipse.core.net.proxy.IProxyService;
 
 /**
  * This class creates a dialog for SWAMP authentication
@@ -287,6 +290,38 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		return api;
 	}
 	
+	protected Proxy getProxy() {
+	    Proxy proxy = new Proxy();
+
+        IProxyService service = Activator.getDefault().getProxyService();
+        if (service != null && service.isProxiesEnabled()) {
+            
+            IProxyData iproxy_data = null;
+            
+            if (service.getProxyData(IProxyData.HTTPS_PROXY_TYPE).getHost() != null && 
+                    service.getProxyData(IProxyData.HTTPS_PROXY_TYPE).getPort() != -1) {
+                iproxy_data = service.getProxyData(IProxyData.HTTPS_PROXY_TYPE);
+            }else if (service.getProxyData(IProxyData.HTTP_PROXY_TYPE).getHost() != null && 
+                    service.getProxyData(IProxyData.HTTP_PROXY_TYPE).getPort() != -1){
+                iproxy_data = service.getProxyData(IProxyData.HTTP_PROXY_TYPE);
+            }
+            
+            if (iproxy_data != null) {
+                proxy.setHost(iproxy_data.getHost());
+                proxy.setPort(iproxy_data.getPort());
+                
+                if (iproxy_data.getUserId() != null && iproxy_data.getPassword() != null) {
+                    proxy.setUsername(iproxy_data.getUserId());
+                    proxy.setPassword(iproxy_data.getPassword());
+                }
+                proxy.setScheme(iproxy_data.getType().toLowerCase());
+                proxy.setConfigured(true);
+            }
+        }
+        
+        return proxy;
+	}
+	
 	/**
 	 * Tries authenticating with the SWAMP
 	 */
@@ -327,7 +362,7 @@ public class AuthenticationDialog extends TitleAreaDialog {
 		try {
 			api = new SwampApiWrapper();
 			System.out.println("Hostname: " + hostname);
-			id = api.login(username, password, hostname);
+			id = api.login(username, password, hostname, getProxy());
 			api.saveSession();
 		}
 		catch (Exception h) {

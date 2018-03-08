@@ -30,12 +30,16 @@ import java.util.regex.PatternSyntaxException;
 
 import org.continuousassurance.swamp.cli.SwampApiWrapper;
 import org.continuousassurance.swamp.eclipse.ui.SwampPerspective;
+import org.eclipse.core.net.proxy.IProxyService;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.ServiceReference;
 
 
 /**
@@ -425,6 +429,25 @@ public class Activator extends AbstractUIPlugin {
 	
 	public static String[] getValidShapes() {
 		return SHAPES;
+	}
+	
+	private static final String CORE_NET_BUNDLE = "org.eclipse.core.net";
+	
+	public IProxyService getProxyService() {
+	    Bundle bundle = Platform.getBundle(CORE_NET_BUNDLE);
+	    while (bundle.getState() != Bundle.ACTIVE) {
+	        try {
+	            Thread.sleep(1000);
+	        } catch (InterruptedException e) {
+	            e.printStackTrace();
+	        }
+	    }
+	    ServiceReference ref =
+	            bundle.getBundleContext().getServiceReference(IProxyService.class.getName());
+	    if (ref != null) {
+	        return (IProxyService) bundle.getBundleContext().getService(ref);
+	    }
+	    return null;
 	}
 	
 }
