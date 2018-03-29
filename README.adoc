@@ -1,6 +1,6 @@
 = `SWAMP Eclipse Plug-in User Guide`
 Malcolm Reid Jr., James A. Kupsch
-Version 0.9.1
+Version 1.1.1
 :toc:
 :toc-placement: manual
 
@@ -32,6 +32,9 @@ To download and install, follow these steps:
     . In the "Add Repository" dialog that comes up select "Local..." and select the "update-site" directory inside the directory created from unzipping the archive.
     . Back in the "Install" dialog, uncheck the "Group items by category" checkbox. The Eclipse plug-in should show up as an option now. Check that checkbox.
     . Click "Next" and finish the installation. Eclipse will restart and when it reopens, the plug-in should be installed
+
+=== **Upgrade the plug-in**
+
 
 === **Eclipse Marketplace**
 The Eclipse Marketplace hosts plug-ins and features. To access the Eclipse Marketplace, select "Eclipse Marketplace..." from the Help menu. Search for "SWAMP" and click the install button. When the installation is finished, you should see the SWAMP icon in the toolbar and the SWAMP menu in the menubar (highlighted in the screenshot below).

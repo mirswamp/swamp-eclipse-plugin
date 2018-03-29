@@ -21,6 +21,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -301,7 +302,7 @@ public class Activator extends AbstractUIPlugin {
 	 * @return path
 	 */
 	private static String getHostnamePath() {
-		return SwampApiWrapper.SWAMP_DIR_PATH +  HOST_FILENAME;
+		return Paths.get(SwampApiWrapper.getSwampDirPath(), HOST_FILENAME).toString();
 	}
 	
 	private static String getMarkerPrefsPath() {
