@@ -35,6 +35,7 @@ To download and install, follow these steps:
 
 === **Upgrade the plug-in**
 
+To upgrade the plugin, start Eclipse, select the *Check for Updates* item in the *Help* menu. If there is an update it should be listed in the  *Available Updates* dialog box. Make sure the *Swamp plugin* is selected and click the *Next >* button. Next click the *Next >* button on the *Update Details* screen. Accept any *license agreements* and click *Finish* on the on the *Review License* screen. Confirm any dialog boxes to finish the installation.  
 
 === **Eclipse Marketplace**
 The Eclipse Marketplace hosts plug-ins and features. To access the Eclipse Marketplace, select "Eclipse Marketplace..." from the Help menu. Search for "SWAMP" and click the install button. When the installation is finished, you should see the SWAMP icon in the toolbar and the SWAMP menu in the menubar (highlighted in the screenshot below).
