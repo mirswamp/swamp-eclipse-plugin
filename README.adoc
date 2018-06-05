@@ -11,7 +11,7 @@ The Software Assurance Marketplace (SWAMP) hosts a collection of static analysis
 To use this plug-in, the user must have an account on a SWAMP instance. Users can use the SWAMP hosted at https://www.mir-swamp.org or a SWAMP-in-a-Box instance (see your local support staff). If a user is using a CILogin (university credential or GitHub), he or she will need to make a password for each SWAMP instance he or she wishes to log into.
 
 [[introduction]]
-== **introduction**
+== **Introduction**
 
 This document describes the SWAMP Eclipse plug-in, an extension to the Eclipse IDE that allows users with SWAMP accounts to submit Java code to the SWAMP.
 
@@ -35,7 +35,7 @@ To download and install, follow these steps:
 
 === **Upgrade the plug-in**
 
-To upgrade the plugin, start Eclipse, select the *Check for Updates* item in the *Help* menu. If there is an update it should be listed in the  *Available Updates* dialog box. Make sure the *Swamp plugin* is selected and click the *Next >* button. Next click the *Next >* button on the *Update Details* screen. Accept any *license agreements* and click *Finish* on the on the *Review License* screen. Confirm any dialog boxes to finish the installation.  
+To upgrade the plugin, start Eclipse, select the *Check for Updates* item in the *Help* menu. If there is an update it should be listed in the  *Available Updates* dialog box. Make sure the *Swamp plugin* is selected and click the *Next >* button. Next click the *Next >* button on the *Update Details* screen. Accept any *license agreements* and click *Finish* on the on the *Review License* screen. Confirm any dialog boxes to finish the installation.
 
 === **Eclipse Marketplace**
 The Eclipse Marketplace hosts plug-ins and features. To access the Eclipse Marketplace, select "Eclipse Marketplace..." from the Help menu. Search for "SWAMP" and click the install button. When the installation is finished, you should see the SWAMP icon in the toolbar and the SWAMP menu in the menubar (highlighted in the screenshot below).
@@ -43,7 +43,7 @@ The Eclipse Marketplace hosts plug-ins and features. To access the Eclipse Marke
 image:eclipseplugin/doc/images/menuAndToolbar.png[Menubar and Toolbar]
 
 [[plug-in-config]]
-== **set up plug-in preferences (optional)**
+== **Set up plug-in preferences (optional)**
 === **Available SWAMP hosts**
 For shared Eclipse installations and individual installations, system administrators and users may control what SWAMP hosts are accessible by modifying SWAMP_hosts.json and adding it to the installation directory (this can be found by clicking on Help > Installation Details, switching to the "Configuration" tab, and viewing the value for "eclipse.home.location" in the "System properties" section). By default, the MIR host is available to all users.
 
@@ -54,8 +54,38 @@ The SWAMP perspective adds colored markers to the left-hand ruler to annotate we
 
 The SWAMP plugin versions 1.1.0 and above can work with **http proxies**. If a *https* or *http* proxy is set via https://help.eclipse.org/mars/index.jsp?topic=%2Forg.eclipse.platform.doc.user%2Freference%2Fref-net-preferences.htm[standard eclipse proxy configuration], the SWAMP plugin will use the proxy to talk to SWAMP. Incase, if you do not want SWAMP plugin to use the proxy, specify the *SWAMP host* name in **proxy bypass** settings.
 
+=== **Eclipse plugin with Swamp-In-The-Box (SiB) instances**
+
+
+If you are accessing an SiB instance that uses a _self-signed_ SSL/TLS certificate then, the plugin will fail to communicate with that SiB instance. The reason being Java's security model by default does not allow communicating with a web-service that has a self-signed SSL/TLS certificate. To overcome this restriction, the web-service's self-signed SSL/TLS certificate has to be added to the Java installation's _default keystore_ on the machine that is running eclipse . The following are the instructions on how to do it:
+
+. Access the SiB from the web-browser and download the SiB's self-signed certificate by following these instruction here:
+https://www.thesslstore.com/blog/how-to-view-ssl-certificate-details-in-chrome-56/
+
+. Run the following commands to add the self-signed certificate to the Java Installation's keystore:
+--
+a. Change the present working directory to your Java installation directory + `jre/lib/security/`.
++
+.................
+   cd $JAVA_HOME/jre/lib/security
+.................
++
+b. Make a backup copy of the `cacerts` file
++
+.................
+   cp cacerts cacerts.original
+.................
++
+c. Add the certificate to the keystore (Assuming here that the self-signed certificate is stored on the desktop as _www.sib-swamp.org.cer_)
++
+.................
+   sudo keytool -importcert -alias sib-name -file ~/Desktop/www.sib-swamp.org.cer -keystore $PWD/cacerts
+.................
+--
+
+
 [[configuration-and-submission]]
-== **configuration and submission**
+== **Configuration and submission**
 
 === **login**
 A user must be logged into his or her SWAMP account to use the plug-in. To log in, select "Log In" from the SWAMP dropdown menu. The hostname field specifies what SWAMP instance a user logs into. By default, the Morgridge Institute for Research's hostname is entered. The next two fields are username and password. If logging onto the default SWAMP instance, these are the same credentials used for www.mir-swamp.org. The plug-in stores cookies with the user's session information for 24 hours. To log out, select "Log Out" from the SWAMP dropdown menu.
