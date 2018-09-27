@@ -29,6 +29,7 @@ import org.continuousassurance.swamp.api.AssessmentRun;
 import org.continuousassurance.swamp.api.PackageThing;
 import org.continuousassurance.swamp.api.PackageVersion;
 import org.continuousassurance.swamp.cli.SwampApiWrapper;
+import org.continuousassurance.swamp.cli.exceptions.ToolPermissionException;
 import org.continuousassurance.swamp.cli.exceptions.IncompatibleAssessmentTupleException;
 import org.continuousassurance.swamp.cli.exceptions.InvalidIdentifierException;
 import org.continuousassurance.swamp.cli.exceptions.SessionExpiredException;
@@ -893,7 +894,15 @@ public class SwampSubmitter {
 			System.err.println("Error in running assessment.");
 			e.printStackTrace();
 			return;
+		}catch (ToolPermissionException e) {
+		    printToConsole(Utils.getBracketedTimestamp() + "Error: " + e.getLocalizedMessage());
+            // TODO handle error here
+            System.err.println("Error in running assessment.");
+            e.printStackTrace();
+            return;
 		}
+		
+		
 		if (assessUUID == null) {
 			printToConsole(Utils.getBracketedTimestamp() + "Error: There was an error in uploading assessment for package {" + pkgName + "} with tool {" + toolName + "} on platform {" + platformName + "}");
 			// TODO handle error here
