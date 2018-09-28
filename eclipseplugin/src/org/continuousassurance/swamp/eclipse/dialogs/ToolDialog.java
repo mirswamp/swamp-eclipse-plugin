@@ -108,7 +108,17 @@ public class ToolDialog extends TitleAreaDialog {
 		container.setLayout(new GridLayout(2, false));
 
 		DialogUtil.initializeLabelWidget(TOOLS_LABEL, SWT.NONE, container);
-		tools = api.getTools(submissionInfo.getPackageType(), submissionInfo.getSelectedProjectID());
+		List<Tool> all_tools = api.getTools(submissionInfo.getPackageType(), submissionInfo.getSelectedProjectID());
+		tools = new ArrayList<Tool>();
+		
+		for (Tool tool : all_tools) {
+		    if (api.hasToolPermission(tool.getUUIDString(), 
+		            submissionInfo.getSelectedProjectID(), 
+		            submissionInfo.getPackageThingUUID())) {
+		        tools.add(tool);
+		    }
+		}
+		
 		swtToolList = DialogUtil.initializeListWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), convertToolListToStringArray());
 		swtToolList.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, TOOL_HELP));
 		

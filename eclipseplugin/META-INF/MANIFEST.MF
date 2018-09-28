@@ -26,7 +26,7 @@ Bundle-ClassPath: .,
  lib/slf4j-api-1.7.25.jar,
  lib/slf4j-simple-1.7.25.jar,
  lib/javax.json-1.0.4.jar,
- lib/java-cli-1.5.6-jar-with-dependencies.jar
+ lib/java-cli-1.5.7-jar-with-dependencies.jar
 Import-Package: org.eclipse.jdt.core,
  org.eclipse.jdt.internal.core,
  org.eclipse.ui.console
