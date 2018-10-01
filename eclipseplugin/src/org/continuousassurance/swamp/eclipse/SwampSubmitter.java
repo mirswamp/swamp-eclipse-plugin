@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Deque;
 import java.util.HashSet;
@@ -122,6 +123,7 @@ public class SwampSubmitter {
 	 * Cyclical dependencies error code
 	 */
 	private static final int CYCLICAL_DEPENDENCIES = 2;
+	private static final int NO_TOOL_PERMISSION = 3;
 	/**
 	 * File patterns to delete if job is cancelled
 	 */
@@ -299,6 +301,26 @@ public class SwampSubmitter {
 					return status;
 				}
 				
+				ArrayList<String> tools_without_permissions = new ArrayList<String>();
+                for (String toolUUID : si.getSelectedToolIDs()) {
+                    if(!api.hasToolPermission(toolUUID, prjUUID, pkgThingUUID)) {
+                            tools_without_permissions.add(api.getTool(toolUUID, prjUUID).getName());
+                    }
+                }
+                
+                if (!tools_without_permissions.isEmpty()) {
+                    printToConsole(Utils.getBracketedTimestamp() + "Error: No permissions to use the tools: " + tools_without_permissions + 
+                            "\nUnselect these tools OR get permissons to use them");
+                    IStatus status = new Status(IStatus.ERROR, 
+                            "eclipseplugin", 
+                            NO_TOOL_PERMISSION, 
+                            "Error: No permissions to use the tools: " + tools_without_permissions + 
+                            "\nUnselect these tools OR get permissons to use them", 
+                            null);
+                    done(status);
+                    return status;
+                }
+                
 				printToConsole(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
 				AssessmentDetails details = new AssessmentDetails(prjUUID, si.getPackageName(), si.getPackageVersion(), si.getProjectName());
 				for (String toolUUID : si.getSelectedToolIDs()) {
@@ -465,6 +487,26 @@ public class SwampSubmitter {
 					return status;
 				}
 				
+				ArrayList<String> tools_without_permissions = new ArrayList<String>();
+				for (String toolUUID : si.getSelectedToolIDs()) {
+				    if(!api.hasToolPermission(toolUUID, prjUUID, pkgThingUUID)) {
+				            tools_without_permissions.add(api.getTool(toolUUID, prjUUID).getName());
+				    }
+				}
+				
+				if (!tools_without_permissions.isEmpty()) {
+				    printToConsole("ERROR - No permissions to use the tools: " + tools_without_permissions + 
+				            "\nUnselect these tools OR get permissons to use them");
+				    IStatus status = new Status(IStatus.ERROR, 
+                            "eclipsepluin", 
+                            NO_TOOL_PERMISSION, 
+                            "Error: No permissions to use the tools: " + tools_without_permissions + 
+                            "\nUnselect these tools OR get permissons to use them", 
+                            null);
+                    done(status);
+                    return status;
+				}
+
 				printToConsole(Utils.getBracketedTimestamp() + "Status: Submitting assessments");
 				AssessmentDetails details = new AssessmentDetails(prjUUID, si.getPackageName(), si.getPackageVersion(), si.getProjectName());
 				

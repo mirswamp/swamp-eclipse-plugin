@@ -108,6 +108,7 @@ public class ToolDialog extends TitleAreaDialog {
 		container.setLayout(new GridLayout(2, false));
 
 		DialogUtil.initializeLabelWidget(TOOLS_LABEL, SWT.NONE, container);
+		/*
 		List<Tool> all_tools = api.getTools(submissionInfo.getPackageType(), submissionInfo.getSelectedProjectID());
 		tools = new ArrayList<Tool>();
 		
@@ -117,7 +118,8 @@ public class ToolDialog extends TitleAreaDialog {
 		            submissionInfo.getPackageThingUUID())) {
 		        tools.add(tool);
 		    }
-		}
+		}*/
+		tools = api.getTools(submissionInfo.getPackageType(), submissionInfo.getSelectedProjectID());
 		
 		swtToolList = DialogUtil.initializeListWidget(container, new GridData(SWT.FILL, SWT.NONE, true, false), convertToolListToStringArray());
 		swtToolList.addHelpListener(e -> MessageDialog.openInformation(shell, DialogUtil.HELP_DIALOG_TITLE, TOOL_HELP));

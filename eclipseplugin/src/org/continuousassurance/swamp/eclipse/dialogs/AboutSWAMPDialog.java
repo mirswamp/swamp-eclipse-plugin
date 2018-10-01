@@ -57,11 +57,11 @@ public class AboutSWAMPDialog extends TitleAreaDialog {
 	/**
 	 * Plug-in release version number
 	 */
-	private static final String ABOUT_SWAMP_SEMANTIC_VERSION_NUMBER = "1.0.0";
+	private static final String ABOUT_SWAMP_SEMANTIC_VERSION_NUMBER = "1.1.6";
 	/**
 	 * Plug-in release date
 	 */
-	private static final String ABOUT_SWAMP_RELEASE_DATE = "03/30/2017";
+	private static final String ABOUT_SWAMP_RELEASE_DATE = "10/01/2018";
 	/**
 	 * Release date label
 	 */
