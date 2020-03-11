@@ -1,5 +1,8 @@
 /*
  * Copyright 2016-2017 Malcolm Reid Jr.
+ * Copyright 2017-2018 Vamshi Basupalli
+ * Copyright 2019-2020 Bolo -- Josef T. Burger
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -57,11 +60,11 @@ public class AboutSWAMPDialog extends TitleAreaDialog {
 	/**
 	 * Plug-in release version number
 	 */
-	private static final String ABOUT_SWAMP_SEMANTIC_VERSION_NUMBER = "1.1.6";
+	private static final String ABOUT_SWAMP_SEMANTIC_VERSION_NUMBER = "1.1.7";
 	/**
 	 * Plug-in release date
 	 */
-	private static final String ABOUT_SWAMP_RELEASE_DATE = "10/01/2018";
+	private static final String ABOUT_SWAMP_RELEASE_DATE = "02/20/2020";
 	/**
 	 * Release date label
 	 */
